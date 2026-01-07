@@ -1,21 +1,20 @@
 /* eslint-disable no-console */
 import mongoose from "mongoose";
 import type { Server } from "http";
-import "dotenv/config";
 import app from "./app";
+import envVariables from "./app/config/env";
 
 let server: Server;
-const port = process.env.PORT || 3000;
 
 const startServer = async () => {
   try {
     console.log("Connecting to database....");
-    await mongoose.connect(process.env.DATABASE_URL as string);
+    await mongoose.connect(envVariables.DATABASE_URL);
     console.log("Connected to Database.");
 
-    server = app.listen(port, () => {
+    server = app.listen(envVariables.PORT, () => {
       console.log(
-        `Skill workshop management system backend is running on port: ${port}`
+        `Skill workshop management system backend is running on port: ${envVariables.PORT}`
       );
     });
   } catch (error) {
