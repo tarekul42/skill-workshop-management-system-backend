@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import mongoose from "mongoose";
 import type { Server } from "http";
 import "dotenv/config";
