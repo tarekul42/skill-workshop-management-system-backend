@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import mongoose from "mongoose";
 import type { Server } from "http";
 import "dotenv/config";
@@ -9,14 +10,12 @@ const port = process.env.PORT || 3000;
 const startServer = async () => {
   try {
     console.log("Connecting to database....");
-    await mongoose.connect(
-      `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@${process.env.DB_CLUSTER_URL}/skill-workshop-management-system-backend?retryWrites=true&w=majority`,
-    );
+    await mongoose.connect(process.env.DATABASE_URL as string);
     console.log("Connected to Database.");
 
     server = app.listen(port, () => {
       console.log(
-        `Skill workshop management system backend is running on port: ${port}`,
+        `Skill workshop management system backend is running on port: ${port}`
       );
     });
   } catch (error) {
@@ -25,4 +24,46 @@ const startServer = async () => {
   }
 };
 
-startServer();
+(async () => {
+  await startServer();
+})();
+
+process.on("unhandledRejection", (error) => {
+  console.error("Unhandled Rejection Detected. Server shutting down.\n", error);
+  if (server) {
+    server.close(() => {
+      process.exit(1);
+    });
+  }
+  process.exit(1);
+});
+
+process.on("uncaughtException", (error) => {
+  console.error("Uncaught Exception Detected. Server shutting down.\n", error);
+  if (server) {
+    server.close(() => {
+      process.exit(1);
+    });
+  }
+  process.exit(1);
+});
+
+process.on("SIGTERM", () => {
+  console.log("SIGTERM received. Server shutting down.");
+  if (server) {
+    server.close(() => {
+      process.exit(1);
+    });
+  }
+  process.exit(1);
+});
+
+process.on("SIGINT", () => {
+  console.log("SIGINT received. Server shutting down.");
+  if (server) {
+    server.close(() => {
+      process.exit(1);
+    });
+  }
+  process.exit(1);
+});
