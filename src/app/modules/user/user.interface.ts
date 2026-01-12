@@ -1,24 +1,24 @@
 import { Types } from "mongoose";
 
-export enum UserRole {
+enum UserRole {
   SUPER_ADMIN = "SUPER_ADMIN",
   ADMIN = "ADMIN",
   INSTRUCTOR = "INSTRUCTOR",
   STUDENT = "STUDENT",
 }
 
-export enum IsActive {
+enum IsActive {
   ACTIVE = "ACTIVE",
   INACTIVE = "INACTIVE",
   BLOCKED = "BLOCKED",
 }
 
-export interface IAuthProvider {
+interface IAuthProvider {
   provider: string;
   providerId: string;
 }
 
-export interface IUser {
+interface IUser {
   name: string;
   email: string;
   password?: string;
@@ -34,3 +34,5 @@ export interface IUser {
   enrollments?: Types.ObjectId[];
   instructors?: Types.ObjectId[];
 }
+
+export { UserRole, IsActive, IAuthProvider, IUser };
