@@ -1,6 +1,7 @@
 import express, { Request, Response } from "express";
 import cors from "cors";
 import router from "./app/route";
+import globalErrorHandler from "./app/middlewares/globalErrorHandler";
 
 const app = express();
 
@@ -14,5 +15,7 @@ app.get("/", (_req: Request, res: Response) => {
     message: "Skill Workshop Management System Backend is up and running.",
   });
 });
+
+app.use(globalErrorHandler);
 
 export default app;
