@@ -6,13 +6,13 @@ import User from "./user.model";
 const createUser = async (req: Request, res: Response) => {
   try {
     const { name, email } = req.body;
-    const result = User.create({
+    const user = await User.create({
       name,
       email,
     });
     res
       .status(httpStatusCodes.CREATED)
-      .json({ message: "User created successfuly", result });
+      .json({ message: "User created successfuly", user });
   } catch (error: any) {
     res
       .status(httpStatusCodes.BAD_REQUEST)
