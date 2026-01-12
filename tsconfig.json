@@ -10,13 +10,13 @@
     "declaration": true,
     "declarationMap": true,
     "noUncheckedIndexedAccess": true,
-    "exactOptionalPropertyTypes": true,
+    // "exactOptionalPropertyTypes": true,
     "strict": true,
     "jsx": "react-jsx",
     // "verbatimModuleSyntax": true,
-    "isolatedModules": true,
+    // "isolatedModules": true,
     "noUncheckedSideEffectImports": true,
     "moduleDetection": "force",
-    "skipLibCheck": true,
-  },
+    "skipLibCheck": true
+  }
 }
