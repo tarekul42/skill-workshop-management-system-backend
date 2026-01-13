@@ -1,22 +1,11 @@
 {
-  // Visit https://aka.ms/tsconfig to read more about this file
   "compilerOptions": {
-    "rootDir": "./src",
+    "target": "es2020",
+    "module": "commonjs",
     "outDir": "./dist",
-    "module": "nodenext",
-    "target": "esnext",
-    "types": [],
-    "sourceMap": true,
-    "declaration": true,
-    "declarationMap": true,
-    "noUncheckedIndexedAccess": true,
-    // "exactOptionalPropertyTypes": true,
+    "rootDir": "./src",
     "strict": true,
-    "jsx": "react-jsx",
-    // "verbatimModuleSyntax": true,
-    // "isolatedModules": true,
-    "noUncheckedSideEffectImports": true,
-    "moduleDetection": "force",
-    "skipLibCheck": true
-  }
+    "esModuleInterop": true
+  },
+  "include": ["src/**/*"]
 }
