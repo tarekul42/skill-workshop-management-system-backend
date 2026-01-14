@@ -6,9 +6,17 @@ import User from "./user.model";
 import bcrypt from "bcryptjs";
 
 const createUser = async (payload: Partial<IUser>) => {
-  const { email, password, ...rest } = payload;
+  const { name, email, password, ...rest } = payload;
 
-  const isUserExists = await User.findOne({ email });
+  if (typeof email !== "string" || email.trim().length === 0) {
+    throw new AppError(StatusCodes.BAD_REQUEST, "Valid email is required");
+  }
+
+  if (typeof password !== "string" || password.length === 0) {
+    throw new AppError(StatusCodes.BAD_REQUEST, "Valid password is required");
+  }
+
+  const isUserExists = await User.findOne({ email: { $eq: email } });
 
   if (isUserExists) {
     throw new AppError(StatusCodes.BAD_REQUEST, "User already exists");
@@ -16,15 +24,16 @@ const createUser = async (payload: Partial<IUser>) => {
 
   const authProvider: IAuthProvider = {
     provider: "credentials",
-    providerId: email as string,
+    providerId: email,
   };
 
   const hashedPassword = await bcrypt.hash(
-    password as string,
+    password,
     Number(envVariables.BCRYPT_SALT_ROUND)
   );
 
   const user = await User.create({
+    name,
     email,
     password: hashedPassword,
     auths: [authProvider],
