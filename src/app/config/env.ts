@@ -24,7 +24,7 @@ const loadEnvVariables = (): IEnvConfig => {
   requiredEnvVariables.forEach((envVariables) => {
     if (!process.env[envVariables]) {
       throw new Error(
-        `Required environment variable ${envVariables} is not defined`
+        `Required environment variable ${envVariables} is not defined`,
       );
     }
   });
