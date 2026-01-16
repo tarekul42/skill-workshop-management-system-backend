@@ -9,7 +9,7 @@ const globalErrorHandler = (
   _req: Request,
   res: Response,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  next: NextFunction
+  next: NextFunction,
 ) => {
   let statusCode = StatusCodes.INTERNAL_SERVER_ERROR;
   let message = `Something went wrong!!! ${err.message}`;
