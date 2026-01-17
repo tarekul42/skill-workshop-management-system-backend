@@ -1,9 +1,10 @@
 import { StatusCodes } from "http-status-codes";
 import envVariables from "../../config/env";
 import AppError from "../../errorHelpers/AppError";
-import { IAuthProvider, IUser } from "./user.interface";
+import { IAuthProvider, IUser, UserRole } from "./user.interface";
 import User from "./user.model";
 import bcrypt from "bcryptjs";
+import { JwtPayload } from "jsonwebtoken";
 
 const createUser = async (payload: Partial<IUser>) => {
   const { name, email, password, ...rest } = payload;
@@ -29,7 +30,7 @@ const createUser = async (payload: Partial<IUser>) => {
 
   const hashedPassword = await bcrypt.hash(
     password,
-    Number(envVariables.BCRYPT_SALT_ROUND),
+    Number(envVariables.BCRYPT_SALT_ROUND)
   );
 
   const user = await User.create({
@@ -41,6 +42,53 @@ const createUser = async (payload: Partial<IUser>) => {
   });
 
   return user;
+};
+
+const updateUser = async (
+  userId: string,
+  payload: Partial<IUser>,
+  decodedToken: JwtPayload
+) => {
+  const user = await User.findById(userId);
+
+  if (!user) {
+    throw new AppError(StatusCodes.NOT_FOUND, "User not found");
+  }
+
+  if (payload.role) {
+    if (
+      decodedToken.role === UserRole.STUDENT ||
+      decodedToken.role === UserRole.INSTRUCTOR
+    ) {
+      throw new AppError(
+        StatusCodes.FORBIDDEN,
+        "You are not authorized to change role"
+      );
+    }
+    if (
+      payload.role === UserRole.SUPER_ADMIN &&
+      decodedToken.role === UserRole.ADMIN
+    ) {
+      throw new AppError(
+        StatusCodes.FORBIDDEN,
+        "You are not authorized to assign SUPER_ADMIN role"
+      );
+    }
+
+    if (payload.password) {
+      payload.password = await bcrypt.hash(
+        payload.password,
+        envVariables.BCRYPT_SALT_ROUND
+      );
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(userId, payload, {
+      new: true,
+      runValidators: true,
+    });
+
+    return updatedUser;
+  }
 };
 
 const getAllUsers = async () => {
@@ -57,6 +105,7 @@ const getAllUsers = async () => {
 
 const UserServices = {
   createUser,
+  updateUser,
   getAllUsers,
 };
 
