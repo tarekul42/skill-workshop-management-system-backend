@@ -1,9 +1,11 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { StatusCodes } from "http-status-codes";
 import envVariables from "../../config/env";
 import AppError from "../../errorHelpers/AppError";
-import { IAuthProvider, IUser } from "./user.interface";
+import { IAuthProvider, IUser, UserRole } from "./user.interface";
 import User from "./user.model";
 import bcrypt from "bcryptjs";
+import { JwtPayload } from "jsonwebtoken";
 
 const createUser = async (payload: Partial<IUser>) => {
   const { name, email, password, ...rest } = payload;
@@ -43,6 +45,83 @@ const createUser = async (payload: Partial<IUser>) => {
   return user;
 };
 
+const updateUser = async (
+  userId: string,
+  payload: Partial<IUser>,
+  decodedToken: JwtPayload,
+) => {
+  const user = await User.findById(userId);
+
+  if (!user) {
+    throw new AppError(StatusCodes.NOT_FOUND, "User not found");
+  }
+
+  const sanitizedPayload: Partial<IUser> = {};
+
+  if (payload.role) {
+    if (
+      decodedToken.role === UserRole.STUDENT ||
+      decodedToken.role === UserRole.INSTRUCTOR
+    ) {
+      throw new AppError(
+        StatusCodes.FORBIDDEN,
+        "You are not authorized to change role",
+      );
+    }
+    if (
+      payload.role === UserRole.SUPER_ADMIN &&
+      decodedToken.role === UserRole.ADMIN
+    ) {
+      throw new AppError(
+        StatusCodes.FORBIDDEN,
+        "You are not authorized to assign SUPER_ADMIN role",
+      );
+    }
+    sanitizedPayload.role = payload.role;
+  }
+
+  if (payload.password) {
+    sanitizedPayload.password = await bcrypt.hash(
+      payload.password,
+      envVariables.BCRYPT_SALT_ROUND,
+    );
+  }
+
+  const allowedFields = [
+    "name",
+    "password",
+    "phone",
+    "age",
+    "address",
+    "isDeleted",
+    "isActive",
+    "isVerified",
+    "role",
+  ];
+
+  for (const key of Object.keys(payload)) {
+    if (key === "role" || key === "password") continue;
+
+    if (key.startsWith("$")) continue;
+
+    if (allowedFields.includes(key)) {
+      const typedKey = key as keyof IUser;
+      (sanitizedPayload as any)[typedKey] = payload[typedKey];
+    }
+  }
+
+  const updatedUser = await User.findByIdAndUpdate(
+    userId,
+    { $set: sanitizedPayload },
+    {
+      new: true,
+      runValidators: true,
+    },
+  );
+
+  return updatedUser;
+};
+
 const getAllUsers = async () => {
   const users = await User.find({});
   const totalUsers = await User.countDocuments();
@@ -57,6 +136,7 @@ const getAllUsers = async () => {
 
 const UserServices = {
   createUser,
+  updateUser,
   getAllUsers,
 };
 
