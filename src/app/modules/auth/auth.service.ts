@@ -25,7 +25,7 @@ const credentialsLogin = async (payload: Partial<IUser>) => {
 
   const isPasswordMatched = await bcrypt.compare(
     password,
-    isUserExists.password
+    isUserExists.password,
   );
 
   if (!isPasswordMatched) {
@@ -41,10 +41,16 @@ const credentialsLogin = async (payload: Partial<IUser>) => {
   const accessToken = generateToken(
     jwtPayload,
     envVariables.JWT_ACCESS_SECRET,
-    envVariables.JWT_ACCESS_EXPIRES
+    envVariables.JWT_ACCESS_EXPIRES,
   );
 
-  return accessToken;
+  const refreshToken = generateToken(
+    jwtPayload,
+    envVariables.JWT_REFRESH_SECRET,
+    envVariables.JWT_REFRESH_EXPIRES,
+  );
+
+  return { accessToken, refreshToken, user: isUserExists };
 };
 
 const AuthServices = {
