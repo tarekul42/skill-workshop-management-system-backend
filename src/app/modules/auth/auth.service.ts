@@ -3,8 +3,7 @@ import { IUser } from "../user/user.interface";
 import User from "../user/user.model";
 import AppError from "../../errorHelpers/AppError";
 import bcrypt from "bcryptjs";
-import envVariables from "../../config/env";
-import { generateToken } from "../../utils/jwt";
+import createUserTokens from "../../utils/userTokens";
 
 const credentialsLogin = async (payload: Partial<IUser>) => {
   const { email, password } = payload;
@@ -32,25 +31,13 @@ const credentialsLogin = async (payload: Partial<IUser>) => {
     throw new AppError(StatusCodes.BAD_REQUEST, "Password does not match");
   }
 
-  const jwtPayload = {
-    userId: isUserExists._id,
-    email: isUserExists.email,
-    role: isUserExists.role,
+  const userTokens = createUserTokens(isUserExists);
+
+  return {
+    accessToken: userTokens.accessToken,
+    refreshToken: userTokens.refreshToken,
+    user: isUserExists,
   };
-
-  const accessToken = generateToken(
-    jwtPayload,
-    envVariables.JWT_ACCESS_SECRET,
-    envVariables.JWT_ACCESS_EXPIRES,
-  );
-
-  const refreshToken = generateToken(
-    jwtPayload,
-    envVariables.JWT_REFRESH_SECRET,
-    envVariables.JWT_REFRESH_EXPIRES,
-  );
-
-  return { accessToken, refreshToken, user: isUserExists };
 };
 
 const AuthServices = {
