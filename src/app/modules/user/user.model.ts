@@ -38,6 +38,12 @@ const userSchema = new Schema<IUser>(
   {
     timestamps: true,
     versionKey: false,
+    toJSON: {
+      transform: (_doc, ret) => {
+        delete ret.password; // Removes password from the response object
+        return ret;
+      },
+    },
   },
 );
 

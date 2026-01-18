@@ -83,7 +83,7 @@ const updateUser = async (
   if (payload.password) {
     sanitizedPayload.password = await bcrypt.hash(
       payload.password,
-      envVariables.BCRYPT_SALT_ROUND,
+      Number(envVariables.BCRYPT_SALT_ROUND),
     );
   }
 
