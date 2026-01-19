@@ -3,7 +3,7 @@ import { IUser } from "../user/user.interface";
 import User from "../user/user.model";
 import AppError from "../../errorHelpers/AppError";
 import bcrypt from "bcryptjs";
-import createUserTokens from "../../utils/userTokens";
+import { createNewAccessToken, createUserTokens } from "../../utils/userTokens";
 
 const credentialsLogin = async (payload: Partial<IUser>) => {
   const { email, password } = payload;
@@ -40,8 +40,16 @@ const credentialsLogin = async (payload: Partial<IUser>) => {
   };
 };
 
+const getNewAccessToken = async (refreshToken: string) => {
+  const newAccessToken = await createNewAccessToken(refreshToken);
+  return {
+    accessToken: newAccessToken,
+  };
+};
+
 const AuthServices = {
   credentialsLogin,
+  getNewAccessToken,
 };
 
 export default AuthServices;

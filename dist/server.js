@@ -7,6 +7,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importDefault(require("mongoose"));
 const app_1 = __importDefault(require("./app"));
 const env_1 = __importDefault(require("./app/config/env"));
+const seedSuperAdmin_1 = __importDefault(require("./app/utils/seedSuperAdmin"));
 let server;
 const startServer = async () => {
     try {
@@ -24,6 +25,7 @@ const startServer = async () => {
 };
 (async () => {
     await startServer();
+    await (0, seedSuperAdmin_1.default)();
 })();
 process.on("unhandledRejection", (error) => {
     console.error("Unhandled Rejection Detected. Server shutting down.\n", error);
@@ -61,4 +63,3 @@ process.on("SIGINT", () => {
     }
     process.exit(1);
 });
-//# sourceMappingURL=server.js.map

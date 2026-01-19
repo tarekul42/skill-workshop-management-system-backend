@@ -6,4 +6,3 @@ const catchAsync = (fn) => (req, res, next) => {
     });
 };
 exports.default = catchAsync;
-//# sourceMappingURL=catchAsync.js.map

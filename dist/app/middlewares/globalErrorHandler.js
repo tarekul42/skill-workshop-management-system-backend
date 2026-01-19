@@ -29,4 +29,3 @@ next) => {
     });
 };
 exports.default = globalErrorHandler;
-//# sourceMappingURL=globalErrorHandler.js.map
