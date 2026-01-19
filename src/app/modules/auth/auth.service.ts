@@ -41,6 +41,10 @@ const credentialsLogin = async (payload: Partial<IUser>) => {
 };
 
 const getNewAccessToken = async (refreshToken: string) => {
+  if (!refreshToken) {
+    throw new AppError(StatusCodes.BAD_REQUEST, "No refresh token found");
+  }
+
   const newAccessToken = await createNewAccessToken(refreshToken);
   return {
     accessToken: newAccessToken,
