@@ -38,9 +38,31 @@ const getNewAccessToken = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const logout = catchAsync(async (req: Request, res: Response) => {
+  res.clearCookie("accessToken", {
+    httpOnly: true,
+    secure: false,
+    sameSite: "lax",
+  });
+
+  res.clearCookie("refreshToken", {
+    httpOnly: true,
+    secure: false,
+    sameSite: "lax",
+  });
+
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: "Logout successful",
+    data: null,
+  });
+});
+
 const AuthControllers = {
   creadentialsLogin,
   getNewAccessToken,
+  logout,
 };
 
 export default AuthControllers;
