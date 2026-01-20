@@ -4,6 +4,8 @@ import User from "../user/user.model";
 import AppError from "../../errorHelpers/AppError";
 import bcrypt from "bcryptjs";
 import { createNewAccessToken, createUserTokens } from "../../utils/userTokens";
+import { JwtPayload } from "jsonwebtoken";
+import envVariables from "../../config/env";
 
 const credentialsLogin = async (payload: Partial<IUser>) => {
   const { email, password } = payload;
@@ -51,9 +53,45 @@ const getNewAccessToken = async (refreshToken: string) => {
   };
 };
 
+const resetPassword = async (
+  oldPassword: string,
+  newPassword: string,
+  decodedToken: JwtPayload,
+) => {
+  const user = await User.findById(decodedToken.userId);
+
+  if (!user) {
+    throw new AppError(StatusCodes.NOT_FOUND, "User not found");
+  }
+
+  if (oldPassword === newPassword) {
+    throw new AppError(
+      StatusCodes.BAD_REQUEST,
+      "New password cannot be the same as the old password",
+    );
+  }
+
+  const isOldPasswordMatched = await bcrypt.compare(
+    oldPassword,
+    user.password as string,
+  );
+
+  if (!isOldPasswordMatched) {
+    throw new AppError(StatusCodes.BAD_REQUEST, "Old password does not match");
+  }
+
+  user.password = await bcrypt.hash(
+    newPassword,
+    Number(envVariables.BCRYPT_SALT_ROUND),
+  );
+
+  user.save();
+};
+
 const AuthServices = {
   credentialsLogin,
   getNewAccessToken,
+  resetPassword,
 };
 
 export default AuthServices;

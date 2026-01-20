@@ -4,6 +4,8 @@ import { StatusCodes } from "http-status-codes";
 import { verifyToken } from "../utils/jwt";
 import envVariables from "../config/env";
 import { JwtPayload } from "jsonwebtoken";
+import User from "../modules/user/user.model";
+import { IsActive } from "../modules/user/user.interface";
 
 const checkAuth =
   (...authRoles: string[]) =>
@@ -24,6 +26,26 @@ const checkAuth =
         throw new AppError(StatusCodes.FORBIDDEN, "Invalid access token");
       }
 
+      const isUserExists = await User.findOne({ email: verifiedToken.email });
+
+      if (!isUserExists) {
+        throw new AppError(StatusCodes.BAD_REQUEST, "User does not exist");
+      }
+
+      if (
+        isUserExists.isActive === IsActive.INACTIVE ||
+        isUserExists.isActive === IsActive.BLOCKED
+      ) {
+        throw new AppError(
+          StatusCodes.FORBIDDEN,
+          `User is ${isUserExists.isActive.toLowerCase()}.`,
+        );
+      }
+
+      if (isUserExists.isDeleted) {
+        throw new AppError(StatusCodes.BAD_REQUEST, "User is deleted");
+      }
+
       if (!authRoles.includes(verifiedToken.role)) {
         throw new AppError(StatusCodes.FORBIDDEN, "Access denied");
       }
@@ -35,4 +57,5 @@ const checkAuth =
       next(err);
     }
   };
+
 export default checkAuth;
