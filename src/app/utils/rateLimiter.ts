@@ -1,26 +1,33 @@
 import { rateLimit } from "express-rate-limit";
 
-const loginRateLimiter = rateLimit({
+const generalLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000,
+  max: 60,
+  message: {
+    status: 429,
+    message: "Too many requests, please try again later.",
+  },
+});
+
+const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10,
+  message: {
+    status: 429,
+    message: "Too many attempts, please try again later.",
+  },
+});
+
+const strictLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  message: {
+    status: 429,
+    message:
+      "Too many attempts on this sensitive operation, please try again later.",
+  },
   standardHeaders: true,
   legacyHeaders: false,
 });
 
-const userListRateLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
-});
-
-const userUpdateRateLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 20, // Limit each IP to 20 requests per windowMs
-  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
-  legacyHeaders: false,
-  message: {
-    status: 429,
-    message: "Too many update attempts from this IP, please try again later.",
-  },
-});
-
-export { loginRateLimiter, userListRateLimiter, userUpdateRateLimiter };
+export { generalLimiter, authLimiter, strictLimiter };

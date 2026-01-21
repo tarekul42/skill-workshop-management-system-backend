@@ -33,7 +33,12 @@ const userSchema = new mongoose_1.Schema({
 }, {
     timestamps: true,
     versionKey: false,
+    toJSON: {
+        transform: (_doc, ret) => {
+            delete ret.password; // Removes password from the response object
+            return ret;
+        },
+    },
 });
 const User = (0, mongoose_1.model)("User", userSchema);
 exports.default = User;
-//# sourceMappingURL=user.model.js.map

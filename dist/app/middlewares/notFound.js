@@ -8,4 +8,3 @@ const notFound = (_req, res) => {
     });
 };
 exports.default = notFound;
-//# sourceMappingURL=notFound.js.map

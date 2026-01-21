@@ -14,4 +14,3 @@ var IsActive;
     IsActive["INACTIVE"] = "INACTIVE";
     IsActive["BLOCKED"] = "BLOCKED";
 })(IsActive || (exports.IsActive = IsActive = {}));
-//# sourceMappingURL=user.interface.js.map
