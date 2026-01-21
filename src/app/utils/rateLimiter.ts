@@ -18,4 +18,16 @@ const authLimiter = rateLimit({
   },
 });
 
-export { generalLimiter, authLimiter };
+const strictLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  message: {
+    status: 429,
+    message:
+      "Too many attempts on this sensitive operation, please try again later.",
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+export { generalLimiter, authLimiter, strictLimiter };
