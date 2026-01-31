@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.authLimiter = exports.generalLimiter = void 0;
+exports.strictLimiter = exports.authLimiter = exports.generalLimiter = void 0;
 const express_rate_limit_1 = require("express-rate-limit");
 const generalLimiter = (0, express_rate_limit_1.rateLimit)({
     windowMs: 1 * 60 * 1000,
@@ -20,3 +20,14 @@ const authLimiter = (0, express_rate_limit_1.rateLimit)({
     },
 });
 exports.authLimiter = authLimiter;
+const strictLimiter = (0, express_rate_limit_1.rateLimit)({
+    windowMs: 15 * 60 * 1000,
+    max: 5,
+    message: {
+        status: 429,
+        message: "Too many attempts on this sensitive operation, please try again later.",
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+exports.strictLimiter = strictLimiter;

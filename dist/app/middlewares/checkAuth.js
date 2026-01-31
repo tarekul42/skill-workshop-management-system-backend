@@ -7,6 +7,8 @@ const AppError_1 = __importDefault(require("../errorHelpers/AppError"));
 const http_status_codes_1 = require("http-status-codes");
 const jwt_1 = require("../utils/jwt");
 const env_1 = __importDefault(require("../config/env"));
+const user_model_1 = __importDefault(require("../modules/user/user.model"));
+const user_interface_1 = require("../modules/user/user.interface");
 const checkAuth = (...authRoles) => async (req, _res, next) => {
     try {
         const accessToken = req.headers.authorization;
@@ -16,6 +18,17 @@ const checkAuth = (...authRoles) => async (req, _res, next) => {
         const verifiedToken = (0, jwt_1.verifyToken)(accessToken, env_1.default.JWT_ACCESS_SECRET);
         if (!verifiedToken) {
             throw new AppError_1.default(http_status_codes_1.StatusCodes.FORBIDDEN, "Invalid access token");
+        }
+        const isUserExists = await user_model_1.default.findOne({ email: verifiedToken.email });
+        if (!isUserExists) {
+            throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "User does not exist");
+        }
+        if (isUserExists.isActive === user_interface_1.IsActive.INACTIVE ||
+            isUserExists.isActive === user_interface_1.IsActive.BLOCKED) {
+            throw new AppError_1.default(http_status_codes_1.StatusCodes.FORBIDDEN, `User is ${isUserExists.isActive.toLowerCase()}.`);
+        }
+        if (isUserExists.isDeleted) {
+            throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "User is deleted");
         }
         if (!authRoles.includes(verifiedToken.role)) {
             throw new AppError_1.default(http_status_codes_1.StatusCodes.FORBIDDEN, "Access denied");
