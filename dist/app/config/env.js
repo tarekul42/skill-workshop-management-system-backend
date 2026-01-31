@@ -17,6 +17,11 @@ const loadEnvVariables = () => {
         "JWT_REFRESH_EXPIRES",
         "SUPER_ADMIN_EMAIL",
         "SUPER_ADMIN_PASSWORD",
+        "GOOGLE_CLIENT_ID",
+        "GOOGLE_CLIENT_SECRET",
+        "GOOGLE_CALLBACK_URL",
+        "EXPRESS_SESSION_SECRET",
+        "FRONTEND_URL",
     ];
     requiredEnvVariables.forEach((envVariables) => {
         if (!process.env[envVariables]) {
@@ -34,6 +39,11 @@ const loadEnvVariables = () => {
         JWT_REFRESH_EXPIRES: process.env.JWT_REFRESH_EXPIRES,
         SUPER_ADMIN_EMAIL: process.env.SUPER_ADMIN_EMAIL,
         SUPER_ADMIN_PASSWORD: process.env.SUPER_ADMIN_PASSWORD,
+        GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
+        GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
+        GOOGLE_CALLBACK_URL: process.env.GOOGLE_CALLBACK_URL,
+        EXPRESS_SESSION_SECRET: process.env.EXPRESS_SESSION_SECRET,
+        FRONTEND_URL: process.env.FRONTEND_URL,
     };
 };
 const envVariables = loadEnvVariables();

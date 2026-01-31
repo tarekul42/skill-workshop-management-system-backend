@@ -3,8 +3,7 @@ import { JwtPayload } from "jsonwebtoken";
 
 declare global {
   namespace Express {
-    interface Request {
-      user?: JwtPayload;
-    }
+    // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+    interface User extends JwtPayload { }
   }
 }
