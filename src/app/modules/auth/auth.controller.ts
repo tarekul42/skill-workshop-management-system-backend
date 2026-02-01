@@ -6,8 +6,11 @@ import { StatusCodes } from "http-status-codes";
 import AppError from "../../errorHelpers/AppError";
 import setAuthCookie from "../../utils/setCookie";
 import { JwtPayload } from "jsonwebtoken";
+import { createUserTokens } from "../../utils/userTokens";
+import envVariables from "../../config/env";
+import { IUser } from "../user/user.interface";
 
-const creadentialsLogin = catchAsync(async (req: Request, res: Response) => {
+const credentialsLogin = catchAsync(async (req: Request, res: Response) => {
   const loginInfo = await AuthServices.credentialsLogin(req.body);
 
   setAuthCookie(res, loginInfo);
@@ -75,11 +78,36 @@ const resetPassword = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const googleCallback = catchAsync(async (req: Request, res: Response) => {
+  const stateParam = req.query.state;
+  let redirectTo = "";
+
+  if (typeof stateParam === "string") {
+    redirectTo = stateParam;
+  }
+
+  if (redirectTo.startsWith("/")) {
+    redirectTo = redirectTo.slice(1);
+  }
+
+  const user = req.user as unknown as Partial<IUser>;
+
+  if (!user) {
+    throw new AppError(StatusCodes.NOT_FOUND, "User Not Found");
+  }
+
+  const tokenInfo = createUserTokens(user);
+
+  setAuthCookie(res, tokenInfo);
+  res.redirect(`${envVariables.FRONTEND_URL}/${redirectTo}`);
+});
+
 const AuthControllers = {
-  creadentialsLogin,
+  credentialsLogin,
   getNewAccessToken,
   logout,
   resetPassword,
+  googleCallback,
 };
 
 export default AuthControllers;

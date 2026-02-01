@@ -40,7 +40,6 @@ passport_1.default.use(new passport_google_oauth20_1.Strategy({
     }
     try {
         // CHECK IF USER EXISTS
-        // Since we don't have 'googleId' in your interface, we find user by email.
         const existingUser = await user_model_1.default.findOne({ email });
         if (existingUser) {
             // OPTIONAL: Update picture or name if they changed on Google
@@ -50,24 +49,19 @@ passport_1.default.use(new passport_google_oauth20_1.Strategy({
             return done(null, existingUser);
         }
         // CREATE NEW USER IF NOT FOUND
-        // We need to provide required fields from your Interface.
-        // I'm setting default values for 'role' and 'auths'. Adjust as needed.
         const newUser = await user_model_1.default.create({
             email: email,
             name: name,
             picture: picture,
             // Google accounts are usually verified
             isVerified: true,
-            // You must set a default role that fits your UserRole enum
             role: user_interface_1.UserRole.STUDENT,
-            // Initialize empty auths array
             auths: [
                 {
                     provider: "google",
                     providerId: profile.id,
                 },
             ],
-            // Set other defaults if your schema requires them
             isActive: user_interface_1.IsActive.ACTIVE,
         });
         return done(null, newUser);

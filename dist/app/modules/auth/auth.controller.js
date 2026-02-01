@@ -9,6 +9,8 @@ const sendResponse_1 = __importDefault(require("../../utils/sendResponse"));
 const http_status_codes_1 = require("http-status-codes");
 const AppError_1 = __importDefault(require("../../errorHelpers/AppError"));
 const setCookie_1 = __importDefault(require("../../utils/setCookie"));
+const userTokens_1 = require("../../utils/userTokens");
+const env_1 = __importDefault(require("../../config/env"));
 const creadentialsLogin = (0, catchAsync_1.default)(async (req, res) => {
     const loginInfo = await auth_service_1.default.credentialsLogin(req.body);
     (0, setCookie_1.default)(res, loginInfo);
@@ -63,10 +65,24 @@ const resetPassword = (0, catchAsync_1.default)(async (req, res) => {
         data: null,
     });
 });
+const googleCallback = (0, catchAsync_1.default)(async (req, res) => {
+    let redirectTo = req.query.state ? req.query.state : "";
+    if (redirectTo.startsWith("/")) {
+        redirectTo = redirectTo.slice(1);
+    }
+    const user = req.user;
+    if (!user) {
+        throw new AppError_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "User Not Found");
+    }
+    const tokenInfo = (0, userTokens_1.createUserTokens)(user);
+    (0, setCookie_1.default)(res, tokenInfo);
+    res.redirect(`${env_1.default.FRONTEND_URL}/${redirectTo}`);
+});
 const AuthControllers = {
     creadentialsLogin,
     getNewAccessToken,
     logout,
     resetPassword,
+    googleCallback,
 };
 exports.default = AuthControllers;
