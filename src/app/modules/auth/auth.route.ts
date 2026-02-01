@@ -19,6 +19,7 @@ router.post(
 
 router.get(
   "/google",
+  authLimiter,
   async (req: Request, res: Response, next: NextFunction) => {
     const redirect = req.query.redirect || "/";
     passport.authenticate("google", {
@@ -30,6 +31,7 @@ router.get(
 
 router.get(
   "/google/callback",
+  authLimiter,
   passport.authenticate("google", { failureRedirect: "/login" }),
   AuthControllers.googleCallback,
 );
