@@ -10,7 +10,7 @@ import { createUserTokens } from "../../utils/userTokens";
 import envVariables from "../../config/env";
 import { IUser } from "../user/user.interface";
 
-const creadentialsLogin = catchAsync(async (req: Request, res: Response) => {
+const credentialsLogin = catchAsync(async (req: Request, res: Response) => {
   const loginInfo = await AuthServices.credentialsLogin(req.body);
 
   setAuthCookie(res, loginInfo);
@@ -98,7 +98,7 @@ const googleCallback = catchAsync(async (req: Request, res: Response) => {
 });
 
 const AuthControllers = {
-  creadentialsLogin,
+  credentialsLogin,
   getNewAccessToken,
   logout,
   resetPassword,

@@ -7,7 +7,7 @@ import passport from "passport";
 
 const router = Router();
 
-router.post("/login", authLimiter, AuthControllers.creadentialsLogin);
+router.post("/login", authLimiter, AuthControllers.credentialsLogin);
 router.post("/refresh-token", authLimiter, AuthControllers.getNewAccessToken);
 router.post("/logout", authLimiter, AuthControllers.logout);
 router.post(
