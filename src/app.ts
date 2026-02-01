@@ -5,12 +5,25 @@ import router from "./app/route";
 import globalErrorHandler from "./app/middlewares/globalErrorHandler";
 import notFound from "./app/middlewares/notFound";
 import { generalLimiter } from "./app/utils/rateLimiter";
+import expressSession from "express-session";
+import envVariables from "./app/config/env";
+import passport from "passport";
+import "./app/config/passport";
 
 const app = express();
 
+app.use(
+  expressSession({
+    secret: envVariables.EXPRESS_SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+  }),
+);
+app.use(passport.initialize());
+app.use(passport.session());
+app.use(cookieParser());
 app.use(express.json());
 app.use(cors());
-app.use(cookieParser());
 
 app.use("/api/v1", generalLimiter, router);
 

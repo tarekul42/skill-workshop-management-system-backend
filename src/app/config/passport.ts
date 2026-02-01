@@ -51,7 +51,6 @@ passport.use(
 
       try {
         // CHECK IF USER EXISTS
-        // Since we don't have 'googleId' in your interface, we find user by email.
         const existingUser = await User.findOne({ email });
 
         if (existingUser) {
@@ -64,24 +63,19 @@ passport.use(
         }
 
         // CREATE NEW USER IF NOT FOUND
-        // We need to provide required fields from your Interface.
-        // I'm setting default values for 'role' and 'auths'. Adjust as needed.
         const newUser = await User.create({
           email: email,
           name: name,
           picture: picture,
           // Google accounts are usually verified
           isVerified: true,
-          // You must set a default role that fits your UserRole enum
           role: UserRole.STUDENT,
-          // Initialize empty auths array
           auths: [
             {
               provider: "google",
               providerId: profile.id,
             },
           ],
-          // Set other defaults if your schema requires them
           isActive: IsActive.ACTIVE,
         });
 
