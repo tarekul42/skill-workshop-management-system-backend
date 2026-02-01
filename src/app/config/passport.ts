@@ -4,9 +4,11 @@ import {
   Profile,
   VerifyCallback,
 } from "passport-google-oauth20";
+import { Strategy as LocalStrategy } from "passport-local";
 import User from "../modules/user/user.model";
 import { IsActive, UserRole } from "../modules/user/user.interface";
 import envVariables from "./env";
+import bcrypt from "bcryptjs";
 
 // 1. SERIALIZATION
 // We store the MongoDB _id in the session
@@ -82,6 +84,46 @@ passport.use(
         return done(null, newUser);
       } catch (error) {
         return done(error, undefined);
+      }
+    },
+  ),
+);
+
+// 4. LOCAL STRATEGY
+passport.use(
+  new LocalStrategy(
+    {
+      usernameField: "email",
+      passwordField: "password",
+    },
+    async (email: string, password: string, done) => {
+      try {
+        const isUserExists = await User.findOne({ email });
+
+        if (!isUserExists) {
+          return done("User does not exist.");
+        }
+
+        const isGoogleAuthenticated = isUserExists.auths.some(
+          (providerObject) => providerObject.provider === "google",
+        );
+
+        if (isGoogleAuthenticated && !isUserExists.password) {
+          return done(null, false, {
+            message:
+              "You have authenticated through Google. So if you want to login with credentials, then at first login with google and set a password for your Gmail and then you can login with email and password.",
+          });
+        }
+
+        const isPasswordMatched = await bcrypt.compare(password as string, isUserExists.password as string)
+
+        if (!isPasswordMatched) {
+          return done(null, false, { message: "Password does not match" })
+        }
+
+        return done(null, isUserExists)
+      } catch (error) {
+        done(error);
       }
     },
   ),
