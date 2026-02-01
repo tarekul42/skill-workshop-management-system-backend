@@ -12,11 +12,17 @@ import "./app/config/passport";
 
 const app = express();
 
+app.set("trust proxy", 1);
+
 app.use(
   expressSession({
     secret: envVariables.EXPRESS_SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
+    cookie: {
+      secure: true,
+      httpOnly: true,
+    },
   }),
 );
 app.use(passport.initialize());
