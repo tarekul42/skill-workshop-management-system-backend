@@ -5,9 +5,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const passport_1 = __importDefault(require("passport"));
 const passport_google_oauth20_1 = require("passport-google-oauth20");
+const passport_local_1 = require("passport-local");
 const user_model_1 = __importDefault(require("../modules/user/user.model"));
 const user_interface_1 = require("../modules/user/user.interface");
 const env_1 = __importDefault(require("./env"));
+const bcryptjs_1 = __importDefault(require("bcryptjs"));
 // 1. SERIALIZATION
 // We store the MongoDB _id in the session
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -68,6 +70,32 @@ passport_1.default.use(new passport_google_oauth20_1.Strategy({
     }
     catch (error) {
         return done(error, undefined);
+    }
+}));
+// 4. LOCAL STRATEGY
+passport_1.default.use(new passport_local_1.Strategy({
+    usernameField: "email",
+    passwordField: "password",
+}, async (email, password, done) => {
+    try {
+        const isUserExists = await user_model_1.default.findOne({ email });
+        if (!isUserExists) {
+            return done("User does not exist.");
+        }
+        const isGoogleAuthenticated = isUserExists.auths.some((providerObject) => providerObject.provider === "google");
+        if (isGoogleAuthenticated && !isUserExists.password) {
+            return done(null, false, {
+                message: "You have authenticated through Google. So if you want to login with credentials, then at first login with google and set a password for your Gmail and then you can login with email and password.",
+            });
+        }
+        const isPasswordMatched = await bcryptjs_1.default.compare(password, isUserExists.password);
+        if (!isPasswordMatched) {
+            return done(null, false, { message: "Password does not match" });
+        }
+        return done(null, isUserExists);
+    }
+    catch (error) {
+        done(error);
     }
 }));
 exports.default = passport_1.default;

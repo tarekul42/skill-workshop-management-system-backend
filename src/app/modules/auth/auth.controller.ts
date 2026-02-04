@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import catchAsync from "../../utils/catchAsync";
 import AuthServices from "./auth.service";
 import sendResponse from "../../utils/sendResponse";
@@ -9,19 +9,56 @@ import { JwtPayload } from "jsonwebtoken";
 import { createUserTokens } from "../../utils/userTokens";
 import envVariables from "../../config/env";
 import { IUser } from "../user/user.interface";
+import passport from "passport";
 
-const credentialsLogin = catchAsync(async (req: Request, res: Response) => {
-  const loginInfo = await AuthServices.credentialsLogin(req.body);
+type TPassportError = Error | null;
 
-  setAuthCookie(res, loginInfo);
+interface IAuthInfo {
+  message: string;
+}
 
-  sendResponse(res, {
-    statusCode: StatusCodes.OK,
-    success: true,
-    message: "Login successful",
-    data: loginInfo,
-  });
-});
+const credentialsLogin = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    passport.authenticate(
+      "local",
+      { session: false },
+      async (err: TPassportError, user: IUser, info: IAuthInfo) => {
+        if (err) {
+          return next(
+            new AppError(
+              StatusCodes.INTERNAL_SERVER_ERROR,
+              "Something went wrong during authentication.",
+            ),
+          );
+        }
+
+        if (!user) {
+          return next(
+            new AppError(
+              StatusCodes.UNAUTHORIZED,
+              info?.message || "Incorrect email or password",
+            ),
+          );
+        }
+
+        const userTokens = createUserTokens(user);
+
+        setAuthCookie(res, userTokens);
+
+        sendResponse(res, {
+          statusCode: StatusCodes.OK,
+          success: true,
+          message: "User logged in successfully",
+          data: {
+            accessToken: userTokens.accessToken,
+            refreshToken: userTokens.refreshToken,
+            user,
+          },
+        });
+      },
+    )(req, res, next);
+  },
+);
 
 const getNewAccessToken = catchAsync(async (req: Request, res: Response) => {
   const refreshToken = req.cookies.refreshToken;
@@ -83,11 +120,17 @@ const googleCallback = catchAsync(async (req: Request, res: Response) => {
   let redirectTo = "";
 
   if (typeof stateParam === "string") {
-    redirectTo = stateParam;
-  }
+    // Only allow relative paths that don't start with protocol or double slashes
+    const sanitized = stateParam.replace(/^\/+/, "");
 
-  if (redirectTo.startsWith("/")) {
-    redirectTo = redirectTo.slice(1);
+    // Reject if it looks like an absolute URL or protocol-relative URL
+    if (
+      !sanitized.includes("://") &&
+      !sanitized.startsWith("//") &&
+      !/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(sanitized)
+    ) {
+      redirectTo = sanitized;
+    }
   }
 
   const user = req.user as unknown as Partial<IUser>;

@@ -11,15 +11,28 @@ const AppError_1 = __importDefault(require("../../errorHelpers/AppError"));
 const setCookie_1 = __importDefault(require("../../utils/setCookie"));
 const userTokens_1 = require("../../utils/userTokens");
 const env_1 = __importDefault(require("../../config/env"));
-const creadentialsLogin = (0, catchAsync_1.default)(async (req, res) => {
-    const loginInfo = await auth_service_1.default.credentialsLogin(req.body);
-    (0, setCookie_1.default)(res, loginInfo);
-    (0, sendResponse_1.default)(res, {
-        statusCode: http_status_codes_1.StatusCodes.OK,
-        success: true,
-        message: "Login successful",
-        data: loginInfo,
-    });
+const passport_1 = __importDefault(require("passport"));
+const credentialsLogin = (0, catchAsync_1.default)(async (req, res, next) => {
+    passport_1.default.authenticate("local", { session: false }, async (err, user, info) => {
+        if (err) {
+            return next(new AppError_1.default(http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR, "Something went wrong during authentication."));
+        }
+        if (!user) {
+            return next(new AppError_1.default(http_status_codes_1.StatusCodes.UNAUTHORIZED, info?.message || "Incorrect email or password"));
+        }
+        const userTokens = (0, userTokens_1.createUserTokens)(user);
+        (0, setCookie_1.default)(res, userTokens);
+        (0, sendResponse_1.default)(res, {
+            statusCode: http_status_codes_1.StatusCodes.OK,
+            success: true,
+            message: "User logged in successfully",
+            data: {
+                accessToken: userTokens.accessToken,
+                refreshToken: userTokens.refreshToken,
+                user,
+            },
+        });
+    })(req, res, next);
 });
 const getNewAccessToken = (0, catchAsync_1.default)(async (req, res) => {
     const refreshToken = req.cookies.refreshToken;
@@ -66,7 +79,11 @@ const resetPassword = (0, catchAsync_1.default)(async (req, res) => {
     });
 });
 const googleCallback = (0, catchAsync_1.default)(async (req, res) => {
-    let redirectTo = req.query.state ? req.query.state : "";
+    const stateParam = req.query.state;
+    let redirectTo = "";
+    if (typeof stateParam === "string") {
+        redirectTo = stateParam;
+    }
     if (redirectTo.startsWith("/")) {
         redirectTo = redirectTo.slice(1);
     }
@@ -79,7 +96,7 @@ const googleCallback = (0, catchAsync_1.default)(async (req, res) => {
     res.redirect(`${env_1.default.FRONTEND_URL}/${redirectTo}`);
 });
 const AuthControllers = {
-    creadentialsLogin,
+    credentialsLogin,
     getNewAccessToken,
     logout,
     resetPassword,
