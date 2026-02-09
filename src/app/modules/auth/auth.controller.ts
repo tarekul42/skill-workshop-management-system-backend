@@ -120,13 +120,12 @@ const googleCallback = catchAsync(async (req: Request, res: Response) => {
   let redirectTo = "";
 
   if (typeof stateParam === "string") {
-    // Only allow relative paths that don't start with protocol or double slashes
-    const sanitized = stateParam.replace(/^\/+/, "");
+    // Normalize backslashes and strip leading slashes for relative path
+    const sanitized = stateParam.replace(/\\/g, "/").replace(/^\/+/, "");
 
-    // Reject if it looks like an absolute URL or protocol-relative URL
+    // Reject if it looks like an absolute URL (contains protocol)
     if (
       !sanitized.includes("://") &&
-      !sanitized.startsWith("//") &&
       !/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(sanitized)
     ) {
       redirectTo = sanitized;
