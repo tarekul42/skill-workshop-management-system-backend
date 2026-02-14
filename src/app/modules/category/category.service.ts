@@ -4,13 +4,23 @@ import { ICategory } from "./category.interface";
 import { Category } from "./category.model";
 
 const createCategory = async (payload: ICategory) => {
-  const existingCategory = await Category.findOne({ name: payload.name });
+  if (typeof payload.name !== "string") {
+    throw new AppError(StatusCodes.BAD_REQUEST, "Invalid category name");
+  }
+
+  const existingCategory = await Category.findOne({
+    name: { $eq: payload.name },
+  });
 
   if (existingCategory) {
     throw new AppError(
       StatusCodes.BAD_REQUEST,
       "A Category with this name already exists",
     );
+  }
+
+  if (payload.name !== undefined && typeof payload.name !== "string") {
+    throw new AppError(StatusCodes.BAD_REQUEST, "Invalid category name");
   }
 
   const category = await Category.create(payload);
@@ -37,6 +47,10 @@ const getSingleCategory = async (slug: string) => {
 };
 
 const updateCategory = async (id: string, payload: Partial<ICategory>) => {
+  if (payload.name !== undefined && typeof payload.name !== "string") {
+    throw new AppError(StatusCodes.BAD_REQUEST, "Invalid category name");
+  }
+
   const existingCategory = await Category.findById(id);
 
   if (!existingCategory) {
@@ -44,7 +58,7 @@ const updateCategory = async (id: string, payload: Partial<ICategory>) => {
   }
 
   const duplicateCategory = await Category.findOne({
-    name: payload.name,
+    name: payload.name !== undefined ? { $eq: payload.name } : undefined,
     _id: { $ne: id },
   });
 
