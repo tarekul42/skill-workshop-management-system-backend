@@ -69,7 +69,13 @@ const updateCategory = async (id: string, payload: Partial<ICategory>) => {
     );
   }
 
-  const updatedCategory = await Category.findByIdAndUpdate(id, payload, {
+  const updateData: Partial<ICategory> = {};
+
+  if (payload.name !== undefined) {
+    updateData.name = payload.name;
+  }
+
+  const updatedCategory = await Category.findByIdAndUpdate(id, updateData, {
     new: true,
     runValidators: true,
   });
