@@ -72,7 +72,7 @@ const updateCategory = async (id: string, payload: Partial<ICategory>) => {
   // 2. Duplicate Check: Only run if name is being updated.
   if (payloadName) {
     const duplicateCategory = await Category.findOne({
-      name: payloadName,
+      name: { $eq: payloadName },
       _id: { $ne: id },
     });
 
