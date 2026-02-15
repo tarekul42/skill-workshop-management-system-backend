@@ -47,38 +47,76 @@ const getSingleCategory = async (slug: string) => {
 };
 
 const updateCategory = async (id: string, payload: Partial<ICategory>) => {
-  if (payload.name !== undefined && typeof payload.name !== "string") {
-    throw new AppError(StatusCodes.BAD_REQUEST, "Invalid category name");
+  // 1. Validation: Name specific checks
+  // We copy to a local variable to handle trimming without mutating the original payload
+  let payloadName = payload.name;
+
+  if (payloadName !== undefined) {
+    if (typeof payloadName !== "string") {
+      throw new AppError(StatusCodes.BAD_REQUEST, "Invalid category name");
+    }
+
+    const trimmedName = payloadName.trim();
+
+    if (trimmedName.length === 0) {
+      throw new AppError(
+        StatusCodes.BAD_REQUEST,
+        "Category name cannot be empty",
+      );
+    }
+
+    // Update our local variable to the clean version
+    payloadName = trimmedName;
   }
 
-  const existingCategory = await Category.findById(id);
+  // 2. Duplicate Check: Only run if name is being updated.
+  if (payloadName) {
+    const duplicateCategory = await Category.findOne({
+      name: payloadName,
+      _id: { $ne: id },
+    });
 
-  if (!existingCategory) {
-    throw new AppError(StatusCodes.NOT_FOUND, "Category not found");
+    if (duplicateCategory) {
+      throw new AppError(
+        StatusCodes.BAD_REQUEST,
+        "A Category with this name already exists",
+      );
+    }
   }
 
-  const duplicateCategory = await Category.findOne({
-    name: payload.name !== undefined ? { $eq: payload.name } : undefined,
-    _id: { $ne: id },
-  });
-
-  if (duplicateCategory) {
-    throw new AppError(
-      StatusCodes.BAD_REQUEST,
-      "A Category with this name already exists",
-    );
-  }
-
+  // 3. Prepare update data
   const updateData: Partial<ICategory> = {};
 
-  if (payload.name !== undefined) {
-    updateData.name = payload.name;
+  if (payloadName !== undefined) {
+    updateData.name = payloadName;
+    // Robust slug generation
+    updateData.slug = payloadName
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "");
   }
 
-  const updatedCategory = await Category.findByIdAndUpdate(id, updateData, {
-    new: true,
-    runValidators: true,
-  });
+  if (payload.thumbnail !== undefined) {
+    updateData.thumbnail = payload.thumbnail;
+  }
+
+  if (payload.description !== undefined) {
+    updateData.description = payload.description;
+  }
+
+  // 4. Update & existence check in one go
+  const updatedCategory = await Category.findByIdAndUpdate(
+    id,
+    { $set: updateData },
+    {
+      new: true,
+      runValidators: true,
+    },
+  );
+
+  if (!updatedCategory) {
+    throw new AppError(StatusCodes.NOT_FOUND, "Category not found");
+  }
 
   return updatedCategory;
 };
