@@ -48,7 +48,7 @@ const getNewAccessToken = (0, catchAsync_1.default)(async (req, res) => {
         data: tokenInfo,
     });
 });
-const logout = (0, catchAsync_1.default)(async (req, res) => {
+const logout = (0, catchAsync_1.default)(async (_req, res) => {
     res.clearCookie("accessToken", {
         httpOnly: true,
         secure: false,
@@ -82,10 +82,13 @@ const googleCallback = (0, catchAsync_1.default)(async (req, res) => {
     const stateParam = req.query.state;
     let redirectTo = "";
     if (typeof stateParam === "string") {
-        redirectTo = stateParam;
-    }
-    if (redirectTo.startsWith("/")) {
-        redirectTo = redirectTo.slice(1);
+        // Normalize backslashes and strip leading slashes for relative path
+        const sanitized = stateParam.replace(/\\/g, "/").replace(/^\/+/, "");
+        // Reject if it looks like an absolute URL (contains protocol)
+        if (!sanitized.includes("://") &&
+            !/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(sanitized)) {
+            redirectTo = sanitized;
+        }
     }
     const user = req.user;
     if (!user) {

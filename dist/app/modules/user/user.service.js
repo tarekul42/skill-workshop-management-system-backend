@@ -10,6 +10,8 @@ const AppError_1 = __importDefault(require("../../errorHelpers/AppError"));
 const user_interface_1 = require("./user.interface");
 const user_model_1 = __importDefault(require("./user.model"));
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
+const queryBuilder_1 = __importDefault(require("../../utils/queryBuilder"));
+const user_constant_1 = require("./user.constant");
 const createUser = async (payload) => {
     const { name, email, password, ...rest } = payload;
     if (typeof email !== "string" || email.trim().length === 0) {
@@ -35,6 +37,30 @@ const createUser = async (payload) => {
         ...rest,
     });
     return user;
+};
+const getSingleUser = async (id) => {
+    const user = await user_model_1.default.findById(id);
+    if (!user) {
+        throw new AppError_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "User not found");
+    }
+    return { data: user };
+};
+const getAllUsers = async (query) => {
+    const queryBuilder = new queryBuilder_1.default(user_model_1.default.find(), query);
+    const usersData = queryBuilder
+        .search(user_constant_1.userSearchableFields)
+        .filter()
+        .sort()
+        .fields()
+        .paginate();
+    const [data, meta] = await Promise.all([
+        usersData.build(),
+        queryBuilder.getMeta(),
+    ]);
+    return {
+        data,
+        meta,
+    };
 };
 const updateUser = async (userId, payload, decodedToken) => {
     const user = await user_model_1.default.findById(userId);
@@ -83,19 +109,10 @@ const updateUser = async (userId, payload, decodedToken) => {
     });
     return updatedUser;
 };
-const getAllUsers = async () => {
-    const users = await user_model_1.default.find({});
-    const totalUsers = await user_model_1.default.countDocuments();
-    return {
-        data: users,
-        meta: {
-            total: totalUsers,
-        },
-    };
-};
 const UserServices = {
     createUser,
-    updateUser,
+    getSingleUser,
     getAllUsers,
+    updateUser,
 };
 exports.default = UserServices;
