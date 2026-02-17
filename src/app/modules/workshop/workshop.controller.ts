@@ -17,8 +17,28 @@ const createLevel = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getSingleLevel = catchAsync(async (req: Request, res: Response) => {
+  const id = req.params.id;
+  const result = await WorkshopService.getSingleLevel(id);
+
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: "Level fetched successfully",
+    data: result,
+  });
+});
+
 const getAllLevels = catchAsync(async (req: Request, res: Response) => {
-  const result = await WorkshopService.getAllLevels();
+  const query: Record<string, string> = {};
+
+  for (const [key, value] of Object.entries(req.query)) {
+    if (typeof value === "string") {
+      query[key] = value;
+    }
+  }
+
+  const result = await WorkshopService.getAllLevels(query);
 
   sendResponse(res, {
     statusCode: StatusCodes.OK,
@@ -62,6 +82,19 @@ const createWorkshop = catchAsync(async (req: Request, res: Response) => {
     statusCode: StatusCodes.CREATED,
     success: true,
     message: "Workshop created successfully",
+    data: result,
+  });
+});
+
+const getSingleWorkshop = catchAsync(async (req: Request, res: Response) => {
+  const slug = req.params.slug;
+
+  const result = await WorkshopService.getSingleWorkshop(slug);
+
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: "Workshop fetched successfully",
     data: result,
   });
 });
@@ -113,10 +146,12 @@ const deleteWorkshop = catchAsync(async (req: Request, res: Response) => {
 
 const WorkshopController = {
   createLevel,
+  getSingleLevel,
   getAllLevels,
   updateLevel,
   deleteLevel,
   createWorkshop,
+  getSingleWorkshop,
   getAllWorkshops,
   updateWorkshop,
   deleteWorkshop,

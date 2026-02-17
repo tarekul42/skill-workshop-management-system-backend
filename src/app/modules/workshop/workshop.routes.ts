@@ -14,6 +14,8 @@ const router = express.Router();
 // levels routes
 router.get("/levels", WorkshopController.getAllLevels);
 
+router.get("/levels/:id", WorkshopController.getSingleLevel);
+
 router.post(
   "/create-level",
   adminCrudLimiter,
@@ -39,6 +41,8 @@ router.delete(
 
 // workshop routes
 router.get("/", WorkshopController.getAllWorkshops);
+
+router.get("/:slug", WorkshopController.getSingleWorkshop);
 
 router.post(
   "/create",

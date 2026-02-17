@@ -3,7 +3,10 @@ import AppError from "../../errorHelpers/AppError";
 import { ILevel, IWorkshop } from "./workshop.interface";
 import { Level, WorkShop } from "./workshop.model";
 import QueryBuilder from "../../utils/queryBuilder";
-import { workshopSearchableFields } from "./workshop.constant";
+import {
+  levelSearchableFields,
+  workshopSearchableFields,
+} from "./workshop.constant";
 
 const createLevel = async (payload: ILevel) => {
   if (!payload || typeof payload.name !== "string") {
@@ -21,8 +24,37 @@ const createLevel = async (payload: ILevel) => {
   return level;
 };
 
-const getAllLevels = async () => {
-  return await Level.find();
+const getSingleLevel = async (id: string) => {
+  const level = await Level.findById(id);
+
+  if (!level) {
+    throw new AppError(StatusCodes.NOT_FOUND, "Level not found");
+  }
+
+  return {
+    data: level,
+  };
+};
+
+const getAllLevels = async (query: Record<string, string>) => {
+  const queryBuilder = new QueryBuilder(Level.find(), query);
+
+  const levels = queryBuilder
+    .search(levelSearchableFields)
+    .filter()
+    .sort()
+    .fields()
+    .paginate();
+
+  const [data, meta] = await Promise.all([
+    levels.build(),
+    queryBuilder.getMeta(),
+  ]);
+
+  return {
+    data,
+    meta,
+  };
 };
 
 const updateLevel = async (id: string, payload: Partial<ILevel>) => {
@@ -88,6 +120,18 @@ const createWorkshop = async (payload: IWorkshop) => {
   const workshop = await WorkShop.create(payload);
 
   return workshop;
+};
+
+const getSingleWorkshop = async (slug: string) => {
+  const workshop = await WorkShop.findOne({ slug: { $eq: slug } });
+
+  if (!workshop) {
+    throw new AppError(StatusCodes.NOT_FOUND, "Workshop not found");
+  }
+
+  return {
+    data: workshop,
+  };
 };
 
 const getAllWorkshops = async (query: Record<string, string>) => {
@@ -162,10 +206,12 @@ const deleteWorkshop = async (id: string) => {
 
 const WorkshopService = {
   createLevel,
+  getSingleLevel,
   getAllLevels,
   updateLevel,
   deleteLevel,
   createWorkshop,
+  getSingleWorkshop,
   getAllWorkshops,
   updateWorkshop,
   deleteWorkshop,

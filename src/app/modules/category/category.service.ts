@@ -2,6 +2,8 @@ import { StatusCodes } from "http-status-codes";
 import AppError from "../../errorHelpers/AppError";
 import { ICategory } from "./category.interface";
 import { Category } from "./category.model";
+import QueryBuilder from "../../utils/queryBuilder";
+import { categorySearchableFields } from "./category.constant";
 
 const createCategory = async (payload: ICategory) => {
   if (typeof payload.name !== "string") {
@@ -23,22 +25,31 @@ const createCategory = async (payload: ICategory) => {
   return category;
 };
 
-const getAllCategories = async () => {
-  const categories = await Category.find({});
-  const totalCategories = await Category.countDocuments();
-
-  return {
-    data: categories,
-    meta: {
-      total: totalCategories,
-    },
-  };
-};
-
 const getSingleCategory = async (slug: string) => {
   const category = await Category.findOne({ slug });
   return {
     data: category,
+  };
+};
+
+const getAllCategories = async (query: Record<string, string>) => {
+  const queryBuilder = new QueryBuilder(Category.find(), query);
+
+  const categoriesData = queryBuilder
+    .search(categorySearchableFields)
+    .filter()
+    .sort()
+    .fields()
+    .paginate();
+
+  const [data, meta] = await Promise.all([
+    categoriesData.build(),
+    queryBuilder.getMeta(),
+  ]);
+
+  return {
+    data,
+    meta,
   };
 };
 
@@ -124,8 +135,8 @@ const deleteCategory = async (id: string) => {
 
 const CategoryService = {
   createCategory,
-  getAllCategories,
   getSingleCategory,
+  getAllCategories,
   updateCategory,
   deleteCategory,
 };

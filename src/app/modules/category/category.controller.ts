@@ -15,17 +15,6 @@ const createCategory = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-const getAllCategories = catchAsync(async (req: Request, res: Response) => {
-  const result = await CategoryService.getAllCategories();
-
-  sendResponse(res, {
-    statusCode: StatusCodes.OK,
-    success: true,
-    message: "Categories fetched successfully",
-    data: result,
-  });
-});
-
 const getSingleCategory = catchAsync(async (req: Request, res: Response) => {
   const slug = req.params.slug;
   const result = await CategoryService.getSingleCategory(slug);
@@ -35,6 +24,22 @@ const getSingleCategory = catchAsync(async (req: Request, res: Response) => {
     success: true,
     message: "Category fetched successfully",
     data: result,
+  });
+});
+
+const getAllCategories = catchAsync(async (req: Request, res: Response) => {
+  const query = req.query;
+
+  const result = await CategoryService.getAllCategories(
+    query as Record<string, string>,
+  );
+
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: "Categories fetched successfully",
+    data: result.data,
+    meta: result.meta,
   });
 });
 
@@ -64,8 +69,8 @@ const deleteCategory = catchAsync(async (req: Request, res: Response) => {
 
 const CategoryController = {
   createCategory,
-  getAllCategories,
   getSingleCategory,
+  getAllCategories,
   updateCategory,
   deleteCategory,
 };
