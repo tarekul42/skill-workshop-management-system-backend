@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.strictLimiter = exports.authLimiter = exports.generalLimiter = void 0;
+exports.adminCrudLimiter = exports.strictLimiter = exports.authLimiter = exports.generalLimiter = void 0;
 const express_rate_limit_1 = require("express-rate-limit");
 const generalLimiter = (0, express_rate_limit_1.rateLimit)({
     windowMs: 1 * 60 * 1000,
@@ -31,3 +31,14 @@ const strictLimiter = (0, express_rate_limit_1.rateLimit)({
     legacyHeaders: false,
 });
 exports.strictLimiter = strictLimiter;
+const adminCrudLimiter = (0, express_rate_limit_1.rateLimit)({
+    windowMs: 15 * 60 * 1000,
+    max: 100,
+    message: {
+        status: 429,
+        message: "Too many requests, please try again later.",
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+exports.adminCrudLimiter = adminCrudLimiter;

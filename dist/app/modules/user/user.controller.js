@@ -16,6 +16,17 @@ const createUser = (0, catchAsync_1.default)(async (req, res) => {
         data: user,
     });
 });
+const getAllUsers = (0, catchAsync_1.default)(async (req, res) => {
+    const query = req.query;
+    const result = await user_service_1.default.getAllUsers(query);
+    (0, sendResponse_1.default)(res, {
+        statusCode: http_status_codes_1.default.OK,
+        success: true,
+        message: "Users fetched successfully",
+        data: result.data,
+        meta: result.meta,
+    });
+});
 const updateUser = (0, catchAsync_1.default)(async (req, res) => {
     const userId = req.params.id;
     const payload = req.body;
@@ -28,19 +39,9 @@ const updateUser = (0, catchAsync_1.default)(async (req, res) => {
         data: user,
     });
 });
-const getAllUsers = (0, catchAsync_1.default)(async (_req, res) => {
-    const users = await user_service_1.default.getAllUsers();
-    (0, sendResponse_1.default)(res, {
-        statusCode: http_status_codes_1.default.OK,
-        success: true,
-        message: "Users fetched successfully",
-        data: users.data,
-        meta: users.meta,
-    });
-});
 const UserControllers = {
     createUser,
-    updateUser,
     getAllUsers,
+    updateUser,
 };
 exports.default = UserControllers;

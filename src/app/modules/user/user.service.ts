@@ -69,7 +69,7 @@ const getAllUsers = async (query: Record<string, string>) => {
 
   const [data, meta] = await Promise.all([
     usersData.build(),
-    queryBuilder.getMeta,
+    queryBuilder.getMeta(),
   ]);
 
   return {
