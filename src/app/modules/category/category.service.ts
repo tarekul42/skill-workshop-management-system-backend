@@ -19,10 +19,6 @@ const createCategory = async (payload: ICategory) => {
     );
   }
 
-  if (payload.name !== undefined && typeof payload.name !== "string") {
-    throw new AppError(StatusCodes.BAD_REQUEST, "Invalid category name");
-  }
-
   const category = await Category.create(payload);
   return category;
 };
