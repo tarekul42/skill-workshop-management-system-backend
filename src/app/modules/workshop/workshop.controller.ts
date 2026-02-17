@@ -7,7 +7,7 @@ import WorkshopService from "./workshop.service";
 const createLevel = catchAsync(async (req: Request, res: Response) => {
   const { name } = req.body;
 
-  const result = await WorkshopService.createLevel(name);
+  const result = await WorkshopService.createLevel({ name });
 
   sendResponse(res, {
     statusCode: StatusCodes.CREATED,
@@ -32,7 +32,7 @@ const updateLevel = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
   const { name } = req.body;
 
-  const result = await WorkshopService.updateLevel(id, name);
+  const result = await WorkshopService.updateLevel(id, { name });
 
   sendResponse(res, {
     statusCode: StatusCodes.OK,
