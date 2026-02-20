@@ -24,6 +24,14 @@ const createEnrollment = async (
       throw new AppError(StatusCodes.BAD_REQUEST, "Workshop ID is required.");
     }
 
+    if (typeof payload.workshop !== "string") {
+      throw new AppError(
+        StatusCodes.BAD_REQUEST,
+        "Workshop ID must be a string.",
+      );
+    }
+    const workshopId = payload.workshop;
+
     const user = await User.findById(userId).session(session);
 
     if (!user?.phone || !user.address) {
@@ -33,7 +41,7 @@ const createEnrollment = async (
       );
     }
 
-    const workshop = await WorkShop.findById(payload.workshop)
+    const workshop = await WorkShop.findById(workshopId)
       .select("price")
       .session(session);
 
