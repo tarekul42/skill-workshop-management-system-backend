@@ -26,9 +26,17 @@ const successPayment = async (query: Record<string, string>) => {
   session.startTransaction();
 
   try {
+    const rawTransactionId = query.transactionId;
+
+    if (typeof rawTransactionId !== "string" || !rawTransactionId.trim()) {
+      throw new AppError(StatusCodes.BAD_REQUEST, "Invalid transaction id");
+    }
+
+    const transactionId = rawTransactionId.trim();
+
     const updatedPayment = await Payment.findOneAndUpdate(
       {
-        transactionId: query.transactionId,
+        transactionId: { $eq: transactionId },
       },
       {
         status: PAYMENT_STATUS.PAID,
@@ -63,12 +71,20 @@ const successPayment = async (query: Record<string, string>) => {
 };
 
 const failPayment = async (query: Record<string, string>) => {
+  const rawTransactionId = query.transactionId;
+
+  if (typeof rawTransactionId !== "string" || !rawTransactionId.trim()) {
+    throw new AppError(StatusCodes.BAD_REQUEST, "Invalid transactionId");
+  }
+
+  const transactionId = rawTransactionId.trim();
+
   const session = await Enrollment.startSession();
   session.startTransaction();
 
   try {
     const updatedPayment = await Payment.findOneAndUpdate(
-      { transactionId: query.transactionId },
+      { transactionId: { $eq: transactionId } },
       { status: PAYMENT_STATUS.FAILED },
       { new: true, runValidators: true, session },
     );
@@ -100,12 +116,20 @@ const failPayment = async (query: Record<string, string>) => {
 };
 
 const cancelPayment = async (query: Record<string, string>) => {
+  const rawTransactionId = query.transactionId;
+
+  if (typeof rawTransactionId !== "string" || !rawTransactionId.trim()) {
+    throw new AppError(StatusCodes.BAD_REQUEST, "Invalid transactionId");
+  }
+
+  const transactionId = rawTransactionId.trim();
+
   const session = await Enrollment.startSession();
   session.startTransaction();
 
   try {
     const updatedPayment = await Payment.findOneAndUpdate(
-      { transactionId: query.transactionId },
+      { transactionId: { $eq: transactionId } },
       { status: PAYMENT_STATUS.CANCELLED },
       { new: true, runValidators: true, session },
     );
