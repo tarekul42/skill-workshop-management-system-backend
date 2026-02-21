@@ -49,7 +49,7 @@ const createEnrollment = async (
       throw new AppError(StatusCodes.NOT_FOUND, "Workshop not found.");
     }
 
-    if (!workshop.price) {
+    if (workshop.price == null) {
       throw new AppError(StatusCodes.BAD_REQUEST, "Workshop price is not set.");
     }
 
