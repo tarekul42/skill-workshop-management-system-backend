@@ -35,6 +35,6 @@ router.delete(
   CategoryController.deleteCategory,
 );
 
-const categoryRoutes = router;
+const CategoryRoutes = router;
 
-export default categoryRoutes;
+export default CategoryRoutes;
