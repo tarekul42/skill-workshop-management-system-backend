@@ -34,6 +34,14 @@ const successPayment = async (query: Record<string, string>) => {
 
     const transactionId = rawTransactionId.trim();
 
+    const rawTransactionId = query.transactionId;
+
+        transactionId: { $eq: transactionId },
+      throw new AppError(StatusCodes.BAD_REQUEST, "Invalid transaction id");
+    }
+
+    const transactionId = rawTransactionId.trim();
+
     const updatedPayment = await Payment.findOneAndUpdate(
       {
         transactionId: { $eq: transactionId },
