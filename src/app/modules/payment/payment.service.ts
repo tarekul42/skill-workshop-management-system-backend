@@ -22,13 +22,18 @@ const initPayment = async (enrollmentId: string) => {
 };
 
 const successPayment = async (query: Record<string, string>) => {
+  const transactionId = query.transactionId;
+  if (typeof transactionId !== "string" || !transactionId.trim()) {
+    throw new AppError(StatusCodes.BAD_REQUEST, "Invalid transactionId");
+  }
+
   const session = await Enrollment.startSession();
   session.startTransaction();
 
   try {
     const rawTransactionId = query.transactionId;
 
-    if (typeof rawTransactionId !== "string" || !rawTransactionId.trim()) {
+        transactionId: { $eq: transactionId },
       throw new AppError(StatusCodes.BAD_REQUEST, "Invalid transaction id");
     }
 
@@ -57,6 +62,11 @@ const successPayment = async (query: Record<string, string>) => {
     }
 
     await Enrollment.findByIdAndUpdate(
+  const transactionId = query.transactionId;
+  if (typeof transactionId !== "string" || !transactionId.trim()) {
+    throw new AppError(StatusCodes.BAD_REQUEST, "Invalid transactionId");
+  }
+
       updatedPayment.enrollment,
       {
         status: ENROLLMENT_STATUS.COMPLETE,
@@ -68,7 +78,7 @@ const successPayment = async (query: Record<string, string>) => {
     session.endSession();
 
     return {
-      success: true,
+      { transactionId: { $eq: transactionId } },
       message: "Payment completed successfully",
     };
   } catch (err) {
@@ -89,6 +99,11 @@ const failPayment = async (query: Record<string, string>) => {
 
   const session = await Enrollment.startSession();
   session.startTransaction();
+  const transactionId = query.transactionId;
+  if (typeof transactionId !== "string" || !transactionId.trim()) {
+    throw new AppError(StatusCodes.BAD_REQUEST, "Invalid transactionId");
+  }
+
 
   try {
     const updatedPayment = await Payment.findOneAndUpdate(
@@ -105,7 +120,7 @@ const failPayment = async (query: Record<string, string>) => {
       updatedPayment.enrollment,
       {
         status: ENROLLMENT_STATUS.FAILED,
-      },
+      { transactionId: { $eq: transactionId } },
       { runValidators: true, session },
     );
 
