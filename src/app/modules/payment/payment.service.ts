@@ -26,9 +26,13 @@ const successPayment = async (query: Record<string, string>) => {
   if (typeof transactionId !== "string" || !transactionId.trim()) {
     throw new AppError(StatusCodes.BAD_REQUEST, "Invalid transactionId");
   }
+    if (typeof query.transactionId !== "string") {
+      throw new AppError(StatusCodes.BAD_REQUEST, "Invalid transaction id");
+    }
+
 
   const session = await Enrollment.startSession();
-  session.startTransaction();
+        transactionId: { $eq: query.transactionId },
 
   try {
     const rawTransactionId = query.transactionId;
@@ -65,10 +69,14 @@ const successPayment = async (query: Record<string, string>) => {
   const transactionId = query.transactionId;
   if (typeof transactionId !== "string" || !transactionId.trim()) {
     throw new AppError(StatusCodes.BAD_REQUEST, "Invalid transactionId");
+    if (typeof query.transactionId !== "string") {
+      throw new AppError(StatusCodes.BAD_REQUEST, "Invalid transaction id");
+    }
+
   }
 
       updatedPayment.enrollment,
-      {
+      { transactionId: { $eq: query.transactionId } },
         status: ENROLLMENT_STATUS.COMPLETE,
       },
       { runValidators: true, session },
@@ -101,11 +109,15 @@ const failPayment = async (query: Record<string, string>) => {
   session.startTransaction();
   const transactionId = query.transactionId;
   if (typeof transactionId !== "string" || !transactionId.trim()) {
+    if (typeof query.transactionId !== "string") {
+      throw new AppError(StatusCodes.BAD_REQUEST, "Invalid transaction id");
+    }
+
     throw new AppError(StatusCodes.BAD_REQUEST, "Invalid transactionId");
   }
 
 
-  try {
+      { transactionId: { $eq: query.transactionId } },
     const updatedPayment = await Payment.findOneAndUpdate(
       { transactionId: { $eq: transactionId } },
       { status: PAYMENT_STATUS.FAILED },
