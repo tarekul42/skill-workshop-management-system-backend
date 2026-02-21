@@ -22,43 +22,22 @@ const initPayment = async (enrollmentId: string) => {
 };
 
 const successPayment = async (query: Record<string, string>) => {
-  const transactionId = query.transactionId;
-  if (typeof transactionId !== "string" || !transactionId.trim()) {
+  const rawTransactionId = query.transactionId;
+
+  if (typeof rawTransactionId !== "string" || !rawTransactionId.trim()) {
     throw new AppError(StatusCodes.BAD_REQUEST, "Invalid transactionId");
   }
-    if (typeof query.transactionId !== "string") {
-      throw new AppError(StatusCodes.BAD_REQUEST, "Invalid transaction id");
-    }
 
+  const transactionId = rawTransactionId.trim();
 
   const session = await Enrollment.startSession();
-        transactionId: { $eq: query.transactionId },
+  session.startTransaction();
 
   try {
-    const rawTransactionId = query.transactionId;
-
-        transactionId: { $eq: transactionId },
-      throw new AppError(StatusCodes.BAD_REQUEST, "Invalid transaction id");
-    }
-
-    const transactionId = rawTransactionId.trim();
-
-    const rawTransactionId = query.transactionId;
-
-        transactionId: { $eq: transactionId },
-      throw new AppError(StatusCodes.BAD_REQUEST, "Invalid transaction id");
-    }
-
-    const transactionId = rawTransactionId.trim();
-
     const updatedPayment = await Payment.findOneAndUpdate(
-      {
-        transactionId: { $eq: transactionId },
-      },
-      {
-        status: PAYMENT_STATUS.PAID,
-      },
-      { new: true, runValidators: true, session: session },
+      { transactionId: { $eq: transactionId } },
+      { status: PAYMENT_STATUS.PAID },
+      { new: true, runValidators: true, session },
     );
 
     if (!updatedPayment) {
@@ -66,19 +45,8 @@ const successPayment = async (query: Record<string, string>) => {
     }
 
     await Enrollment.findByIdAndUpdate(
-  const transactionId = query.transactionId;
-  if (typeof transactionId !== "string" || !transactionId.trim()) {
-    throw new AppError(StatusCodes.BAD_REQUEST, "Invalid transactionId");
-    if (typeof query.transactionId !== "string") {
-      throw new AppError(StatusCodes.BAD_REQUEST, "Invalid transaction id");
-    }
-
-  }
-
       updatedPayment.enrollment,
-      { transactionId: { $eq: query.transactionId } },
-        status: ENROLLMENT_STATUS.COMPLETE,
-      },
+      { status: ENROLLMENT_STATUS.COMPLETE },
       { runValidators: true, session },
     );
 
@@ -86,11 +54,11 @@ const successPayment = async (query: Record<string, string>) => {
     session.endSession();
 
     return {
-      { transactionId: { $eq: transactionId } },
+      success: true,
       message: "Payment completed successfully",
     };
   } catch (err) {
-    await session.commitTransaction();
+    await session.abortTransaction();
     session.endSession();
     throw err;
   }
@@ -107,17 +75,8 @@ const failPayment = async (query: Record<string, string>) => {
 
   const session = await Enrollment.startSession();
   session.startTransaction();
-  const transactionId = query.transactionId;
-  if (typeof transactionId !== "string" || !transactionId.trim()) {
-    if (typeof query.transactionId !== "string") {
-      throw new AppError(StatusCodes.BAD_REQUEST, "Invalid transaction id");
-    }
 
-    throw new AppError(StatusCodes.BAD_REQUEST, "Invalid transactionId");
-  }
-
-
-      { transactionId: { $eq: query.transactionId } },
+  try {
     const updatedPayment = await Payment.findOneAndUpdate(
       { transactionId: { $eq: transactionId } },
       { status: PAYMENT_STATUS.FAILED },
@@ -130,9 +89,7 @@ const failPayment = async (query: Record<string, string>) => {
 
     await Enrollment.findByIdAndUpdate(
       updatedPayment.enrollment,
-      {
-        status: ENROLLMENT_STATUS.FAILED,
-      { transactionId: { $eq: transactionId } },
+      { status: ENROLLMENT_STATUS.FAILED },
       { runValidators: true, session },
     );
 
@@ -175,13 +132,11 @@ const cancelPayment = async (query: Record<string, string>) => {
 
     await Enrollment.findByIdAndUpdate(
       updatedPayment.enrollment,
-      {
-        status: ENROLLMENT_STATUS.CANCEL,
-      },
+      { status: ENROLLMENT_STATUS.CANCEL },
       { runValidators: true, session },
     );
 
-    await session.abortTransaction();
+    await session.commitTransaction();
     session.endSession();
 
     return {
