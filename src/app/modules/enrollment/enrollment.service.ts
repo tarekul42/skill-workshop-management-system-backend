@@ -1,7 +1,10 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { StatusCodes } from "http-status-codes";
 import AppError from "../../errorHelpers/AppError";
 import { PAYMENT_STATUS } from "../payment/payment.interface";
 import Payment from "../payment/payment.model";
+import { ISSLCommerz } from "../sslCommerz/sslCommerz.interface";
+import SSLService from "../sslCommerz/sslCommerz.service";
 import User from "../user/user.model";
 import { WorkShop } from "../workshop/workshop.model";
 import { ENROLLMENT_STATUS, IEnrollment } from "./enrollment.interface";
@@ -102,10 +105,27 @@ const createEnrollment = async (
       .populate("workshop", "title price")
       .populate("payment");
 
+    const userAddress = (updatedEnrollment?.user as any).address;
+    const userEmail = (updatedEnrollment?.user as any).email;
+    const userPhoneNumber = (updatedEnrollment?.user as any).phone;
+    const userName = (updatedEnrollment?.user as any).name;
+
+    const sslPayload: ISSLCommerz = {
+      address: userAddress,
+      email: userEmail,
+      phoneNumber: userPhoneNumber,
+      name: userName,
+      amount: amount,
+      transactionId: transactionId,
+    };
+
+    const sslPayment = await SSLService.sslPaymentInit(sslPayload);
+
     await session.commitTransaction();
     session.endSession();
 
     return {
+      paymentUrl: sslPayment.GatewayPageURL,
       enrollment: updatedEnrollment,
     };
   } catch (err) {
