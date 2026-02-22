@@ -18,4 +18,4 @@ interface IPayment {
   status: PAYMENT_STATUS;
 }
 
-export { PAYMENT_STATUS, IPayment };
+export { IPayment, PAYMENT_STATUS };

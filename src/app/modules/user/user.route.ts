@@ -1,10 +1,10 @@
 import { Router } from "express";
-import UserControllers from "./user.controller";
-import validateRequest from "../../middlewares/validateRequest";
-import { createUserZodSchema, updateUserZodSchema } from "./user.validation";
 import checkAuth from "../../middlewares/checkAuth";
-import { UserRole } from "./user.interface";
+import validateRequest from "../../middlewares/validateRequest";
 import { strictLimiter } from "../../utils/rateLimiter";
+import UserControllers from "./user.controller";
+import { UserRole } from "./user.interface";
+import { createUserZodSchema, updateUserZodSchema } from "./user.validation";
 
 const router = Router();
 

@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
-import mongoose from "mongoose";
 import type { Server } from "http";
+import mongoose from "mongoose";
 import app from "./app";
 import envVariables from "./app/config/env";
 import seedSuperAdmin from "./app/utils/seedSuperAdmin";
@@ -15,7 +15,7 @@ const startServer = async () => {
 
     server = app.listen(envVariables.PORT, () => {
       console.log(
-        `Skill workshop management system backend is running on port: ${envVariables.PORT}`
+        `Skill workshop management system backend is running on port: ${envVariables.PORT}`,
       );
     });
   } catch (error) {

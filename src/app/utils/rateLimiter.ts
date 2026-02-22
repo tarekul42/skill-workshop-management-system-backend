@@ -41,4 +41,4 @@ const adminCrudLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-export { generalLimiter, authLimiter, strictLimiter, adminCrudLimiter };
+export { adminCrudLimiter, authLimiter, generalLimiter, strictLimiter };

@@ -1,8 +1,8 @@
 /* eslint-disable no-console */
-import envVariables from "../config/env";
-import User from "../modules/user/user.model";
 import bcrypt from "bcryptjs";
+import envVariables from "../config/env";
 import { IAuthProvider, IUser, UserRole } from "../modules/user/user.interface";
+import User from "../modules/user/user.model";
 
 const seedSuperAdmin = async () => {
   try {
@@ -17,7 +17,7 @@ const seedSuperAdmin = async () => {
 
     const hashedPassword = await bcrypt.hash(
       envVariables.SUPER_ADMIN_PASSWORD,
-      Number(envVariables.BCRYPT_SALT_ROUND)
+      Number(envVariables.BCRYPT_SALT_ROUND),
     );
 
     const authProvider: IAuthProvider = {

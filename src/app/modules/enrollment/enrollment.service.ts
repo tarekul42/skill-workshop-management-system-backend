@@ -1,11 +1,11 @@
 import { StatusCodes } from "http-status-codes";
 import AppError from "../../errorHelpers/AppError";
-import User from "../user/user.model";
-import { ENROLLMENT_STATUS, IEnrollment } from "./enrollment.interface";
-import Enrollment from "./enrollment.model";
-import { WorkShop } from "../workshop/workshop.model";
 import { PAYMENT_STATUS } from "../payment/payment.interface";
 import Payment from "../payment/payment.model";
+import User from "../user/user.model";
+import { WorkShop } from "../workshop/workshop.model";
+import { ENROLLMENT_STATUS, IEnrollment } from "./enrollment.interface";
+import Enrollment from "./enrollment.model";
 
 const getTransactionId = () => {
   return `tran_${Date.now()}_${Math.floor(Math.random() * 10000)}`;

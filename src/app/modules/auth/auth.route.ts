@@ -1,9 +1,9 @@
 import { NextFunction, Request, Response, Router } from "express";
-import AuthControllers from "./auth.controller";
-import { authLimiter } from "../../utils/rateLimiter";
-import checkAuth from "../../middlewares/checkAuth";
-import { UserRole } from "../user/user.interface";
 import passport from "passport";
+import checkAuth from "../../middlewares/checkAuth";
+import { authLimiter } from "../../utils/rateLimiter";
+import { UserRole } from "../user/user.interface";
+import AuthControllers from "./auth.controller";
 
 const router = Router();
 

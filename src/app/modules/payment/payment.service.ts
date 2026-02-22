@@ -1,9 +1,9 @@
 import { StatusCodes } from "http-status-codes";
 import AppError from "../../errorHelpers/AppError";
-import Payment from "./payment.model";
+import { ENROLLMENT_STATUS } from "../enrollment/enrollment.interface";
 import Enrollment from "../enrollment/enrollment.model";
 import { PAYMENT_STATUS } from "./payment.interface";
-import { ENROLLMENT_STATUS } from "../enrollment/enrollment.interface";
+import Payment from "./payment.model";
 
 const initPayment = async (enrollmentId: string) => {
   const payment = await Payment.findOne({ enrollment: enrollmentId });

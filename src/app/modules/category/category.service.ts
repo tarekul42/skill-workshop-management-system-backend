@@ -1,9 +1,9 @@
 import { StatusCodes } from "http-status-codes";
 import AppError from "../../errorHelpers/AppError";
-import { ICategory } from "./category.interface";
-import { Category } from "./category.model";
 import QueryBuilder from "../../utils/queryBuilder";
 import { categorySearchableFields } from "./category.constant";
+import { ICategory } from "./category.interface";
+import { Category } from "./category.model";
 
 const createCategory = async (payload: ICategory) => {
   if (typeof payload.name !== "string") {

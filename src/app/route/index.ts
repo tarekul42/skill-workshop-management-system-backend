@@ -1,9 +1,9 @@
 import { Router } from "express";
-import UserRoutes from "../modules/user/user.route";
 import AuthRoutes from "../modules/auth/auth.route";
 import CategoryRoutes from "../modules/category/category.route";
 import EnrollmentRoutes from "../modules/enrollment/enrollment.route";
 import PaymentRoutes from "../modules/payment/payment.route";
+import UserRoutes from "../modules/user/user.route";
 
 const router = Router();
 

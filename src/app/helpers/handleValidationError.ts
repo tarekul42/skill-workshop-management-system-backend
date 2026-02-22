@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { StatusCodes } from "http-status-codes";
 import mongoose from "mongoose";
 import {
   IErrorSources,
   IGenericErrorResponse,
 } from "../interfaces/error.types";
-import { StatusCodes } from "http-status-codes";
 
 const handleValidationError = (
   err: mongoose.Error.ValidationError,

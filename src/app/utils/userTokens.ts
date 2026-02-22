@@ -68,4 +68,4 @@ const createNewAccessToken = async (refreshToken: string) => {
   return accessToken;
 };
 
-export { createUserTokens, createNewAccessToken };
+export { createNewAccessToken, createUserTokens };

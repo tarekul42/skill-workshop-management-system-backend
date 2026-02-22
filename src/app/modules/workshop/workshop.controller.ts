@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
+import { StatusCodes } from "http-status-codes";
 import catchAsync from "../../utils/catchAsync";
 import sendResponse from "../../utils/sendResponse";
-import { StatusCodes } from "http-status-codes";
 import WorkshopService from "./workshop.service";
 
 const createLevel = catchAsync(async (req: Request, res: Response) => {
