@@ -3,12 +3,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const http_status_codes_1 = require("http-status-codes");
-const user_model_1 = __importDefault(require("../user/user.model"));
-const AppError_1 = __importDefault(require("../../errorHelpers/AppError"));
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
-const userTokens_1 = require("../../utils/userTokens");
+const http_status_codes_1 = require("http-status-codes");
 const env_1 = __importDefault(require("../../config/env"));
+const AppError_1 = __importDefault(require("../../errorHelpers/AppError"));
+const userTokens_1 = require("../../utils/userTokens");
+const user_model_1 = __importDefault(require("../user/user.model"));
 const getNewAccessToken = async (refreshToken) => {
     if (!refreshToken) {
         throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "No refresh token found");

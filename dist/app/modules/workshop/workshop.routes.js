@@ -4,12 +4,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
-const workshop_controller_1 = __importDefault(require("./workshop.controller"));
 const checkAuth_1 = __importDefault(require("../../middlewares/checkAuth"));
-const user_interface_1 = require("../user/user.interface");
 const validateRequest_1 = __importDefault(require("../../middlewares/validateRequest"));
-const workshop_validation_1 = require("./workshop.validation");
 const rateLimiter_1 = require("../../utils/rateLimiter");
+const user_interface_1 = require("../user/user.interface");
+const workshop_controller_1 = __importDefault(require("./workshop.controller"));
+const workshop_validation_1 = require("./workshop.validation");
 const router = express_1.default.Router();
 // levels routes
 router.get("/levels", workshop_controller_1.default.getAllLevels);

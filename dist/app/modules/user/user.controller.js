@@ -4,9 +4,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const http_status_codes_1 = __importDefault(require("http-status-codes"));
-const user_service_1 = __importDefault(require("./user.service"));
 const catchAsync_1 = __importDefault(require("../../utils/catchAsync"));
 const sendResponse_1 = __importDefault(require("../../utils/sendResponse"));
+const user_service_1 = __importDefault(require("./user.service"));
 const createUser = (0, catchAsync_1.default)(async (req, res) => {
     const user = await user_service_1.default.createUser(req.body);
     (0, sendResponse_1.default)(res, {

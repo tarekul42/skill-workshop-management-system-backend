@@ -3,13 +3,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const passport_1 = __importDefault(require("passport"));
 const passport_google_oauth20_1 = require("passport-google-oauth20");
 const passport_local_1 = require("passport-local");
-const user_model_1 = __importDefault(require("../modules/user/user.model"));
 const user_interface_1 = require("../modules/user/user.interface");
+const user_model_1 = __importDefault(require("../modules/user/user.model"));
 const env_1 = __importDefault(require("./env"));
-const bcryptjs_1 = __importDefault(require("bcryptjs"));
 // 1. SERIALIZATION
 // We store the MongoDB _id in the session
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -86,6 +86,11 @@ passport_1.default.use(new passport_local_1.Strategy({
         if (isGoogleAuthenticated && !isUserExists.password) {
             return done(null, false, {
                 message: "You have authenticated through Google. So if you want to login with credentials, then at first login with google and set a password for your Gmail and then you can login with email and password.",
+            });
+        }
+        if (!isUserExists.password) {
+            return done(null, false, {
+                message: "Password not set for this account",
             });
         }
         const isPasswordMatched = await bcryptjs_1.default.compare(password, isUserExists.password);

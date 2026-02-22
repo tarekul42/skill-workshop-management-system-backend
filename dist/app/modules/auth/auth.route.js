@@ -4,11 +4,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
-const auth_controller_1 = __importDefault(require("./auth.controller"));
-const rateLimiter_1 = require("../../utils/rateLimiter");
-const checkAuth_1 = __importDefault(require("../../middlewares/checkAuth"));
-const user_interface_1 = require("../user/user.interface");
 const passport_1 = __importDefault(require("passport"));
+const checkAuth_1 = __importDefault(require("../../middlewares/checkAuth"));
+const rateLimiter_1 = require("../../utils/rateLimiter");
+const user_interface_1 = require("../user/user.interface");
+const auth_controller_1 = __importDefault(require("./auth.controller"));
 const router = (0, express_1.Router)();
 router.post("/login", rateLimiter_1.authLimiter, auth_controller_1.default.credentialsLogin);
 router.post("/refresh-token", rateLimiter_1.authLimiter, auth_controller_1.default.getNewAccessToken);

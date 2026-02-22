@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.adminCrudLimiter = exports.strictLimiter = exports.authLimiter = exports.generalLimiter = void 0;
+exports.strictLimiter = exports.generalLimiter = exports.authLimiter = exports.adminCrudLimiter = void 0;
 const express_rate_limit_1 = require("express-rate-limit");
 const generalLimiter = (0, express_rate_limit_1.rateLimit)({
     windowMs: 1 * 60 * 1000,

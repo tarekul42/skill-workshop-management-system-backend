@@ -3,14 +3,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-/* eslint-disable no-console */
 const http_status_codes_1 = require("http-status-codes");
 const env_1 = __importDefault(require("../config/env"));
 const AppError_1 = __importDefault(require("../errorHelpers/AppError"));
-const handleDuplicateError_1 = __importDefault(require("../helpers/handleDuplicateError"));
 const handleCastError_1 = __importDefault(require("../helpers/handleCastError"));
-const handleZodError_1 = __importDefault(require("../helpers/handleZodError"));
+const handleDuplicateError_1 = __importDefault(require("../helpers/handleDuplicateError"));
 const handleValidationError_1 = __importDefault(require("../helpers/handleValidationError"));
+const handleZodError_1 = __importDefault(require("../helpers/handleZodError"));
 const globalErrorHandler = (
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 err, _req, res, 

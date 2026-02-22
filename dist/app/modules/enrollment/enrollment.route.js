@@ -1,0 +1,20 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = __importDefault(require("express"));
+const checkAuth_1 = __importDefault(require("../../middlewares/checkAuth"));
+const validateRequest_1 = __importDefault(require("../../middlewares/validateRequest"));
+const rateLimiter_1 = require("../../utils/rateLimiter");
+const user_interface_1 = require("../user/user.interface");
+const enrollment_controller_1 = __importDefault(require("./enrollment.controller"));
+const enrollment_validation_1 = require("./enrollment.validation");
+const router = express_1.default.Router();
+router.post("/", rateLimiter_1.adminCrudLimiter, (0, checkAuth_1.default)(...Object.values(user_interface_1.UserRole)), (0, validateRequest_1.default)(enrollment_validation_1.createEnrollmentZodSchema), enrollment_controller_1.default.createEnrollment);
+router.get("/", rateLimiter_1.adminCrudLimiter, (0, checkAuth_1.default)(user_interface_1.UserRole.ADMIN, user_interface_1.UserRole.SUPER_ADMIN), enrollment_controller_1.default.getAllEnrollments);
+router.get("/my-enrollments", rateLimiter_1.adminCrudLimiter, (0, checkAuth_1.default)(...Object.values(user_interface_1.UserRole)), enrollment_controller_1.default.getUserEnrollments);
+router.get("/:enrollmentId", rateLimiter_1.adminCrudLimiter, (0, checkAuth_1.default)(...Object.values(user_interface_1.UserRole)), enrollment_controller_1.default.getSingleEnrollment);
+router.patch("/:enrollmentId/status", rateLimiter_1.adminCrudLimiter, (0, checkAuth_1.default)(...Object.values(user_interface_1.UserRole)), (0, validateRequest_1.default)(enrollment_validation_1.updateEnrollmentStatusZodSchema), enrollment_controller_1.default.updateEnrollmentStatus);
+const EnrollmentRoutes = router;
+exports.default = EnrollmentRoutes;

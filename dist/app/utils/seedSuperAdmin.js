@@ -4,10 +4,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 /* eslint-disable no-console */
-const env_1 = __importDefault(require("../config/env"));
-const user_model_1 = __importDefault(require("../modules/user/user.model"));
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
+const env_1 = __importDefault(require("../config/env"));
 const user_interface_1 = require("../modules/user/user.interface");
+const user_model_1 = __importDefault(require("../modules/user/user.model"));
 const seedSuperAdmin = async () => {
     try {
         const isSuperAdminExists = await user_model_1.default.findOne({
