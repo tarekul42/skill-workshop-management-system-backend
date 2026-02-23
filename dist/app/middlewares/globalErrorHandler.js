@@ -4,19 +4,41 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const http_status_codes_1 = require("http-status-codes");
+const cloudinary_config_1 = require("../config/cloudinary.config");
 const env_1 = __importDefault(require("../config/env"));
 const AppError_1 = __importDefault(require("../errorHelpers/AppError"));
 const handleCastError_1 = __importDefault(require("../helpers/handleCastError"));
 const handleDuplicateError_1 = __importDefault(require("../helpers/handleDuplicateError"));
 const handleValidationError_1 = __importDefault(require("../helpers/handleValidationError"));
 const handleZodError_1 = __importDefault(require("../helpers/handleZodError"));
-const globalErrorHandler = (
+const globalErrorHandler = async (
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-err, _req, res, 
+err, req, res, 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 next) => {
     if (env_1.default.NODE_ENV === "development") {
         console.log(err);
+    }
+    // Clean up uploaded images on error - failures should not prevent error response
+    try {
+        if (req.file) {
+            await (0, cloudinary_config_1.deleteImageFromCloudinary)(req.file.path);
+        }
+        if (req.files) {
+            let filesToDelete = [];
+            if (Array.isArray(req.files)) {
+                filesToDelete = req.files;
+            }
+            else {
+                // Handle object form from multer fields()
+                filesToDelete = Object.values(req.files).flat();
+            }
+            await Promise.all(filesToDelete.map((file) => (0, cloudinary_config_1.deleteImageFromCloudinary)(file.path)));
+        }
+    }
+    catch (cleanupError) {
+        // Log but don't throw - cleanup failure shouldn't prevent error response
+        console.error("Failed to clean up uploaded images:", cleanupError);
     }
     let statusCode = http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR;
     let message = `Something went wrong!!! ${err.message}`;

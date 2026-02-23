@@ -3,7 +3,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+/* eslint-disable no-console */
 const http_status_codes_1 = require("http-status-codes");
+const cloudinary_config_1 = require("../../config/cloudinary.config");
 const AppError_1 = __importDefault(require("../../errorHelpers/AppError"));
 const queryBuilder_1 = __importDefault(require("../../utils/queryBuilder"));
 const workshop_constant_1 = require("./workshop.constant");
@@ -136,9 +138,40 @@ const updateWorkshop = async (id, payload) => {
             throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Workshop with this title already exists");
         }
     }
+    if (payload.images &&
+        payload.images.length > 0 &&
+        existingWorkshop.images &&
+        existingWorkshop.images.length > 0) {
+        payload.images = [...payload.images, ...existingWorkshop.images];
+    }
+    if (payload.deleteImages &&
+        payload.deleteImages.length > 0 &&
+        existingWorkshop.images &&
+        existingWorkshop.images.length > 0) {
+        const restDBImages = existingWorkshop.images.filter((imageUrl) => !payload.deleteImages?.includes(imageUrl));
+        const updatedPayloadImages = (payload.images || [])
+            .filter((imageUrl) => !payload.deleteImages?.includes(imageUrl))
+            .filter((imageUrl) => !restDBImages.includes(imageUrl));
+        payload.images = [...restDBImages, ...updatedPayloadImages];
+    }
+    if (payload.images) {
+        safePayload.images = payload.images;
+    }
     const updatedWorkshop = await workshop_model_1.WorkShop.findByIdAndUpdate(id, safePayload, {
         new: true,
     });
+    if (payload.deleteImages &&
+        payload.deleteImages.length > 0 &&
+        existingWorkshop.images &&
+        existingWorkshop.images.length > 0) {
+        // Only delete images that actually belonged to this workshop
+        const validDeletions = payload.deleteImages.filter((url) => existingWorkshop.images?.includes(url));
+        const results = await Promise.allSettled(validDeletions.map((url) => (0, cloudinary_config_1.deleteImageFromCloudinary)(url)));
+        const failures = results.filter((r) => r.status === "rejected");
+        if (failures.length > 0) {
+            console.error(`Failed to delete ${failures.length} images from Cloudinary`);
+        }
+    }
     return updatedWorkshop;
 };
 const deleteWorkshop = async (id) => {

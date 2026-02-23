@@ -38,5 +38,6 @@ const updateWorkshopZodSchema = zod_1.z.object({
     maxSeats: zod_1.z.number().optional(),
     minAge: zod_1.z.number().optional(),
     category: zod_1.z.string().optional(),
+    deleteImages: zod_1.z.array(zod_1.z.string()).optional(),
 });
 exports.updateWorkshopZodSchema = updateWorkshopZodSchema;

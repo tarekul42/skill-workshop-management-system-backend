@@ -7,7 +7,9 @@ import WorkshopController from "./workshop.controller";
 import {
   createLevelZodSchema,
   createWorkshopZodSchema,
+  updateWorkshopZodSchema,
 } from "./workshop.validation";
+import multerUpload from "../../config/multer.config";
 
 const router = express.Router();
 
@@ -48,6 +50,7 @@ router.post(
   "/create",
   adminCrudLimiter,
   checkAuth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
+  multerUpload.array("files"),
   validateRequest(createWorkshopZodSchema),
   WorkshopController.createWorkshop,
 );
@@ -56,7 +59,8 @@ router.patch(
   "/:id",
   adminCrudLimiter,
   checkAuth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
-  validateRequest(createWorkshopZodSchema),
+  multerUpload.array("files"),
+  validateRequest(updateWorkshopZodSchema),
   WorkshopController.updateWorkshop,
 );
 

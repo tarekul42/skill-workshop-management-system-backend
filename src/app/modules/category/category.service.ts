@@ -1,9 +1,11 @@
+/* eslint-disable no-console */
 import { StatusCodes } from "http-status-codes";
 import AppError from "../../errorHelpers/AppError";
 import QueryBuilder from "../../utils/queryBuilder";
 import { categorySearchableFields } from "./category.constant";
 import { ICategory } from "./category.interface";
 import { Category } from "./category.model";
+import { deleteImageFromCloudinary } from "../../config/cloudinary.config";
 
 const createCategory = async (payload: ICategory) => {
   if (typeof payload.name !== "string") {
@@ -54,6 +56,10 @@ const getAllCategories = async (query: Record<string, string>) => {
 };
 
 const updateCategory = async (id: string, payload: Partial<ICategory>) => {
+  const existingCategory = await Category.findById(id);
+  if (!existingCategory) {
+    throw new AppError(StatusCodes.NOT_FOUND, "Category not found");
+  }
   // 1. Validation: Name specific checks
   // We copy to a local variable to handle trimming without mutating the original payload
   let payloadName = payload.name;
@@ -123,6 +129,15 @@ const updateCategory = async (id: string, payload: Partial<ICategory>) => {
 
   if (!updatedCategory) {
     throw new AppError(StatusCodes.NOT_FOUND, "Category not found");
+  }
+
+  if (payload.thumbnail && existingCategory.thumbnail) {
+    try {
+      await deleteImageFromCloudinary(existingCategory.thumbnail);
+    } catch (error) {
+      // Log error but don't fail the request - category update already succeeded
+      console.error("Failed to delete old thumbnail from Cloudinary:", error);
+    }
   }
 
   return updatedCategory;

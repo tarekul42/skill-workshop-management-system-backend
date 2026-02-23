@@ -3,6 +3,7 @@ import { StatusCodes } from "http-status-codes";
 import catchAsync from "../../utils/catchAsync";
 import sendResponse from "../../utils/sendResponse";
 import WorkshopService from "./workshop.service";
+import { IWorkshop } from "./workshop.interface";
 
 const createLevel = catchAsync(async (req: Request, res: Response) => {
   const { name } = req.body;
@@ -18,7 +19,7 @@ const createLevel = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getSingleLevel = catchAsync(async (req: Request, res: Response) => {
-  const id = req.params.id;
+  const id = req.params.id as string;
   const result = await WorkshopService.getSingleLevel(id);
 
   sendResponse(res, {
@@ -49,7 +50,7 @@ const getAllLevels = catchAsync(async (req: Request, res: Response) => {
 });
 
 const updateLevel = catchAsync(async (req: Request, res: Response) => {
-  const { id } = req.params;
+  const id = req.params.id as string;
   const { name } = req.body;
 
   const result = await WorkshopService.updateLevel(id, { name });
@@ -63,7 +64,7 @@ const updateLevel = catchAsync(async (req: Request, res: Response) => {
 });
 
 const deleteLevel = catchAsync(async (req: Request, res: Response) => {
-  const { id } = req.params;
+  const id = req.params.id as string;
 
   const result = await WorkshopService.deleteLevel(id);
 
@@ -76,7 +77,14 @@ const deleteLevel = catchAsync(async (req: Request, res: Response) => {
 });
 
 const createWorkshop = catchAsync(async (req: Request, res: Response) => {
-  const result = await WorkshopService.createWorkshop(req.body);
+  const payload: IWorkshop = {
+    ...req.body,
+    images: ((req.files as Express.Multer.File[]) ?? []).map(
+      (file) => file.path,
+    ),
+  };
+
+  const result = await WorkshopService.createWorkshop(payload);
 
   sendResponse(res, {
     statusCode: StatusCodes.CREATED,
@@ -87,7 +95,7 @@ const createWorkshop = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getSingleWorkshop = catchAsync(async (req: Request, res: Response) => {
-  const slug = req.params.slug;
+  const slug = req.params.slug as string;
 
   const result = await WorkshopService.getSingleWorkshop(slug);
 
@@ -120,8 +128,16 @@ const getAllWorkshops = catchAsync(async (req: Request, res: Response) => {
 });
 
 const updateWorkshop = catchAsync(async (req: Request, res: Response) => {
-  const { id } = req.params;
-  const result = await WorkshopService.updateWorkshop(id, req.body);
+  const id = req.params.id as string;
+
+  const files = req.files as Express.Multer.File[] | undefined;
+
+  const payload: Partial<IWorkshop> = {
+    ...req.body,
+    ...(files?.length && { images: files.map((file) => file.path) }),
+  };
+
+  const result = await WorkshopService.updateWorkshop(id, payload);
 
   sendResponse(res, {
     statusCode: StatusCodes.OK,
@@ -132,7 +148,7 @@ const updateWorkshop = catchAsync(async (req: Request, res: Response) => {
 });
 
 const deleteWorkshop = catchAsync(async (req: Request, res: Response) => {
-  const { id } = req.params;
+  const id = req.params.id as string;
 
   const result = await WorkshopService.deleteWorkshop(id);
 

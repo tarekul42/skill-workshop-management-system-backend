@@ -8,6 +8,7 @@ import {
   createCategoryZodSchema,
   updateCategoryZodSchema,
 } from "./category.validation";
+import multerUpload from "../../config/multer.config";
 
 const router = Router();
 
@@ -15,6 +16,7 @@ router.post(
   "/create",
   adminCrudLimiter,
   checkAuth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
+  multerUpload.single("file"),
   validateRequest(createCategoryZodSchema),
   CategoryController.createCategory,
 );
@@ -25,6 +27,7 @@ router.patch(
   "/:id",
   adminCrudLimiter,
   checkAuth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
+  multerUpload.single("file"),
   validateRequest(updateCategoryZodSchema),
   CategoryController.updateCategory,
 );

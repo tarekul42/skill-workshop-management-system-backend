@@ -32,7 +32,7 @@ const getAllUsers = catchAsync(async (req: Request, res: Response) => {
 });
 
 const updateUser = catchAsync(async (req: Request, res: Response) => {
-  const userId = req.params.id;
+  const userId = req.params.id as string;
   const payload = req.body;
   const verifiedToken = req.user as JwtPayload;
 

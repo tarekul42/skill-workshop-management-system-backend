@@ -8,7 +8,11 @@ const catchAsync_1 = __importDefault(require("../../utils/catchAsync"));
 const sendResponse_1 = __importDefault(require("../../utils/sendResponse"));
 const category_service_1 = __importDefault(require("./category.service"));
 const createCategory = (0, catchAsync_1.default)(async (req, res) => {
-    const result = await category_service_1.default.createCategory(req.body);
+    const payload = {
+        ...req.body,
+        ...(req.file?.path && { thumbnail: req.file.path }),
+    };
+    const result = await category_service_1.default.createCategory(payload);
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_codes_1.StatusCodes.CREATED,
         success: true,
@@ -39,7 +43,11 @@ const getAllCategories = (0, catchAsync_1.default)(async (req, res) => {
 });
 const updateCategory = (0, catchAsync_1.default)(async (req, res) => {
     const id = req.params.id;
-    const result = await category_service_1.default.updateCategory(id, req.body);
+    const payload = {
+        ...req.body,
+        ...(req.file?.path && { thumbnail: req.file.path }),
+    };
+    const result = await category_service_1.default.updateCategory(id, payload);
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_codes_1.StatusCodes.OK,
         success: true,
@@ -48,7 +56,8 @@ const updateCategory = (0, catchAsync_1.default)(async (req, res) => {
     });
 });
 const deleteCategory = (0, catchAsync_1.default)(async (req, res) => {
-    const result = await category_service_1.default.deleteCategory(req.params.id);
+    const id = req.params.id;
+    const result = await category_service_1.default.deleteCategory(id);
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_codes_1.StatusCodes.OK,
         success: true,
