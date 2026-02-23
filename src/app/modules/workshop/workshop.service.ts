@@ -217,7 +217,26 @@ const updateWorkshop = async (id: string, payload: Partial<IWorkshop>) => {
   }
 
   if (payload.images) {
-    safePayload.images = payload.images;
+    const isValidUrl = (url: string) => {
+      try {
+        new URL(url);
+        return true;
+      } catch {
+        return false;
+      }
+    };
+
+    const validImages = payload.images.filter((img) => isValidUrl(img));
+
+    if (validImages.length === 0 && payload.images.length > 0) {
+      throw new AppError(
+        StatusCodes.BAD_REQUEST,
+        "Invalid images format",
+        "Images must be valid URLs",
+      );
+    }
+
+    safePayload.images = validImages;
   }
 
   const updatedWorkshop = await WorkShop.findByIdAndUpdate(id, safePayload, {
