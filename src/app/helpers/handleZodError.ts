@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { StatusCodes } from "http-status-codes";
+import { ZodError } from "zod";
 import {
   IErrorSources,
   IGenericErrorResponse,
 } from "../interfaces/error.types";
-import { ZodError } from "zod";
 
 const handleZodError = (err: any): IGenericErrorResponse => {
   const errorSources: IErrorSources[] = (err as ZodError).issues.map(

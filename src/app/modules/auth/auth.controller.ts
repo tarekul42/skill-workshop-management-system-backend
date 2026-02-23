@@ -1,15 +1,15 @@
 import { NextFunction, Request, Response } from "express";
-import catchAsync from "../../utils/catchAsync";
-import AuthServices from "./auth.service";
-import sendResponse from "../../utils/sendResponse";
 import { StatusCodes } from "http-status-codes";
-import AppError from "../../errorHelpers/AppError";
-import setAuthCookie from "../../utils/setCookie";
 import { JwtPayload } from "jsonwebtoken";
-import { createUserTokens } from "../../utils/userTokens";
-import envVariables from "../../config/env";
-import { IUser } from "../user/user.interface";
 import passport from "passport";
+import envVariables from "../../config/env";
+import AppError from "../../errorHelpers/AppError";
+import catchAsync from "../../utils/catchAsync";
+import sendResponse from "../../utils/sendResponse";
+import setAuthCookie from "../../utils/setCookie";
+import { createUserTokens } from "../../utils/userTokens";
+import { IUser } from "../user/user.interface";
+import AuthServices from "./auth.service";
 
 type TPassportError = Error | null;
 

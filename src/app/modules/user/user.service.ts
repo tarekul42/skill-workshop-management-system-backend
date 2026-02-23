@@ -1,13 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import bcrypt from "bcryptjs";
 import { StatusCodes } from "http-status-codes";
+import { JwtPayload } from "jsonwebtoken";
 import envVariables from "../../config/env";
 import AppError from "../../errorHelpers/AppError";
-import { IAuthProvider, IUser, UserRole } from "./user.interface";
-import User from "./user.model";
-import bcrypt from "bcryptjs";
-import { JwtPayload } from "jsonwebtoken";
 import QueryBuilder from "../../utils/queryBuilder";
 import { userSearchableFields } from "./user.constant";
+import { IAuthProvider, IUser, UserRole } from "./user.interface";
+import User from "./user.model";
 
 const createUser = async (payload: Partial<IUser>) => {
   const { name, email, password, ...rest } = payload;

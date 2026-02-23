@@ -3,17 +3,17 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const express_1 = __importDefault(require("express"));
-const cors_1 = __importDefault(require("cors"));
 const cookie_parser_1 = __importDefault(require("cookie-parser"));
-const route_1 = __importDefault(require("./app/route"));
+const cors_1 = __importDefault(require("cors"));
+const express_1 = __importDefault(require("express"));
+const express_session_1 = __importDefault(require("express-session"));
+const passport_1 = __importDefault(require("passport"));
+const env_1 = __importDefault(require("./app/config/env"));
+require("./app/config/passport");
 const globalErrorHandler_1 = __importDefault(require("./app/middlewares/globalErrorHandler"));
 const notFound_1 = __importDefault(require("./app/middlewares/notFound"));
+const route_1 = __importDefault(require("./app/route"));
 const rateLimiter_1 = require("./app/utils/rateLimiter");
-const express_session_1 = __importDefault(require("express-session"));
-const env_1 = __importDefault(require("./app/config/env"));
-const passport_1 = __importDefault(require("passport"));
-require("./app/config/passport");
 const app = (0, express_1.default)();
 app.set("trust proxy", 1);
 app.use((0, express_session_1.default)({

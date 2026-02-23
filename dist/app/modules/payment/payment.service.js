@@ -1,0 +1,110 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const http_status_codes_1 = require("http-status-codes");
+const AppError_1 = __importDefault(require("../../errorHelpers/AppError"));
+const enrollment_interface_1 = require("../enrollment/enrollment.interface");
+const enrollment_model_1 = __importDefault(require("../enrollment/enrollment.model"));
+const payment_interface_1 = require("./payment.interface");
+const payment_model_1 = __importDefault(require("./payment.model"));
+const initPayment = async (enrollmentId) => {
+    const payment = await payment_model_1.default.findOne({ enrollment: enrollmentId });
+    if (!payment) {
+        throw new AppError_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "Payment not found");
+    }
+    const enrollment = await enrollment_model_1.default.findById(enrollmentId);
+    if (!enrollment) {
+        throw new AppError_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "Enrollment not found");
+    }
+    return {};
+};
+const successPayment = async (query) => {
+    const rawTransactionId = query.transactionId;
+    if (typeof rawTransactionId !== "string" || !rawTransactionId.trim()) {
+        throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Invalid transactionId");
+    }
+    const transactionId = rawTransactionId.trim();
+    const session = await enrollment_model_1.default.startSession();
+    session.startTransaction();
+    try {
+        const updatedPayment = await payment_model_1.default.findOneAndUpdate({ transactionId: { $eq: transactionId } }, { status: payment_interface_1.PAYMENT_STATUS.PAID }, { new: true, runValidators: true, session });
+        if (!updatedPayment) {
+            throw new AppError_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "Payment not found");
+        }
+        await enrollment_model_1.default.findByIdAndUpdate(updatedPayment.enrollment, { status: enrollment_interface_1.ENROLLMENT_STATUS.COMPLETE }, { runValidators: true, session });
+        await session.commitTransaction();
+        session.endSession();
+        return {
+            success: true,
+            message: "Payment completed successfully",
+        };
+    }
+    catch (err) {
+        await session.abortTransaction();
+        session.endSession();
+        throw err;
+    }
+};
+const failPayment = async (query) => {
+    const rawTransactionId = query.transactionId;
+    if (typeof rawTransactionId !== "string" || !rawTransactionId.trim()) {
+        throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Invalid transactionId");
+    }
+    const transactionId = rawTransactionId.trim();
+    const session = await enrollment_model_1.default.startSession();
+    session.startTransaction();
+    try {
+        const updatedPayment = await payment_model_1.default.findOneAndUpdate({ transactionId: { $eq: transactionId } }, { status: payment_interface_1.PAYMENT_STATUS.FAILED }, { new: true, runValidators: true, session });
+        if (!updatedPayment) {
+            throw new AppError_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "Payment not found");
+        }
+        await enrollment_model_1.default.findByIdAndUpdate(updatedPayment.enrollment, { status: enrollment_interface_1.ENROLLMENT_STATUS.FAILED }, { runValidators: true, session });
+        await session.commitTransaction();
+        session.endSession();
+        return {
+            success: false,
+            message: "Payment Failed",
+        };
+    }
+    catch (err) {
+        await session.abortTransaction();
+        session.endSession();
+        throw err;
+    }
+};
+const cancelPayment = async (query) => {
+    const rawTransactionId = query.transactionId;
+    if (typeof rawTransactionId !== "string" || !rawTransactionId.trim()) {
+        throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Invalid transactionId");
+    }
+    const transactionId = rawTransactionId.trim();
+    const session = await enrollment_model_1.default.startSession();
+    session.startTransaction();
+    try {
+        const updatedPayment = await payment_model_1.default.findOneAndUpdate({ transactionId: { $eq: transactionId } }, { status: payment_interface_1.PAYMENT_STATUS.CANCELLED }, { new: true, runValidators: true, session });
+        if (!updatedPayment) {
+            throw new AppError_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "Payment not found");
+        }
+        await enrollment_model_1.default.findByIdAndUpdate(updatedPayment.enrollment, { status: enrollment_interface_1.ENROLLMENT_STATUS.CANCEL }, { runValidators: true, session });
+        await session.commitTransaction();
+        session.endSession();
+        return {
+            success: false,
+            message: "Payment Cancelled",
+        };
+    }
+    catch (err) {
+        await session.abortTransaction();
+        session.endSession();
+        throw err;
+    }
+};
+const PaymentService = {
+    initPayment,
+    successPayment,
+    failPayment,
+    cancelPayment,
+};
+exports.default = PaymentService;

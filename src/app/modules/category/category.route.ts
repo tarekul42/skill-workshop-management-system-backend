@@ -1,13 +1,13 @@
 import { Router } from "express";
 import checkAuth from "../../middlewares/checkAuth";
-import { UserRole } from "../user/user.interface";
 import validateRequest from "../../middlewares/validateRequest";
+import { adminCrudLimiter } from "../../utils/rateLimiter";
+import { UserRole } from "../user/user.interface";
+import CategoryController from "./category.controller";
 import {
   createCategoryZodSchema,
   updateCategoryZodSchema,
 } from "./category.validation";
-import CategoryController from "./category.controller";
-import { adminCrudLimiter } from "../../utils/rateLimiter";
 
 const router = Router();
 

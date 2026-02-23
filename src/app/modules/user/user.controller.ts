@@ -1,9 +1,9 @@
 import { Request, Response } from "express";
 import StatusCodes from "http-status-codes";
-import UserServices from "./user.service";
+import { JwtPayload } from "jsonwebtoken";
 import catchAsync from "../../utils/catchAsync";
 import sendResponse from "../../utils/sendResponse";
-import { JwtPayload } from "jsonwebtoken";
+import UserServices from "./user.service";
 
 const createUser = catchAsync(async (req: Request, res: Response) => {
   const user = await UserServices.createUser(req.body);

@@ -1,3 +1,4 @@
+import bcrypt from "bcryptjs";
 import passport from "passport";
 import {
   Strategy as GoogleStrategy,
@@ -5,10 +6,9 @@ import {
   VerifyCallback,
 } from "passport-google-oauth20";
 import { Strategy as LocalStrategy } from "passport-local";
-import User from "../modules/user/user.model";
 import { IsActive, UserRole } from "../modules/user/user.interface";
+import User from "../modules/user/user.model";
 import envVariables from "./env";
-import bcrypt from "bcryptjs";
 
 // 1. SERIALIZATION
 // We store the MongoDB _id in the session
@@ -115,13 +115,22 @@ passport.use(
           });
         }
 
-        const isPasswordMatched = await bcrypt.compare(password as string, isUserExists.password as string)
-
-        if (!isPasswordMatched) {
-          return done(null, false, { message: "Password does not match" })
+        if (!isUserExists.password) {
+          return done(null, false, {
+            message: "Password not set for this account",
+          });
         }
 
-        return done(null, isUserExists)
+        const isPasswordMatched = await bcrypt.compare(
+          password,
+          isUserExists.password,
+        );
+
+        if (!isPasswordMatched) {
+          return done(null, false, { message: "Password does not match" });
+        }
+
+        return done(null, isUserExists);
       } catch (error) {
         done(error);
       }

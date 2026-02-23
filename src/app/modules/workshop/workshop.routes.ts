@@ -1,13 +1,13 @@
 import express from "express";
-import WorkshopController from "./workshop.controller";
 import checkAuth from "../../middlewares/checkAuth";
-import { UserRole } from "../user/user.interface";
 import validateRequest from "../../middlewares/validateRequest";
+import { adminCrudLimiter } from "../../utils/rateLimiter";
+import { UserRole } from "../user/user.interface";
+import WorkshopController from "./workshop.controller";
 import {
   createLevelZodSchema,
   createWorkshopZodSchema,
 } from "./workshop.validation";
-import { adminCrudLimiter } from "../../utils/rateLimiter";
 
 const router = express.Router();
 

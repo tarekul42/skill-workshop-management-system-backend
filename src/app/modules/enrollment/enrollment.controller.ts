@@ -1,9 +1,9 @@
 import { Request, Response } from "express";
-import catchAsync from "../../utils/catchAsync";
-import { JwtPayload } from "jsonwebtoken";
-import EnrollmentService from "./enrollment.service";
-import sendResponse from "../../utils/sendResponse";
 import { StatusCodes } from "http-status-codes";
+import { JwtPayload } from "jsonwebtoken";
+import catchAsync from "../../utils/catchAsync";
+import sendResponse from "../../utils/sendResponse";
+import EnrollmentService from "./enrollment.service";
 
 const createEnrollment = catchAsync(async (req: Request, res: Response) => {
   const decodeToken = req.user as JwtPayload;

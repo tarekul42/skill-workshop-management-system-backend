@@ -36,4 +36,4 @@ interface IUser {
   instructors?: Types.ObjectId[];
 }
 
-export { UserRole, IsActive, IAuthProvider, IUser };
+export { IAuthProvider, IsActive, IUser, UserRole };

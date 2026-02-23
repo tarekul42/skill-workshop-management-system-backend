@@ -1,9 +1,12 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { StatusCodes } from "http-status-codes";
 import AppError from "../../errorHelpers/AppError";
-import Payment from "./payment.model";
-import Enrollment from "../enrollment/enrollment.model";
-import { PAYMENT_STATUS } from "./payment.interface";
 import { ENROLLMENT_STATUS } from "../enrollment/enrollment.interface";
+import Enrollment from "../enrollment/enrollment.model";
+import { ISSLCommerz } from "../sslCommerz/sslCommerz.interface";
+import SSLService from "../sslCommerz/sslCommerz.service";
+import { PAYMENT_STATUS } from "./payment.interface";
+import Payment from "./payment.model";
 
 const initPayment = async (enrollmentId: string) => {
   const payment = await Payment.findOne({ enrollment: enrollmentId });
@@ -12,13 +15,31 @@ const initPayment = async (enrollmentId: string) => {
     throw new AppError(StatusCodes.NOT_FOUND, "Payment not found");
   }
 
-  const enrollment = await Enrollment.findById(enrollmentId);
+  const enrollment = await Enrollment.findById(payment.enrollment);
 
   if (!enrollment) {
     throw new AppError(StatusCodes.NOT_FOUND, "Enrollment not found");
   }
 
-  return {};
+  const userAddress = (enrollment.user as any).address;
+  const userEmail = (enrollment.user as any).email;
+  const userPhoneNumber = (enrollment.user as any).phone;
+  const userName = (enrollment.user as any).name;
+
+  const sslPayload: ISSLCommerz = {
+    address: userAddress,
+    email: userEmail,
+    phoneNumber: userPhoneNumber,
+    name: userName,
+    amount: payment.amount,
+    transactionId: payment.transactionId,
+  };
+
+  const sslPayment = await SSLService.sslPaymentInit(sslPayload);
+
+  return {
+    paymentUrl: sslPayment.GatewayPageURL,
+  };
 };
 
 const successPayment = async (query: Record<string, string>) => {

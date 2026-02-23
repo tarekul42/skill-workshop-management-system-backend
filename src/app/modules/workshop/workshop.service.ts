@@ -1,12 +1,12 @@
 import { StatusCodes } from "http-status-codes";
 import AppError from "../../errorHelpers/AppError";
-import { ILevel, IWorkshop } from "./workshop.interface";
-import { Level, WorkShop } from "./workshop.model";
 import QueryBuilder from "../../utils/queryBuilder";
 import {
   levelSearchableFields,
   workshopSearchableFields,
 } from "./workshop.constant";
+import { ILevel, IWorkshop } from "./workshop.interface";
+import { Level, WorkShop } from "./workshop.model";
 
 const createLevel = async (payload: ILevel) => {
   if (!payload || typeof payload.name !== "string") {

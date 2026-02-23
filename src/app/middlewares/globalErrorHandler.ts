@@ -1,13 +1,13 @@
 /* eslint-disable no-console */
-import { StatusCodes } from "http-status-codes";
 import { NextFunction, Request, Response } from "express";
+import { StatusCodes } from "http-status-codes";
 import envVariables from "../config/env";
 import AppError from "../errorHelpers/AppError";
-import handleDuplicateError from "../helpers/handleDuplicateError";
 import handleCastError from "../helpers/handleCastError";
+import handleDuplicateError from "../helpers/handleDuplicateError";
+import handleValidationError from "../helpers/handleValidationError";
 import handleZodError from "../helpers/handleZodError";
 import { IErrorSources } from "../interfaces/error.types";
-import handleValidationError from "../helpers/handleValidationError";
 
 const globalErrorHandler = (
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

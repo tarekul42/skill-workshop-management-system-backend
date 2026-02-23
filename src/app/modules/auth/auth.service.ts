@@ -1,10 +1,10 @@
-import { StatusCodes } from "http-status-codes";
-import User from "../user/user.model";
-import AppError from "../../errorHelpers/AppError";
 import bcrypt from "bcryptjs";
-import { createNewAccessToken } from "../../utils/userTokens";
+import { StatusCodes } from "http-status-codes";
 import { JwtPayload } from "jsonwebtoken";
 import envVariables from "../../config/env";
+import AppError from "../../errorHelpers/AppError";
+import { createNewAccessToken } from "../../utils/userTokens";
+import User from "../user/user.model";
 
 const getNewAccessToken = async (refreshToken: string) => {
   if (!refreshToken) {

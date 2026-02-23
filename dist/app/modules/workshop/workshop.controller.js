@@ -3,9 +3,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const http_status_codes_1 = require("http-status-codes");
 const catchAsync_1 = __importDefault(require("../../utils/catchAsync"));
 const sendResponse_1 = __importDefault(require("../../utils/sendResponse"));
-const http_status_codes_1 = require("http-status-codes");
 const workshop_service_1 = __importDefault(require("./workshop.service"));
 const createLevel = (0, catchAsync_1.default)(async (req, res) => {
     const { name } = req.body;

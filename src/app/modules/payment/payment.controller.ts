@@ -1,9 +1,9 @@
 import { Request, Response } from "express";
-import catchAsync from "../../utils/catchAsync";
-import PaymentService from "./payment.service";
-import sendResponse from "../../utils/sendResponse";
 import { StatusCodes } from "http-status-codes";
 import envVariables from "../../config/env";
+import catchAsync from "../../utils/catchAsync";
+import sendResponse from "../../utils/sendResponse";
+import PaymentService from "./payment.service";
 
 const initPayment = catchAsync(async (req: Request, res: Response) => {
   const enrollmentId = req.params.enrollmentId;
