@@ -11,7 +11,7 @@ cloudinary.config({
 
 const deleteImageFromCloudinary = async (url: string) => {
   try {
-    const regex = /\/v\d+\/(.*?)\.(jpg|jpeg|png|gif|webp)$/i;
+    const regex = /\/v\d+\/([^/]+)\.(jpg|jpeg|png|gif|webp)$/i;
     const match = url.match(regex);
 
     if (match && match[1]) {
