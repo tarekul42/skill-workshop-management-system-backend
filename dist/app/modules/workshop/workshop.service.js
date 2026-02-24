@@ -155,7 +155,20 @@ const updateWorkshop = async (id, payload) => {
         payload.images = [...restDBImages, ...updatedPayloadImages];
     }
     if (payload.images) {
-        safePayload.images = payload.images;
+        const isValidUrl = (url) => {
+            try {
+                new URL(url);
+                return true;
+            }
+            catch {
+                return false;
+            }
+        };
+        const validImages = payload.images.filter((img) => isValidUrl(img));
+        if (validImages.length === 0 && payload.images.length > 0) {
+            throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Invalid images format", "Images must be valid URLs");
+        }
+        safePayload.images = validImages;
     }
     const updatedWorkshop = await workshop_model_1.WorkShop.findByIdAndUpdate(id, safePayload, {
         new: true,

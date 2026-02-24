@@ -4,13 +4,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
+const multer_config_1 = __importDefault(require("../../config/multer.config"));
 const checkAuth_1 = __importDefault(require("../../middlewares/checkAuth"));
 const validateRequest_1 = __importDefault(require("../../middlewares/validateRequest"));
 const rateLimiter_1 = require("../../utils/rateLimiter");
 const user_interface_1 = require("../user/user.interface");
 const category_controller_1 = __importDefault(require("./category.controller"));
 const category_validation_1 = require("./category.validation");
-const multer_config_1 = __importDefault(require("../../config/multer.config"));
 const router = (0, express_1.Router)();
 router.post("/create", rateLimiter_1.adminCrudLimiter, (0, checkAuth_1.default)(user_interface_1.UserRole.ADMIN, user_interface_1.UserRole.SUPER_ADMIN), multer_config_1.default.single("file"), (0, validateRequest_1.default)(category_validation_1.createCategoryZodSchema), category_controller_1.default.createCategory);
 router.get("/", category_controller_1.default.getAllCategories);
