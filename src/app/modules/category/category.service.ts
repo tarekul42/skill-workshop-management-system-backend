@@ -1,11 +1,11 @@
 /* eslint-disable no-console */
 import { StatusCodes } from "http-status-codes";
+import { deleteImageFromCloudinary } from "../../config/cloudinary.config";
 import AppError from "../../errorHelpers/AppError";
 import QueryBuilder from "../../utils/queryBuilder";
 import { categorySearchableFields } from "./category.constant";
 import { ICategory } from "./category.interface";
 import { Category } from "./category.model";
-import { deleteImageFromCloudinary } from "../../config/cloudinary.config";
 
 const createCategory = async (payload: ICategory) => {
   if (typeof payload.name !== "string") {

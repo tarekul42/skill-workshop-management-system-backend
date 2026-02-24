@@ -2,8 +2,8 @@ import { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import catchAsync from "../../utils/catchAsync";
 import sendResponse from "../../utils/sendResponse";
-import CategoryService from "./category.service";
 import { ICategory } from "./category.interface";
+import CategoryService from "./category.service";
 
 const createCategory = catchAsync(async (req: Request, res: Response) => {
   const payload = {

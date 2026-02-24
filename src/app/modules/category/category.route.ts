@@ -1,4 +1,5 @@
 import { Router } from "express";
+import multerUpload from "../../config/multer.config";
 import checkAuth from "../../middlewares/checkAuth";
 import validateRequest from "../../middlewares/validateRequest";
 import { adminCrudLimiter } from "../../utils/rateLimiter";
@@ -8,7 +9,6 @@ import {
   createCategoryZodSchema,
   updateCategoryZodSchema,
 } from "./category.validation";
-import multerUpload from "../../config/multer.config";
 
 const router = Router();
 
