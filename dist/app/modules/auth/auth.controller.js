@@ -66,6 +66,39 @@ const logout = (0, catchAsync_1.default)(async (_req, res) => {
         data: null,
     });
 });
+const changePassword = (0, catchAsync_1.default)(async (req, res) => {
+    const newPassword = req.body.newPassword;
+    const oldPassword = req.body.oldPassword;
+    const decodedToken = req.user;
+    await auth_service_1.default.changePassword(oldPassword, newPassword, decodedToken);
+    (0, sendResponse_1.default)(res, {
+        success: true,
+        statusCode: http_status_codes_1.StatusCodes.OK,
+        message: "Password changed successfully",
+        data: null,
+    });
+});
+const setPassword = (0, catchAsync_1.default)(async (req, res) => {
+    const decodedToken = req.user;
+    const { password } = req.body;
+    await auth_service_1.default.setPassword(decodedToken.userId, password);
+    (0, sendResponse_1.default)(res, {
+        success: true,
+        statusCode: http_status_codes_1.StatusCodes.OK,
+        message: "Password set successfully",
+        data: null,
+    });
+});
+const forgotPassword = (0, catchAsync_1.default)(async (req, res) => {
+    const { email } = req.body;
+    await auth_service_1.default.forgotPassword(email);
+    (0, sendResponse_1.default)(res, {
+        success: true,
+        statusCode: http_status_codes_1.StatusCodes.OK,
+        message: "Email has been sent",
+        data: null,
+    });
+});
 const resetPassword = (0, catchAsync_1.default)(async (req, res) => {
     const oldPassword = req.body.oldPassword;
     const newPassword = req.body.newPassword;
@@ -102,6 +135,9 @@ const AuthControllers = {
     credentialsLogin,
     getNewAccessToken,
     logout,
+    changePassword,
+    setPassword,
+    forgotPassword,
     resetPassword,
     googleCallback,
 };
