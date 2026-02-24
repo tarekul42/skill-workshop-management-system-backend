@@ -3,10 +3,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+/* eslint-disable @typescript-eslint/no-explicit-any */
 const http_status_codes_1 = require("http-status-codes");
 const AppError_1 = __importDefault(require("../../errorHelpers/AppError"));
 const enrollment_interface_1 = require("../enrollment/enrollment.interface");
 const enrollment_model_1 = __importDefault(require("../enrollment/enrollment.model"));
+const sslCommerz_service_1 = __importDefault(require("../sslCommerz/sslCommerz.service"));
 const payment_interface_1 = require("./payment.interface");
 const payment_model_1 = __importDefault(require("./payment.model"));
 const initPayment = async (enrollmentId) => {
@@ -14,11 +16,26 @@ const initPayment = async (enrollmentId) => {
     if (!payment) {
         throw new AppError_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "Payment not found");
     }
-    const enrollment = await enrollment_model_1.default.findById(enrollmentId);
+    const enrollment = await enrollment_model_1.default.findById(payment.enrollment);
     if (!enrollment) {
         throw new AppError_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "Enrollment not found");
     }
-    return {};
+    const userAddress = enrollment.user.address;
+    const userEmail = enrollment.user.email;
+    const userPhoneNumber = enrollment.user.phone;
+    const userName = enrollment.user.name;
+    const sslPayload = {
+        address: userAddress,
+        email: userEmail,
+        phoneNumber: userPhoneNumber,
+        name: userName,
+        amount: payment.amount,
+        transactionId: payment.transactionId,
+    };
+    const sslPayment = await sslCommerz_service_1.default.sslPaymentInit(sslPayload);
+    return {
+        paymentUrl: sslPayment.GatewayPageURL,
+    };
 };
 const successPayment = async (query) => {
     const rawTransactionId = query.transactionId;

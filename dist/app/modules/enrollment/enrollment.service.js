@@ -3,19 +3,19 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+/* eslint-disable @typescript-eslint/no-explicit-any */
 const http_status_codes_1 = require("http-status-codes");
 const AppError_1 = __importDefault(require("../../errorHelpers/AppError"));
+const getTransactionId_1 = require("../../utils/getTransactionId");
 const payment_interface_1 = require("../payment/payment.interface");
 const payment_model_1 = __importDefault(require("../payment/payment.model"));
+const sslCommerz_service_1 = __importDefault(require("../sslCommerz/sslCommerz.service"));
 const user_model_1 = __importDefault(require("../user/user.model"));
 const workshop_model_1 = require("../workshop/workshop.model");
 const enrollment_interface_1 = require("./enrollment.interface");
 const enrollment_model_1 = __importDefault(require("./enrollment.model"));
-const getTransactionId = () => {
-    return `tran_${Date.now()}_${Math.floor(Math.random() * 10000)}`;
-};
 const createEnrollment = async (payload, userId) => {
-    const transactionId = getTransactionId();
+    const transactionId = (0, getTransactionId_1.getTransactionId)();
     const session = await enrollment_model_1.default.startSession();
     session.startTransaction();
     try {
@@ -67,9 +67,23 @@ const createEnrollment = async (payload, userId) => {
             .populate("user", "name email phone address")
             .populate("workshop", "title price")
             .populate("payment");
+        const userAddress = (updatedEnrollment?.user).address;
+        const userEmail = (updatedEnrollment?.user).email;
+        const userPhoneNumber = (updatedEnrollment?.user).phone;
+        const userName = (updatedEnrollment?.user).name;
+        const sslPayload = {
+            address: userAddress,
+            email: userEmail,
+            phoneNumber: userPhoneNumber,
+            name: userName,
+            amount: amount,
+            transactionId: transactionId,
+        };
+        const sslPayment = await sslCommerz_service_1.default.sslPaymentInit(sslPayload);
         await session.commitTransaction();
         session.endSession();
         return {
+            paymentUrl: sslPayment.GatewayPageURL,
             enrollment: updatedEnrollment,
         };
     }

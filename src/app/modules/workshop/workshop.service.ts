@@ -1,4 +1,6 @@
+/* eslint-disable no-console */
 import { StatusCodes } from "http-status-codes";
+import { deleteImageFromCloudinary } from "../../config/cloudinary.config";
 import AppError from "../../errorHelpers/AppError";
 import QueryBuilder from "../../utils/queryBuilder";
 import {
@@ -188,9 +190,81 @@ const updateWorkshop = async (id: string, payload: Partial<IWorkshop>) => {
     }
   }
 
+  if (
+    payload.images &&
+    payload.images.length > 0 &&
+    existingWorkshop.images &&
+    existingWorkshop.images.length > 0
+  ) {
+    payload.images = [...payload.images, ...existingWorkshop.images];
+  }
+
+  if (
+    payload.deleteImages &&
+    payload.deleteImages.length > 0 &&
+    existingWorkshop.images &&
+    existingWorkshop.images.length > 0
+  ) {
+    const restDBImages = existingWorkshop.images.filter(
+      (imageUrl) => !payload.deleteImages?.includes(imageUrl),
+    );
+
+    const updatedPayloadImages = (payload.images || [])
+      .filter((imageUrl) => !payload.deleteImages?.includes(imageUrl))
+      .filter((imageUrl) => !restDBImages.includes(imageUrl));
+
+    payload.images = [...restDBImages, ...updatedPayloadImages];
+  }
+
+  if (payload.images) {
+    const isValidUrl = (url: string) => {
+      try {
+        new URL(url);
+        return true;
+      } catch {
+        return false;
+      }
+    };
+
+    const validImages = payload.images.filter((img) => isValidUrl(img));
+
+    if (validImages.length === 0 && payload.images.length > 0) {
+      throw new AppError(
+        StatusCodes.BAD_REQUEST,
+        "Invalid images format",
+        "Images must be valid URLs",
+      );
+    }
+
+    safePayload.images = validImages;
+  }
+
   const updatedWorkshop = await WorkShop.findByIdAndUpdate(id, safePayload, {
     new: true,
   });
+
+  if (
+    payload.deleteImages &&
+    payload.deleteImages.length > 0 &&
+    existingWorkshop.images &&
+    existingWorkshop.images.length > 0
+  ) {
+    // Only delete images that actually belonged to this workshop
+    const validDeletions = payload.deleteImages.filter((url) =>
+      existingWorkshop.images?.includes(url),
+    );
+
+    const results = await Promise.allSettled(
+      validDeletions.map((url) => deleteImageFromCloudinary(url)),
+    );
+
+    const failures = results.filter((r) => r.status === "rejected");
+    if (failures.length > 0) {
+      console.error(
+        `Failed to delete ${failures.length} images from Cloudinary`,
+      );
+    }
+  }
 
   return updatedWorkshop;
 };

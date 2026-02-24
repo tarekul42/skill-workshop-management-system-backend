@@ -3,11 +3,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+/* eslint-disable no-console */
 const http_status_codes_1 = require("http-status-codes");
 const AppError_1 = __importDefault(require("../../errorHelpers/AppError"));
 const queryBuilder_1 = __importDefault(require("../../utils/queryBuilder"));
 const category_constant_1 = require("./category.constant");
 const category_model_1 = require("./category.model");
+const cloudinary_config_1 = require("../../config/cloudinary.config");
 const createCategory = async (payload) => {
     if (typeof payload.name !== "string") {
         throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Invalid category name");
@@ -45,6 +47,10 @@ const getAllCategories = async (query) => {
     };
 };
 const updateCategory = async (id, payload) => {
+    const existingCategory = await category_model_1.Category.findById(id);
+    if (!existingCategory) {
+        throw new AppError_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "Category not found");
+    }
     // 1. Validation: Name specific checks
     // We copy to a local variable to handle trimming without mutating the original payload
     let payloadName = payload.name;
@@ -92,6 +98,15 @@ const updateCategory = async (id, payload) => {
     });
     if (!updatedCategory) {
         throw new AppError_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "Category not found");
+    }
+    if (payload.thumbnail && existingCategory.thumbnail) {
+        try {
+            await (0, cloudinary_config_1.deleteImageFromCloudinary)(existingCategory.thumbnail);
+        }
+        catch (error) {
+            // Log error but don't fail the request - category update already succeeded
+            console.error("Failed to delete old thumbnail from Cloudinary:", error);
+        }
     }
     return updatedCategory;
 };

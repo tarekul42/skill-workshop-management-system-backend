@@ -43,7 +43,7 @@ const getAllLevels = (0, catchAsync_1.default)(async (req, res) => {
     });
 });
 const updateLevel = (0, catchAsync_1.default)(async (req, res) => {
-    const { id } = req.params;
+    const id = req.params.id;
     const { name } = req.body;
     const result = await workshop_service_1.default.updateLevel(id, { name });
     (0, sendResponse_1.default)(res, {
@@ -54,7 +54,7 @@ const updateLevel = (0, catchAsync_1.default)(async (req, res) => {
     });
 });
 const deleteLevel = (0, catchAsync_1.default)(async (req, res) => {
-    const { id } = req.params;
+    const id = req.params.id;
     const result = await workshop_service_1.default.deleteLevel(id);
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_codes_1.StatusCodes.OK,
@@ -64,7 +64,11 @@ const deleteLevel = (0, catchAsync_1.default)(async (req, res) => {
     });
 });
 const createWorkshop = (0, catchAsync_1.default)(async (req, res) => {
-    const result = await workshop_service_1.default.createWorkshop(req.body);
+    const payload = {
+        ...req.body,
+        images: (req.files ?? []).map((file) => file.path),
+    };
+    const result = await workshop_service_1.default.createWorkshop(payload);
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_codes_1.StatusCodes.CREATED,
         success: true,
@@ -99,8 +103,13 @@ const getAllWorkshops = (0, catchAsync_1.default)(async (req, res) => {
     });
 });
 const updateWorkshop = (0, catchAsync_1.default)(async (req, res) => {
-    const { id } = req.params;
-    const result = await workshop_service_1.default.updateWorkshop(id, req.body);
+    const id = req.params.id;
+    const files = req.files;
+    const payload = {
+        ...req.body,
+        ...(files?.length && { images: files.map((file) => file.path) }),
+    };
+    const result = await workshop_service_1.default.updateWorkshop(id, payload);
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_codes_1.StatusCodes.OK,
         success: true,
@@ -109,7 +118,7 @@ const updateWorkshop = (0, catchAsync_1.default)(async (req, res) => {
     });
 });
 const deleteWorkshop = (0, catchAsync_1.default)(async (req, res) => {
-    const { id } = req.params;
+    const id = req.params.id;
     const result = await workshop_service_1.default.deleteWorkshop(id);
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_codes_1.StatusCodes.OK,

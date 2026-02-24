@@ -1,4 +1,5 @@
 import { Router } from "express";
+import multerUpload from "../../config/multer.config";
 import checkAuth from "../../middlewares/checkAuth";
 import validateRequest from "../../middlewares/validateRequest";
 import { adminCrudLimiter } from "../../utils/rateLimiter";
@@ -15,6 +16,7 @@ router.post(
   "/create",
   adminCrudLimiter,
   checkAuth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
+  multerUpload.single("file"),
   validateRequest(createCategoryZodSchema),
   CategoryController.createCategory,
 );
@@ -25,6 +27,7 @@ router.patch(
   "/:id",
   adminCrudLimiter,
   checkAuth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
+  multerUpload.single("file"),
   validateRequest(updateCategoryZodSchema),
   CategoryController.updateCategory,
 );
