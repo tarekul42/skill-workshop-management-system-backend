@@ -98,7 +98,11 @@ const setPassword = async (userId: string, plainPassword: string) => {
   await user.save();
 };
 const forgotPassword = async (email: string) => {
-  const isUserExists = await User.findOne({ email });
+  if (typeof email !== "string") {
+    throw new AppError(StatusCodes.BAD_REQUEST, "Invalid email");
+  }
+
+  const isUserExists = await User.findOne({ email: { $eq: email } });
 
   if (!isUserExists) {
     throw new AppError(StatusCodes.NOT_FOUND, "User not found");
