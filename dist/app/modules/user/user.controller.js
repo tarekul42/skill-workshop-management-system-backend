@@ -16,6 +16,26 @@ const createUser = (0, catchAsync_1.default)(async (req, res) => {
         data: user,
     });
 });
+const getSingleUser = (0, catchAsync_1.default)(async (req, res) => {
+    const id = req.params.id;
+    const result = await user_service_1.default.getSingleUser(id);
+    (0, sendResponse_1.default)(res, {
+        statusCode: http_status_codes_1.default.OK,
+        success: true,
+        message: "User fetched successfully",
+        data: result.data,
+    });
+});
+const getMe = (0, catchAsync_1.default)(async (req, res) => {
+    const decodedToken = req.user;
+    const result = await user_service_1.default.getMe(decodedToken.userId);
+    (0, sendResponse_1.default)(res, {
+        statusCode: http_status_codes_1.default.OK,
+        success: true,
+        message: "User fetched successfully",
+        data: result.data,
+    });
+});
 const getAllUsers = (0, catchAsync_1.default)(async (req, res) => {
     const query = req.query;
     const result = await user_service_1.default.getAllUsers(query);
@@ -41,6 +61,8 @@ const updateUser = (0, catchAsync_1.default)(async (req, res) => {
 });
 const UserControllers = {
     createUser,
+    getSingleUser,
+    getMe,
     getAllUsers,
     updateUser,
 };

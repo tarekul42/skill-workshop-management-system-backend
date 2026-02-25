@@ -57,6 +57,13 @@ const getSingleUser = async (id: string) => {
   return { data: user };
 };
 
+const getMe = async (userId: string) => {
+  const user = await User.findById(userId);
+  return {
+    data: user,
+  };
+};
+
 const getAllUsers = async (query: Record<string, string>) => {
   const queryBuilder = new QueryBuilder(User.find(), query);
 
@@ -158,6 +165,7 @@ const updateUser = async (
 const UserServices = {
   createUser,
   getSingleUser,
+  getMe,
   getAllUsers,
   updateUser,
 };

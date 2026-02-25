@@ -14,12 +14,18 @@ router.post(
   UserControllers.createUser,
 );
 
-router.patch(
+router.get(
   "/:id",
   strictLimiter,
-  validateRequest(updateUserZodSchema),
+  checkAuth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
+  UserControllers.getSingleUser,
+);
+
+router.get(
+  "/me",
+  strictLimiter,
   checkAuth(...Object.values(UserRole)),
-  UserControllers.updateUser,
+  UserControllers.getMe,
 );
 
 router.get(
@@ -27,6 +33,14 @@ router.get(
   strictLimiter,
   checkAuth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
   UserControllers.getAllUsers,
+);
+
+router.patch(
+  "/:id",
+  strictLimiter,
+  validateRequest(updateUserZodSchema),
+  checkAuth(...Object.values(UserRole)),
+  UserControllers.updateUser,
 );
 
 const UserRoutes = router;
