@@ -70,7 +70,7 @@ passport.use(
             existingUser.isActive === IsActive.INACTIVE
           ) {
             return done(null, false, {
-              message: `User is ${existingUser.isActive}`,
+              message: `User is ${existingUser.isActive}.`,
             });
           }
 
@@ -135,7 +135,7 @@ passport.use(
           isUserExists.isActive === IsActive.INACTIVE
         ) {
           return done(null, false, {
-            message: `User is ${isUserExists.isActive}`,
+            message: `User is ${isUserExists.isActive}.`,
           });
         }
 

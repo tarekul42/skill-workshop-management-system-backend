@@ -11,12 +11,12 @@ const Level = (0, mongoose_1.model)("Level", levelSchema);
 exports.Level = Level;
 const workshopSchema = new mongoose_1.Schema({
     title: { type: String, required: true },
-    slug: { type: String, unique: true },
+    slug: { type: String, unique: true, index: true },
     description: { type: String },
     images: { type: [String], default: [] },
-    location: { type: String },
+    location: { type: String, index: true },
     price: { type: Number },
-    startDate: { type: Date },
+    startDate: { type: Date, index: true },
     endDate: { type: Date },
     whatYouLearn: { type: [String], default: [] },
     prerequisites: { type: [String], default: [] },
@@ -28,15 +28,19 @@ const workshopSchema = new mongoose_1.Schema({
         type: mongoose_1.Schema.Types.ObjectId,
         ref: "Category",
         required: true,
+        index: true,
     },
     level: {
         type: mongoose_1.Schema.Types.ObjectId,
         ref: "Level",
         required: true,
+        index: true,
     },
 }, {
     timestamps: true,
 });
+const WorkShop = (0, mongoose_1.model)("Workshop", workshopSchema);
+exports.WorkShop = WorkShop;
 workshopSchema.pre("save", async function () {
     if (this.isModified("title")) {
         const baseSlug = this.title.toLowerCase().split(" ").join("-");
@@ -61,5 +65,3 @@ workshopSchema.pre("findOneAndUpdate", async function () {
     }
     this.setUpdate(workshop);
 });
-const WorkShop = (0, mongoose_1.model)("Workshop", workshopSchema);
-exports.WorkShop = WorkShop;

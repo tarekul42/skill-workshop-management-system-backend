@@ -11,7 +11,7 @@ const authProviderSchema = new mongoose_1.Schema({
 });
 const userSchema = new mongoose_1.Schema({
     name: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
+    email: { type: String, required: true, unique: true, index: true },
     password: { type: String },
     phone: { type: String },
     picture: { type: String },
@@ -35,10 +35,13 @@ const userSchema = new mongoose_1.Schema({
     versionKey: false,
     toJSON: {
         transform: (_doc, ret) => {
-            delete ret.password; // Removes password from the response object
+            delete ret.password;
             return ret;
         },
     },
 });
+userSchema.index({ isDeleted: 1, isActive: 1, role: 1 });
+userSchema.index({ isDeleted: 1, isVerified: 1 });
+userSchema.index({ name: "text", email: "text", address: "text" });
 const User = (0, mongoose_1.model)("User", userSchema);
 exports.default = User;

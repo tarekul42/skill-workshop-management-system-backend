@@ -15,12 +15,12 @@ const Level = model<ILevel>("Level", levelSchema);
 const workshopSchema = new Schema<IWorkshop>(
   {
     title: { type: String, required: true },
-    slug: { type: String, unique: true },
+    slug: { type: String, unique: true, index: true },
     description: { type: String },
     images: { type: [String], default: [] },
-    location: { type: String },
+    location: { type: String, index: true },
     price: { type: Number },
-    startDate: { type: Date },
+    startDate: { type: Date, index: true },
     endDate: { type: Date },
     whatYouLearn: { type: [String], default: [] },
     prerequisites: { type: [String], default: [] },
@@ -32,17 +32,21 @@ const workshopSchema = new Schema<IWorkshop>(
       type: Schema.Types.ObjectId,
       ref: "Category",
       required: true,
+      index: true,
     },
     level: {
       type: Schema.Types.ObjectId,
       ref: "Level",
       required: true,
+      index: true,
     },
   },
   {
     timestamps: true,
   },
 );
+
+const WorkShop = model<IWorkshop>("Workshop", workshopSchema);
 
 workshopSchema.pre("save", async function () {
   if (this.isModified("title")) {
@@ -72,7 +76,5 @@ workshopSchema.pre("findOneAndUpdate", async function () {
   }
   this.setUpdate(workshop);
 });
-
-const WorkShop = model<IWorkshop>("Workshop", workshopSchema);
 
 export { Level, WorkShop };

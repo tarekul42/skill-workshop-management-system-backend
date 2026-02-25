@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { NextFunction, Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import { JwtPayload } from "jsonwebtoken";
@@ -79,18 +80,28 @@ const getNewAccessToken = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-const logout = catchAsync(async (_req: Request, res: Response) => {
+const logout = catchAsync(async (req: Request, res: Response) => {
+  const isProduction = process.env.NODE_ENV === "production";
+
   res.clearCookie("accessToken", {
     httpOnly: true,
-    secure: false,
-    sameSite: "lax",
+    secure: isProduction,
+    sameSite: isProduction ? "strict" : "lax",
   });
 
   res.clearCookie("refreshToken", {
     httpOnly: true,
-    secure: false,
-    sameSite: "lax",
+    secure: isProduction,
+    sameSite: isProduction ? "strict" : "lax",
   });
+
+  if (req.session) {
+    req.session.destroy((err) => {
+      if (err) {
+        console.error("Session destroy error:", err);
+      }
+    });
+  }
 
   sendResponse(res, {
     statusCode: StatusCodes.OK,

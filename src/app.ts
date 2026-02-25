@@ -34,6 +34,14 @@ app.use(cors());
 
 app.use("/api/v1", generalLimiter, router);
 
+app.get("/health-check", (_req: Request, res: Response) => {
+  res.status(200).json({
+    status: "ok",
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+  });
+});
+
 app.get("/", (_req: Request, res: Response) => {
   res.status(200).json({
     message: "Skill Workshop Management System Backend is up and running.",

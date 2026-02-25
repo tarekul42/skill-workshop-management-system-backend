@@ -50,7 +50,7 @@ router.post(
   "/create",
   adminCrudLimiter,
   checkAuth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
-  multerUpload.array("files"),
+  multerUpload.array("files", 10),
   validateRequest(createWorkshopZodSchema),
   WorkshopController.createWorkshop,
 );
