@@ -23,6 +23,9 @@ const checkAuth = (...authRoles) => async (req, _res, next) => {
         if (!isUserExists) {
             throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "User does not exist");
         }
+        if (!isUserExists.isVerified) {
+            throw new AppError_1.default(http_status_codes_1.StatusCodes.FORBIDDEN, "User is not verified");
+        }
         if (isUserExists.isActive === user_interface_1.IsActive.INACTIVE ||
             isUserExists.isActive === user_interface_1.IsActive.BLOCKED) {
             throw new AppError_1.default(http_status_codes_1.StatusCodes.FORBIDDEN, `User is ${isUserExists.isActive.toLowerCase()}.`);

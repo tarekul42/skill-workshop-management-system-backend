@@ -44,6 +44,19 @@ passport_1.default.use(new passport_google_oauth20_1.Strategy({
         // CHECK IF USER EXISTS
         const existingUser = await user_model_1.default.findOne({ email });
         if (existingUser) {
+            // Security checks
+            if (existingUser.isDeleted) {
+                return done(null, false, { message: "User is deleted." });
+            }
+            if (!existingUser.isVerified) {
+                return done(null, false, { message: "User is not verified." });
+            }
+            if (existingUser.isActive === user_interface_1.IsActive.BLOCKED ||
+                existingUser.isActive === user_interface_1.IsActive.INACTIVE) {
+                return done(null, false, {
+                    message: `User is ${existingUser.isActive}`,
+                });
+            }
             // OPTIONAL: Update picture or name if they changed on Google
             existingUser.name = name;
             existingUser.picture = picture;
@@ -81,6 +94,18 @@ passport_1.default.use(new passport_local_1.Strategy({
         const isUserExists = await user_model_1.default.findOne({ email });
         if (!isUserExists) {
             return done("User does not exist.");
+        }
+        if (isUserExists.isDeleted) {
+            return done(null, false, { message: "User is deleted." });
+        }
+        if (!isUserExists.isVerified) {
+            return done(null, false, { message: "User is not verified." });
+        }
+        if (isUserExists.isActive === user_interface_1.IsActive.BLOCKED ||
+            isUserExists.isActive === user_interface_1.IsActive.INACTIVE) {
+            return done(null, false, {
+                message: `User is ${isUserExists.isActive}`,
+            });
         }
         const isGoogleAuthenticated = isUserExists.auths.some((providerObject) => providerObject.provider === "google");
         if (isGoogleAuthenticated && !isUserExists.password) {
