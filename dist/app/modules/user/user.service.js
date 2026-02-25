@@ -45,6 +45,12 @@ const getSingleUser = async (id) => {
     }
     return { data: user };
 };
+const getMe = async (userId) => {
+    const user = await user_model_1.default.findById(userId);
+    return {
+        data: user,
+    };
+};
 const getAllUsers = async (query) => {
     const queryBuilder = new queryBuilder_1.default(user_model_1.default.find(), query);
     const usersData = queryBuilder
@@ -112,6 +118,7 @@ const updateUser = async (userId, payload, decodedToken) => {
 const UserServices = {
     createUser,
     getSingleUser,
+    getMe,
     getAllUsers,
     updateUser,
 };
