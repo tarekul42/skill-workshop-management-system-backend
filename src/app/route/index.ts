@@ -4,6 +4,7 @@ import CategoryRoutes from "../modules/category/category.route";
 import EnrollmentRoutes from "../modules/enrollment/enrollment.route";
 import PaymentRoutes from "../modules/payment/payment.route";
 import UserRoutes from "../modules/user/user.route";
+import WorkshopRoutes from "../modules/workshop/workshop.routes";
 
 const router = Router();
 
@@ -15,6 +16,10 @@ const moduleRoutes = [
   {
     path: "/auth",
     route: AuthRoutes,
+  },
+  {
+    path: "/workshop",
+    route: WorkshopRoutes,
   },
   {
     path: "/category",

@@ -70,3 +70,7 @@ router.delete(
   checkAuth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
   WorkshopController.deleteWorkshop,
 );
+
+const WorkshopRoutes = router;
+
+export default WorkshopRoutes;
