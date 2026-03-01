@@ -14,7 +14,7 @@ const generateOtp = (length = 6) => {
 };
 
 const sendOtp = async (email: string, name: string) => {
-  const user = await User.findOne({ email });
+  const user = await User.findOne({ email: { $eq: email } });
 
   if (!user) {
     throw new AppError(StatusCodes.NOT_FOUND, "User not found");
@@ -46,7 +46,7 @@ const sendOtp = async (email: string, name: string) => {
 };
 
 const verifyOtp = async (email: string, otp: string) => {
-  const user = await User.findOne({ email });
+  const user = await User.findOne({ email: { $eq: email } });
 
   if (!user) {
     throw new AppError(StatusCodes.NOT_FOUND, "User not found");
@@ -84,7 +84,11 @@ const verifyOtp = async (email: string, otp: string) => {
   }
 
   await Promise.all([
-    User.updateOne({ email }, { isVerified: true }, { runValidators: true }),
+    User.updateOne(
+      { email: { $eq: email } },
+      { isVerified: true },
+      { runValidators: true },
+    ),
     redisClient.del([redisKey]),
   ]);
 };
