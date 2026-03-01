@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { StatusCodes } from "http-status-codes";
+import { Types } from "mongoose";
 import AppError from "../../errorHelpers/AppError";
 import { getTransactionId } from "../../utils/getTransactionId";
 import { PAYMENT_STATUS } from "../payment/payment.interface";
@@ -144,7 +145,7 @@ const getUserEnrollments = async (userId: string) => {
 };
 
 const getSingleEnrollment = async (enrollmentId: string, userId: string, userRole: string) => {
-  const enrollment = await Enrollment.findById(enrollmentId)
+  const enrollment = await Enrollment.findOne({ _id: { $eq: new Types.ObjectId(enrollmentId) } })
     .populate("user", "name email phone address")
     .populate("workshop", "title price images location startDate endDate")
     .populate("payment", "status amount transactionId invoiceUrl");
@@ -223,14 +224,14 @@ const updateEnrollmentStatus = async (
     );
   }
 
-  const enrollment = await Enrollment.findById(enrollmentId);
+  const enrollment = await Enrollment.findOne({ _id: { $eq: new Types.ObjectId(enrollmentId) } });
 
   if (!enrollment) {
     throw new AppError(StatusCodes.NOT_FOUND, "Enrollment not found");
   }
 
-  const updatedEnrollment = await Enrollment.findByIdAndUpdate(
-    enrollmentId,
+  const updatedEnrollment = await Enrollment.findOneAndUpdate(
+    { _id: { $eq: new Types.ObjectId(enrollmentId) } },
     { status },
     { new: true, runValidators: true },
   )

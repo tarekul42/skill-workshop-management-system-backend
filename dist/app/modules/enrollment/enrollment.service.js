@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const http_status_codes_1 = require("http-status-codes");
+const mongoose_1 = require("mongoose");
 const AppError_1 = __importDefault(require("../../errorHelpers/AppError"));
 const getTransactionId_1 = require("../../utils/getTransactionId");
 const payment_interface_1 = require("../payment/payment.interface");
@@ -103,7 +104,7 @@ const getUserEnrollments = async (userId) => {
     };
 };
 const getSingleEnrollment = async (enrollmentId, userId, userRole) => {
-    const enrollment = await enrollment_model_1.default.findById(enrollmentId)
+    const enrollment = await enrollment_model_1.default.findOne({ _id: { $eq: new mongoose_1.Types.ObjectId(enrollmentId) } })
         .populate("user", "name email phone address")
         .populate("workshop", "title price images location startDate endDate")
         .populate("payment", "status amount transactionId invoiceUrl");
@@ -160,11 +161,11 @@ const updateEnrollmentStatus = async (enrollmentId, status, userRole) => {
     if (!allowedStatuses.includes(status)) {
         throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Invalid enrollment status");
     }
-    const enrollment = await enrollment_model_1.default.findById(enrollmentId);
+    const enrollment = await enrollment_model_1.default.findOne({ _id: { $eq: new mongoose_1.Types.ObjectId(enrollmentId) } });
     if (!enrollment) {
         throw new AppError_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "Enrollment not found");
     }
-    const updatedEnrollment = await enrollment_model_1.default.findByIdAndUpdate(enrollmentId, { status }, { new: true, runValidators: true })
+    const updatedEnrollment = await enrollment_model_1.default.findOneAndUpdate({ _id: { $eq: new mongoose_1.Types.ObjectId(enrollmentId) } }, { status }, { new: true, runValidators: true })
         .populate("user", "name email phone")
         .populate("workshop", "title price")
         .populate("payment", "status amount transactionId");

@@ -14,7 +14,7 @@ const initPayment = async (enrollmentId: string) => {
     throw new AppError(StatusCodes.BAD_REQUEST, "Invalid enrollment ID");
   }
 
-  const payment = await Payment.findOne({ enrollment: enrollmentId });
+  const payment = await Payment.findOne({ enrollment: { $eq: new Types.ObjectId(enrollmentId) } });
 
   if (!payment) {
     throw new AppError(StatusCodes.NOT_FOUND, "Payment not found");
@@ -24,7 +24,7 @@ const initPayment = async (enrollmentId: string) => {
     throw new AppError(StatusCodes.BAD_REQUEST, "Payment already completed");
   }
 
-  const enrollment = await Enrollment.findById(payment.enrollment).populate(
+  const enrollment = await Enrollment.findOne({ _id: { $eq: new Types.ObjectId(payment.enrollment as any) } }).populate(
     "user",
     "name email phone address",
   );
@@ -88,8 +88,8 @@ const successPayment = async (query: Record<string, string>) => {
       throw new AppError(StatusCodes.NOT_FOUND, "Payment not found");
     }
 
-    await Enrollment.findByIdAndUpdate(
-      updatedPayment.enrollment,
+    await Enrollment.findOneAndUpdate(
+      { _id: { $eq: new Types.ObjectId(updatedPayment.enrollment as any) } },
       { status: ENROLLMENT_STATUS.COMPLETE },
       { runValidators: true, session },
     );

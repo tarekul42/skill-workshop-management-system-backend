@@ -16,14 +16,14 @@ const initPayment = async (enrollmentId) => {
     if (!enrollmentId || !mongoose_1.Types.ObjectId.isValid(enrollmentId)) {
         throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Invalid enrollment ID");
     }
-    const payment = await payment_model_1.default.findOne({ enrollment: enrollmentId });
+    const payment = await payment_model_1.default.findOne({ enrollment: { $eq: new mongoose_1.Types.ObjectId(enrollmentId) } });
     if (!payment) {
         throw new AppError_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "Payment not found");
     }
     if (payment.status === payment_interface_1.PAYMENT_STATUS.PAID) {
         throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Payment already completed");
     }
-    const enrollment = await enrollment_model_1.default.findById(payment.enrollment).populate("user", "name email phone address");
+    const enrollment = await enrollment_model_1.default.findOne({ _id: { $eq: new mongoose_1.Types.ObjectId(payment.enrollment) } }).populate("user", "name email phone address");
     if (!enrollment) {
         throw new AppError_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "Enrollment not found");
     }
@@ -60,7 +60,7 @@ const successPayment = async (query) => {
         if (!updatedPayment) {
             throw new AppError_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "Payment not found");
         }
-        await enrollment_model_1.default.findByIdAndUpdate(updatedPayment.enrollment, { status: enrollment_interface_1.ENROLLMENT_STATUS.COMPLETE }, { runValidators: true, session });
+        await enrollment_model_1.default.findOneAndUpdate({ _id: { $eq: new mongoose_1.Types.ObjectId(updatedPayment.enrollment) } }, { status: enrollment_interface_1.ENROLLMENT_STATUS.COMPLETE }, { runValidators: true, session });
         await session.commitTransaction();
         session.endSession();
         return {
