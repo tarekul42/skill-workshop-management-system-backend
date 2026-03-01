@@ -171,7 +171,10 @@ const getAllEnrollments = async (query: Record<string, string>) => {
   const filter: Record<string, unknown> = {};
 
   if (typeof status === "string") {
-    const allowedStatuses = Object.values(ENROLLMENT_STATUS);
+    const allowedStatuses = Object.values(ENROLLMENT_STATUS) as string[];
+    if (allowedStatuses.includes(status)) {
+      filter.status = status;
+    }
     if (allowedStatuses.includes(status as ENROLLMENT_STATUS)) {
       filter.status = status;
     }
