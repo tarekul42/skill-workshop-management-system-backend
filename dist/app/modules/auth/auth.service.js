@@ -65,6 +65,10 @@ const forgotPassword = async (email) => {
     if (typeof email !== "string") {
         throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Invalid email");
     }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Invalid email format");
+    }
     const isUserExists = await user_model_1.default.findOne({ email: { $eq: email } });
     if (!isUserExists) {
         throw new AppError_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "User not found");
@@ -111,7 +115,7 @@ const resetPassword = async (oldPassword, newPassword, decodedToken) => {
         throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Old password does not match");
     }
     user.password = await bcryptjs_1.default.hash(newPassword, Number(env_1.default.BCRYPT_SALT_ROUND));
-    user.save();
+    await user.save();
 };
 const AuthServices = {
     getNewAccessToken,

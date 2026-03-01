@@ -1,7 +1,7 @@
 import { Router } from "express";
 import checkAuth from "../../middlewares/checkAuth";
 import validateRequest from "../../middlewares/validateRequest";
-import { strictLimiter } from "../../utils/rateLimiter";
+import { authLimiter, strictLimiter } from "../../utils/rateLimiter";
 import UserControllers from "./user.controller";
 import { UserRole } from "./user.interface";
 import { createUserZodSchema, updateUserZodSchema } from "./user.validation";
@@ -10,15 +10,9 @@ const router = Router();
 
 router.post(
   "/register",
+  authLimiter,
   validateRequest(createUserZodSchema),
   UserControllers.createUser,
-);
-
-router.get(
-  "/:id",
-  strictLimiter,
-  checkAuth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
-  UserControllers.getSingleUser,
 );
 
 router.get(
@@ -33,6 +27,13 @@ router.get(
   strictLimiter,
   checkAuth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
   UserControllers.getAllUsers,
+);
+
+router.get(
+  "/:id",
+  strictLimiter,
+  checkAuth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
+  UserControllers.getSingleUser,
 );
 
 router.patch(

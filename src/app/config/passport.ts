@@ -119,7 +119,7 @@ passport.use(
         const isUserExists = await User.findOne({ email });
 
         if (!isUserExists) {
-          return done("User does not exist.");
+          return done(null, false, { message: "User does not exist." });
         }
 
         if (isUserExists.isDeleted) {

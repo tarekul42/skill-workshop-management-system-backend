@@ -41,27 +41,34 @@ const workshopSchema = new mongoose_1.Schema({
 });
 const WorkShop = (0, mongoose_1.model)("Workshop", workshopSchema);
 exports.WorkShop = WorkShop;
-workshopSchema.pre("save", async function () {
-    if (this.isModified("title")) {
-        const baseSlug = this.title.toLowerCase().split(" ").join("-");
-        let slug = `${baseSlug}`;
-        let counter = 0;
-        while (await WorkShop.exists({ slug })) {
-            slug = `${slug}-${counter++}`;
+const generateUniqueSlug = async (baseSlug, excludeId) => {
+    let slug = baseSlug;
+    let counter = 0;
+    while (true) {
+        const query = { slug };
+        if (excludeId) {
+            query._id = { $ne: new mongoose_1.Types.ObjectId(excludeId) };
         }
-        this.slug = slug;
+        const exists = await WorkShop.findOne(query);
+        if (!exists)
+            break;
+        slug = `${baseSlug}-${counter++}`;
+    }
+    return slug;
+};
+workshopSchema.pre("save", async function () {
+    if (this.isModified("title") || !this.slug) {
+        const baseSlug = this.title.toLowerCase().split(" ").join("-");
+        this.slug = await generateUniqueSlug(baseSlug);
     }
 });
 workshopSchema.pre("findOneAndUpdate", async function () {
-    const workshop = this.getUpdate();
-    if (workshop.title) {
-        const baseSlug = workshop.title.toLowerCase().split(" ").join("-");
-        let slug = `${baseSlug}`;
-        let counter = 0;
-        while (await WorkShop.exists({ slug })) {
-            slug = `${slug}-${counter++}`;
-        }
-        workshop.slug = slug;
+    const update = this.getUpdate();
+    const query = this.getQuery();
+    if (update?.title) {
+        const baseSlug = update.title.toLowerCase().split(" ").join("-");
+        const workshopId = query._id?.toString();
+        update.slug = await generateUniqueSlug(baseSlug, workshopId);
     }
-    this.setUpdate(workshop);
+    this.setUpdate(update);
 });

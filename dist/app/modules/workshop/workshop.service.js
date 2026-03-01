@@ -138,6 +138,45 @@ const updateWorkshop = async (id, payload) => {
             throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Workshop with this title already exists");
         }
     }
+    if (typeof payload.description === "string") {
+        safePayload.description = payload.description;
+    }
+    if (typeof payload.location === "string") {
+        safePayload.location = payload.location;
+    }
+    if (typeof payload.price === "number") {
+        safePayload.price = payload.price;
+    }
+    if (payload.startDate !== undefined) {
+        safePayload.startDate = payload.startDate;
+    }
+    if (payload.endDate !== undefined) {
+        safePayload.endDate = payload.endDate;
+    }
+    if (Array.isArray(payload.whatYouLearn)) {
+        safePayload.whatYouLearn = payload.whatYouLearn;
+    }
+    if (Array.isArray(payload.prerequisites)) {
+        safePayload.prerequisites = payload.prerequisites;
+    }
+    if (Array.isArray(payload.benefits)) {
+        safePayload.benefits = payload.benefits;
+    }
+    if (Array.isArray(payload.syllabus)) {
+        safePayload.syllabus = payload.syllabus;
+    }
+    if (typeof payload.maxSeats === "number") {
+        safePayload.maxSeats = payload.maxSeats;
+    }
+    if (typeof payload.minAge === "number") {
+        safePayload.minAge = payload.minAge;
+    }
+    if (payload.category !== undefined) {
+        safePayload.category = payload.category;
+    }
+    if (payload.level !== undefined) {
+        safePayload.level = payload.level;
+    }
     if (payload.images &&
         payload.images.length > 0 &&
         existingWorkshop.images &&

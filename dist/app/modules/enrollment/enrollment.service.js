@@ -93,17 +93,72 @@ const createEnrollment = async (payload, userId) => {
         throw err;
     }
 };
-const getUserEnrollments = async () => {
-    return {};
+const getUserEnrollments = async (userId) => {
+    const enrollment = await enrollment_model_1.default.find({ user: userId })
+        .populate("user", "name email phone")
+        .populate("workshop", "title price images location startDate")
+        .populate("payment", "status amount transactionId");
+    return {
+        data: enrollment,
+    };
 };
-const getSingleEnrollment = async () => {
-    return {};
+const getSingleEnrollment = async (enrollmentId, userId, userRole) => {
+    const enrollment = await enrollment_model_1.default.findById(enrollmentId)
+        .populate("user", "name email phone address")
+        .populate("workshop", "title price images location startDate endDate")
+        .populate("payment", "status amount transactionId invoiceUrl");
+    if (!enrollment) {
+        throw new AppError_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "Enrollment not found");
+    }
+    const isOwner = enrollment.user && enrollment.user._id?.toString() === userId;
+    const isAdmin = userRole === "ADMIN" || userRole === "SUPER_ADMIN";
+    if (!isOwner && !isAdmin) {
+        throw new AppError_1.default(http_status_codes_1.StatusCodes.FORBIDDEN, "You are not authorized to view this enrollment");
+    }
+    return {
+        data: enrollment,
+    };
 };
-const getAllEnrollments = async () => {
-    return {};
+const getAllEnrollments = async (query) => {
+    const { status, page = 1, limit = 10 } = query;
+    const filter = {};
+    if (status) {
+        filter.status = status;
+    }
+    const skip = (Number(page) - 1) * Number(limit);
+    const [enrollments, total] = await Promise.all([
+        enrollment_model_1.default.find(filter)
+            .populate("user", "name email phone")
+            .populate("workshop", "title price images location")
+            .populate("payment", "status amount transactionId")
+            .skip(skip)
+            .limit(Number(limit))
+            .sort({ createdAt: -1 }),
+        enrollment_model_1.default.countDocuments(filter),
+    ]);
+    return {
+        data: enrollments,
+        meta: {
+            total,
+            page: Number(page),
+            limit: Number(limit),
+            totalPage: Math.ceil(total / Number(limit)),
+        },
+    };
 };
-const updateEnrollmentStatus = async () => {
-    return {};
+const updateEnrollmentStatus = async (enrollmentId, status, userRole) => {
+    if (userRole !== "ADMIN" && userRole !== "SUPER_ADMIN") {
+        throw new AppError_1.default(http_status_codes_1.StatusCodes.FORBIDDEN, "Only admins can update enrollment status");
+    }
+    const enrollment = await enrollment_model_1.default.findById(enrollmentId);
+    if (!enrollment) {
+        throw new AppError_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "Enrollment not found");
+    }
+    const updatedEnrollment = await enrollment_model_1.default.findByIdAndUpdate(enrollmentId, { status }, { new: true, runValidators: true })
+        .populate("user", "name email phone")
+        .populate("workshop", "title price")
+        .populate("payment", "status amount transactionId");
+    return updatedEnrollment;
 };
 const EnrollmentService = {
     createEnrollment,

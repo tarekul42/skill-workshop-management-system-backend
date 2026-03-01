@@ -55,7 +55,10 @@ const sslPaymentInit = async (payload) => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
     }
     catch (err) {
-        throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, err.message);
+        if (err instanceof AppError_1.default) {
+            throw err;
+        }
+        throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_GATEWAY, err?.message || "Payment gateway request failed");
     }
 };
 const SSLService = {

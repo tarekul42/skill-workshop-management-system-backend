@@ -93,7 +93,7 @@ passport_1.default.use(new passport_local_1.Strategy({
     try {
         const isUserExists = await user_model_1.default.findOne({ email });
         if (!isUserExists) {
-            return done("User does not exist.");
+            return done(null, false, { message: "User does not exist." });
         }
         if (isUserExists.isDeleted) {
             return done(null, false, { message: "User is deleted." });

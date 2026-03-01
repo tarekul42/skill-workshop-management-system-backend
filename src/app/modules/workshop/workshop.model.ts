@@ -1,4 +1,4 @@
-import { model, Schema } from "mongoose";
+import { model, Schema, Types } from "mongoose";
 import { ILevel, IWorkshop } from "./workshop.interface";
 
 const levelSchema = new Schema<ILevel>(
@@ -48,33 +48,45 @@ const workshopSchema = new Schema<IWorkshop>(
 
 const WorkShop = model<IWorkshop>("Workshop", workshopSchema);
 
-workshopSchema.pre("save", async function () {
-  if (this.isModified("title")) {
-    const baseSlug = this.title.toLowerCase().split(" ").join("-");
-    let slug = `${baseSlug}`;
+const generateUniqueSlug = async (
+  baseSlug: string,
+  excludeId?: string,
+): Promise<string> => {
+  let slug = baseSlug;
+  let counter = 0;
 
-    let counter = 0;
-    while (await WorkShop.exists({ slug })) {
-      slug = `${slug}-${counter++}`;
+  while (true) {
+    const query: { slug: string; _id?: { $ne: Types.ObjectId } } = { slug };
+    if (excludeId) {
+      query._id = { $ne: new Types.ObjectId(excludeId) };
     }
-    this.slug = slug;
+
+    const exists = await WorkShop.findOne(query);
+    if (!exists) break;
+
+    slug = `${baseSlug}-${counter++}`;
+  }
+
+  return slug;
+};
+
+workshopSchema.pre("save", async function () {
+  if (this.isModified("title") || !this.slug) {
+    const baseSlug = this.title.toLowerCase().split(" ").join("-");
+    this.slug = await generateUniqueSlug(baseSlug);
   }
 });
 
 workshopSchema.pre("findOneAndUpdate", async function () {
-  const workshop = this.getUpdate() as Partial<IWorkshop>;
+  const update = this.getUpdate() as Partial<IWorkshop> & { _id?: Types.ObjectId };
+  const query = this.getQuery();
 
-  if (workshop.title) {
-    const baseSlug = workshop.title.toLowerCase().split(" ").join("-");
-    let slug = `${baseSlug}`;
-
-    let counter = 0;
-    while (await WorkShop.exists({ slug })) {
-      slug = `${slug}-${counter++}`;
-    }
-    workshop.slug = slug;
+  if (update?.title) {
+    const baseSlug = update.title.toLowerCase().split(" ").join("-");
+    const workshopId = query._id?.toString();
+    update.slug = await generateUniqueSlug(baseSlug, workshopId);
   }
-  this.setUpdate(workshop);
+  this.setUpdate(update);
 });
 
 export { Level, WorkShop };

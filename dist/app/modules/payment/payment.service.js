@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const http_status_codes_1 = require("http-status-codes");
+const mongoose_1 = require("mongoose");
 const AppError_1 = __importDefault(require("../../errorHelpers/AppError"));
 const enrollment_interface_1 = require("../enrollment/enrollment.interface");
 const enrollment_model_1 = __importDefault(require("../enrollment/enrollment.model"));
@@ -12,23 +13,32 @@ const sslCommerz_service_1 = __importDefault(require("../sslCommerz/sslCommerz.s
 const payment_interface_1 = require("./payment.interface");
 const payment_model_1 = __importDefault(require("./payment.model"));
 const initPayment = async (enrollmentId) => {
+    if (!enrollmentId || !mongoose_1.Types.ObjectId.isValid(enrollmentId)) {
+        throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Invalid enrollment ID");
+    }
     const payment = await payment_model_1.default.findOne({ enrollment: enrollmentId });
     if (!payment) {
         throw new AppError_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "Payment not found");
     }
-    const enrollment = await enrollment_model_1.default.findById(payment.enrollment);
+    if (payment.status === payment_interface_1.PAYMENT_STATUS.PAID) {
+        throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Payment already completed");
+    }
+    const enrollment = await enrollment_model_1.default.findById(payment.enrollment).populate("user", "name email phone address");
     if (!enrollment) {
         throw new AppError_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "Enrollment not found");
     }
-    const userAddress = enrollment.user.address;
-    const userEmail = enrollment.user.email;
-    const userPhoneNumber = enrollment.user.phone;
-    const userName = enrollment.user.name;
+    if (enrollment.status !== enrollment_interface_1.ENROLLMENT_STATUS.PENDING) {
+        throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Enrollment is not pending");
+    }
+    const user = enrollment.user;
+    if (!user?.address || !user?.phone) {
+        throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "User profile is incomplete. Please update address and phone number.");
+    }
     const sslPayload = {
-        address: userAddress,
-        email: userEmail,
-        phoneNumber: userPhoneNumber,
-        name: userName,
+        address: user.address,
+        email: user.email,
+        phoneNumber: user.phone,
+        name: user.name,
         amount: payment.amount,
         transactionId: payment.transactionId,
     };

@@ -11,7 +11,7 @@ const user_controller_1 = __importDefault(require("./user.controller"));
 const user_interface_1 = require("./user.interface");
 const user_validation_1 = require("./user.validation");
 const router = (0, express_1.Router)();
-router.post("/register", (0, validateRequest_1.default)(user_validation_1.createUserZodSchema), user_controller_1.default.createUser);
+router.post("/register", rateLimiter_1.authLimiter, (0, validateRequest_1.default)(user_validation_1.createUserZodSchema), user_controller_1.default.createUser);
 router.get("/:id", rateLimiter_1.strictLimiter, (0, checkAuth_1.default)(user_interface_1.UserRole.ADMIN, user_interface_1.UserRole.SUPER_ADMIN), user_controller_1.default.getSingleUser);
 router.get("/me", rateLimiter_1.strictLimiter, (0, checkAuth_1.default)(...Object.values(user_interface_1.UserRole)), user_controller_1.default.getMe);
 router.get("/all-users", rateLimiter_1.strictLimiter, (0, checkAuth_1.default)(user_interface_1.UserRole.ADMIN, user_interface_1.UserRole.SUPER_ADMIN), user_controller_1.default.getAllUsers);

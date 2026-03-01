@@ -12,7 +12,7 @@ const createUser = (0, catchAsync_1.default)(async (req, res) => {
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_codes_1.default.CREATED,
         success: true,
-        message: "User created successfuly",
+        message: "User created successfully",
         data: user,
     });
 });
@@ -53,9 +53,9 @@ const updateUser = (0, catchAsync_1.default)(async (req, res) => {
     const verifiedToken = req.user;
     const user = await user_service_1.default.updateUser(userId, payload, verifiedToken);
     (0, sendResponse_1.default)(res, {
-        statusCode: http_status_codes_1.default.CREATED,
+        statusCode: http_status_codes_1.default.OK,
         success: true,
-        message: "User updated successfuly",
+        message: "User updated successfully",
         data: user,
     });
 });

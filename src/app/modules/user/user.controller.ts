@@ -11,7 +11,7 @@ const createUser = catchAsync(async (req: Request, res: Response) => {
   sendResponse(res, {
     statusCode: StatusCodes.CREATED,
     success: true,
-    message: "User created successfuly",
+    message: "User created successfully",
     data: user,
   });
 });
@@ -63,9 +63,9 @@ const updateUser = catchAsync(async (req: Request, res: Response) => {
   const user = await UserServices.updateUser(userId, payload, verifiedToken);
 
   sendResponse(res, {
-    statusCode: StatusCodes.CREATED,
+    statusCode: StatusCodes.OK,
     success: true,
-    message: "User updated successfuly",
+    message: "User updated successfully",
     data: user,
   });
 });

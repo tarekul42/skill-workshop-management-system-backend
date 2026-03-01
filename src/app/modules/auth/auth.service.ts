@@ -102,6 +102,11 @@ const forgotPassword = async (email: string) => {
     throw new AppError(StatusCodes.BAD_REQUEST, "Invalid email");
   }
 
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    throw new AppError(StatusCodes.BAD_REQUEST, "Invalid email format");
+  }
+
   const isUserExists = await User.findOne({ email: { $eq: email } });
 
   if (!isUserExists) {
@@ -178,7 +183,7 @@ const resetPassword = async (
     Number(envVariables.BCRYPT_SALT_ROUND),
   );
 
-  user.save();
+  await user.save();
 };
 
 const AuthServices = {
