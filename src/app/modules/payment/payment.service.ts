@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { StatusCodes } from "http-status-codes";
+import { Types } from "mongoose";
 import AppError from "../../errorHelpers/AppError";
 import { ENROLLMENT_STATUS } from "../enrollment/enrollment.interface";
 import Enrollment from "../enrollment/enrollment.model";
@@ -9,28 +10,50 @@ import { PAYMENT_STATUS } from "./payment.interface";
 import Payment from "./payment.model";
 
 const initPayment = async (enrollmentId: string) => {
-  const payment = await Payment.findOne({ enrollment: enrollmentId });
+  if (!enrollmentId || !Types.ObjectId.isValid(enrollmentId)) {
+    throw new AppError(StatusCodes.BAD_REQUEST, "Invalid enrollment ID");
+  }
+
+  const payment = await Payment.findOne({ enrollment: { $eq: new Types.ObjectId(enrollmentId) } });
 
   if (!payment) {
     throw new AppError(StatusCodes.NOT_FOUND, "Payment not found");
   }
 
-  const enrollment = await Enrollment.findById(payment.enrollment);
+  if (payment.status === PAYMENT_STATUS.PAID) {
+    throw new AppError(StatusCodes.BAD_REQUEST, "Payment already completed");
+  }
+
+  const enrollment = await Enrollment.findOne({ _id: { $eq: new Types.ObjectId(payment.enrollment as any) } }).populate(
+    "user",
+    "name email phone address",
+  );
 
   if (!enrollment) {
     throw new AppError(StatusCodes.NOT_FOUND, "Enrollment not found");
   }
 
-  const userAddress = (enrollment.user as any).address;
-  const userEmail = (enrollment.user as any).email;
-  const userPhoneNumber = (enrollment.user as any).phone;
-  const userName = (enrollment.user as any).name;
+  if (enrollment.status !== ENROLLMENT_STATUS.PENDING) {
+    throw new AppError(
+      StatusCodes.BAD_REQUEST,
+      "Enrollment is not pending",
+    );
+  }
+
+  const user = enrollment.user as any;
+
+  if (!user?.address || !user?.phone) {
+    throw new AppError(
+      StatusCodes.BAD_REQUEST,
+      "User profile is incomplete. Please update address and phone number.",
+    );
+  }
 
   const sslPayload: ISSLCommerz = {
-    address: userAddress,
-    email: userEmail,
-    phoneNumber: userPhoneNumber,
-    name: userName,
+    address: user.address,
+    email: user.email,
+    phoneNumber: user.phone,
+    name: user.name,
     amount: payment.amount,
     transactionId: payment.transactionId,
   };
@@ -65,8 +88,8 @@ const successPayment = async (query: Record<string, string>) => {
       throw new AppError(StatusCodes.NOT_FOUND, "Payment not found");
     }
 
-    await Enrollment.findByIdAndUpdate(
-      updatedPayment.enrollment,
+    await Enrollment.findOneAndUpdate(
+      { _id: { $eq: new Types.ObjectId(updatedPayment.enrollment as any) } },
       { status: ENROLLMENT_STATUS.COMPLETE },
       { runValidators: true, session },
     );

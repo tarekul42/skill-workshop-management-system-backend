@@ -20,7 +20,12 @@ const createCategory = async (payload) => {
     if (existingCategory) {
         throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "A Category with this name already exists");
     }
-    const category = await category_model_1.Category.create(payload);
+    const slug = payload.name
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "");
+    const category = await category_model_1.Category.create({ ...payload, slug });
     return category;
 };
 const getSingleCategory = async (slug) => {

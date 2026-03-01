@@ -48,17 +48,25 @@ const getNewAccessToken = (0, catchAsync_1.default)(async (req, res) => {
         data: tokenInfo,
     });
 });
-const logout = (0, catchAsync_1.default)(async (_req, res) => {
+const logout = (0, catchAsync_1.default)(async (req, res) => {
+    const isProduction = process.env.NODE_ENV === "production";
     res.clearCookie("accessToken", {
         httpOnly: true,
-        secure: false,
-        sameSite: "lax",
+        secure: isProduction,
+        sameSite: isProduction ? "strict" : "lax",
     });
     res.clearCookie("refreshToken", {
         httpOnly: true,
-        secure: false,
-        sameSite: "lax",
+        secure: isProduction,
+        sameSite: isProduction ? "strict" : "lax",
     });
+    if (req.session) {
+        req.session.destroy((err) => {
+            if (err) {
+                console.error("Session destroy error:", err);
+            }
+        });
+    }
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_codes_1.StatusCodes.OK,
         success: true,

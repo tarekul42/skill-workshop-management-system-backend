@@ -23,7 +23,13 @@ const createCategory = async (payload: ICategory) => {
     );
   }
 
-  const category = await Category.create(payload);
+  const slug = payload.name
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+
+  const category = await Category.create({ ...payload, slug });
   return category;
 };
 

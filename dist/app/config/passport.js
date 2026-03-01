@@ -54,7 +54,7 @@ passport_1.default.use(new passport_google_oauth20_1.Strategy({
             if (existingUser.isActive === user_interface_1.IsActive.BLOCKED ||
                 existingUser.isActive === user_interface_1.IsActive.INACTIVE) {
                 return done(null, false, {
-                    message: `User is ${existingUser.isActive}`,
+                    message: `User is ${existingUser.isActive}.`,
                 });
             }
             // OPTIONAL: Update picture or name if they changed on Google
@@ -93,7 +93,7 @@ passport_1.default.use(new passport_local_1.Strategy({
     try {
         const isUserExists = await user_model_1.default.findOne({ email });
         if (!isUserExists) {
-            return done("User does not exist.");
+            return done(null, false, { message: "User does not exist." });
         }
         if (isUserExists.isDeleted) {
             return done(null, false, { message: "User is deleted." });
@@ -104,7 +104,7 @@ passport_1.default.use(new passport_local_1.Strategy({
         if (isUserExists.isActive === user_interface_1.IsActive.BLOCKED ||
             isUserExists.isActive === user_interface_1.IsActive.INACTIVE) {
             return done(null, false, {
-                message: `User is ${isUserExists.isActive}`,
+                message: `User is ${isUserExists.isActive}.`,
             });
         }
         const isGoogleAuthenticated = isUserExists.auths.some((providerObject) => providerObject.provider === "google");

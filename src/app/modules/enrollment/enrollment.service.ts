@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { StatusCodes } from "http-status-codes";
+import { Types } from "mongoose";
 import AppError from "../../errorHelpers/AppError";
 import { getTransactionId } from "../../utils/getTransactionId";
 import { PAYMENT_STATUS } from "../payment/payment.interface";
@@ -132,20 +133,113 @@ const createEnrollment = async (
   }
 };
 
-const getUserEnrollments = async () => {
-  return {};
+const getUserEnrollments = async (userId: string) => {
+  const enrollment = await Enrollment.find({ user: userId })
+    .populate("user", "name email phone")
+    .populate("workshop", "title price images location startDate")
+    .populate("payment", "status amount transactionId");
+
+  return {
+    data: enrollment,
+  };
 };
 
-const getSingleEnrollment = async () => {
-  return {};
+const getSingleEnrollment = async (enrollmentId: string, userId: string, userRole: string) => {
+  const enrollment = await Enrollment.findOne({ _id: { $eq: new Types.ObjectId(enrollmentId) } })
+    .populate("user", "name email phone address")
+    .populate("workshop", "title price images location startDate endDate")
+    .populate("payment", "status amount transactionId invoiceUrl");
+
+  if (!enrollment) {
+    throw new AppError(StatusCodes.NOT_FOUND, "Enrollment not found");
+  }
+
+  const isOwner = enrollment.user && (enrollment.user as any)._id?.toString() === userId;
+  const isAdmin = userRole === "ADMIN" || userRole === "SUPER_ADMIN";
+
+  if (!isOwner && !isAdmin) {
+    throw new AppError(StatusCodes.FORBIDDEN, "You are not authorized to view this enrollment");
+  }
+
+  return {
+    data: enrollment,
+  };
 };
 
-const getAllEnrollments = async () => {
-  return {};
+const getAllEnrollments = async (query: Record<string, string>) => {
+  const { status, page = 1, limit = 10 } = query;
+
+  const filter: Record<string, unknown> = {};
+
+  if (typeof status === "string") {
+    const allowedStatuses = Object.values(ENROLLMENT_STATUS) as string[];
+    if (allowedStatuses.includes(status)) {
+      filter.status = status;
+    }
+    if (allowedStatuses.includes(status as ENROLLMENT_STATUS)) {
+      filter.status = status;
+    }
+  }
+
+  const skip = (Number(page) - 1) * Number(limit);
+
+  const [enrollments, total] = await Promise.all([
+    Enrollment.find(filter)
+      .populate("user", "name email phone")
+      .populate("workshop", "title price images location")
+      .populate("payment", "status amount transactionId")
+      .skip(skip)
+      .limit(Number(limit))
+      .sort({ createdAt: -1 }),
+    Enrollment.countDocuments(filter),
+  ]);
+
+  return {
+    data: enrollments,
+    meta: {
+      total,
+      page: Number(page),
+      limit: Number(limit),
+      totalPage: Math.ceil(total / Number(limit)),
+    },
+  };
 };
 
-const updateEnrollmentStatus = async () => {
-  return {};
+const updateEnrollmentStatus = async (
+  enrollmentId: string,
+  status: ENROLLMENT_STATUS,
+  userRole: string,
+) => {
+  if (userRole !== "ADMIN" && userRole !== "SUPER_ADMIN") {
+    throw new AppError(
+      StatusCodes.FORBIDDEN,
+      "Only admins can update enrollment status",
+    );
+  }
+  const allowedStatuses = Object.values(ENROLLMENT_STATUS);
+  if (!allowedStatuses.includes(status)) {
+    throw new AppError(
+      StatusCodes.BAD_REQUEST,
+      "Invalid enrollment status",
+    );
+  }
+
+  const enrollment = await Enrollment.findOne({ _id: { $eq: new Types.ObjectId(enrollmentId) } });
+
+  if (!enrollment) {
+    throw new AppError(StatusCodes.NOT_FOUND, "Enrollment not found");
+  }
+
+  const updatedEnrollment = await Enrollment.findOneAndUpdate(
+    { _id: { $eq: new Types.ObjectId(enrollmentId) } },
+    { status },
+    { new: true, runValidators: true },
+  )
+    .populate("user", "name email phone")
+    .populate("workshop", "title price")
+    .populate("payment", "status amount transactionId");
+
+  return updatedEnrollment;
 };
 
 const EnrollmentService = {

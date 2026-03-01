@@ -4,7 +4,7 @@ import CategoryRoutes from "../modules/category/category.route";
 import EnrollmentRoutes from "../modules/enrollment/enrollment.route";
 import PaymentRoutes from "../modules/payment/payment.route";
 import UserRoutes from "../modules/user/user.route";
-import WorkshopRoutes from "../modules/workshop/workshop.routes";
+import WorkshopRoutes from "../modules/workshop/workshop.route";
 
 const router = Router();
 

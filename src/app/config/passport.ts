@@ -70,7 +70,7 @@ passport.use(
             existingUser.isActive === IsActive.INACTIVE
           ) {
             return done(null, false, {
-              message: `User is ${existingUser.isActive}`,
+              message: `User is ${existingUser.isActive}.`,
             });
           }
 
@@ -119,7 +119,7 @@ passport.use(
         const isUserExists = await User.findOne({ email });
 
         if (!isUserExists) {
-          return done("User does not exist.");
+          return done(null, false, { message: "User does not exist." });
         }
 
         if (isUserExists.isDeleted) {
@@ -135,7 +135,7 @@ passport.use(
           isUserExists.isActive === IsActive.INACTIVE
         ) {
           return done(null, false, {
-            message: `User is ${isUserExists.isActive}`,
+            message: `User is ${isUserExists.isActive}.`,
           });
         }
 

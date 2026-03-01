@@ -8,17 +8,22 @@ const catchAsync_1 = __importDefault(require("../../utils/catchAsync"));
 const sendResponse_1 = __importDefault(require("../../utils/sendResponse"));
 const enrollment_service_1 = __importDefault(require("./enrollment.service"));
 const createEnrollment = (0, catchAsync_1.default)(async (req, res) => {
-    const decodeToken = req.user;
-    const enrollment = await enrollment_service_1.default.createEnrollment(req.body, decodeToken.userId);
+    const userId = req.user.userId;
+    const payload = req.body;
+    const result = await enrollment_service_1.default.createEnrollment(payload, userId);
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_codes_1.StatusCodes.CREATED,
         success: true,
         message: "Enrollment created successfully",
-        data: enrollment,
+        data: {
+            enrollment: result.enrollment,
+            paymentUrl: result.paymentUrl,
+        },
     });
 });
 const getUserEnrollments = (0, catchAsync_1.default)(async (req, res) => {
-    const enrollments = await enrollment_service_1.default.getUserEnrollments();
+    const decodeToken = req.user;
+    const enrollments = await enrollment_service_1.default.getUserEnrollments(decodeToken.userId);
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_codes_1.StatusCodes.OK,
         success: true,
@@ -27,7 +32,9 @@ const getUserEnrollments = (0, catchAsync_1.default)(async (req, res) => {
     });
 });
 const getSingleEnrollment = (0, catchAsync_1.default)(async (req, res) => {
-    const enrollment = await enrollment_service_1.default.getSingleEnrollment();
+    const decodeToken = req.user;
+    const enrollmentId = req.params.enrollmentId;
+    const enrollment = await enrollment_service_1.default.getSingleEnrollment(enrollmentId, decodeToken.userId, decodeToken.role);
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_codes_1.StatusCodes.OK,
         success: true,
@@ -36,16 +43,21 @@ const getSingleEnrollment = (0, catchAsync_1.default)(async (req, res) => {
     });
 });
 const getAllEnrollments = (0, catchAsync_1.default)(async (req, res) => {
-    const enrollments = await enrollment_service_1.default.getAllEnrollments();
+    const query = req.query;
+    const enrollments = await enrollment_service_1.default.getAllEnrollments(query);
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_codes_1.StatusCodes.OK,
         success: true,
         message: "Enrollments fetched successfully",
         data: enrollments,
+        meta: enrollments.meta,
     });
 });
 const updateEnrollmentStatus = (0, catchAsync_1.default)(async (req, res) => {
-    const updatedEnrollment = await enrollment_service_1.default.updateEnrollmentStatus();
+    const decodeToken = req.user;
+    const enrollmentId = req.params.enrollmentId;
+    const status = req.body.status;
+    const updatedEnrollment = await enrollment_service_1.default.updateEnrollmentStatus(enrollmentId, status, decodeToken.role);
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_codes_1.StatusCodes.OK,
         success: true,

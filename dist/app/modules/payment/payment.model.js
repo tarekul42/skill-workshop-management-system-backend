@@ -29,6 +29,7 @@ const paymentSchema = new mongoose_1.Schema({
         type: String,
         enum: Object.values(payment_interface_1.PAYMENT_STATUS),
         default: payment_interface_1.PAYMENT_STATUS.UNPAID,
+        index: true,
     },
 }, {
     timestamps: true,

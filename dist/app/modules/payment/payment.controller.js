@@ -12,7 +12,7 @@ const initPayment = (0, catchAsync_1.default)(async (req, res) => {
     const enrollmentId = req.params.enrollmentId;
     const result = await payment_service_1.default.initPayment(enrollmentId);
     (0, sendResponse_1.default)(res, {
-        statusCode: http_status_codes_1.StatusCodes.CREATED,
+        statusCode: http_status_codes_1.StatusCodes.OK,
         success: true,
         message: "Payment initiated successfully",
         data: result,

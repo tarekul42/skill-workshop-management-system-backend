@@ -73,6 +73,12 @@ const updateUser = async (userId, payload, decodedToken) => {
     if (!user) {
         throw new AppError_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "User not found");
     }
+    const isAdmin = decodedToken.role === user_interface_1.UserRole.ADMIN ||
+        decodedToken.role === user_interface_1.UserRole.SUPER_ADMIN;
+    const isOwnProfile = decodedToken.userId === userId;
+    if (!isAdmin && !isOwnProfile) {
+        throw new AppError_1.default(http_status_codes_1.StatusCodes.FORBIDDEN, "You are not authorized to update this user");
+    }
     const sanitizedPayload = {};
     if (payload.role) {
         if (decodedToken.role === user_interface_1.UserRole.STUDENT ||
@@ -88,17 +94,20 @@ const updateUser = async (userId, payload, decodedToken) => {
     if (payload.password) {
         sanitizedPayload.password = await bcryptjs_1.default.hash(payload.password, Number(env_1.default.BCRYPT_SALT_ROUND));
     }
+    const sensitiveFields = ["isDeleted", "isActive", "isVerified", "role"];
     const allowedFields = [
         "name",
         "password",
         "phone",
         "age",
         "address",
-        "isDeleted",
-        "isActive",
-        "isVerified",
-        "role",
     ];
+    if (isAdmin) {
+        allowedFields.push(...sensitiveFields);
+    }
+    else if (isOwnProfile) {
+        allowedFields.push("name", "phone", "age", "address");
+    }
     for (const key of Object.keys(payload)) {
         if (key === "role" || key === "password")
             continue;

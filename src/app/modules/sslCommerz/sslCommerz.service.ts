@@ -39,10 +39,21 @@ const sslPaymentInit = async (payload: ISSLCommerz) => {
       ship_country: "N/A",
     };
 
+    // Diagnostic logging for Bug #11 (Environment variable quotes)
+    // eslint-disable-next-line no-console
+    console.log("SSL Store ID:", envVariables.SSL.SSL_STORE_ID);
+    // eslint-disable-next-line no-console
+    console.log("SSL API URL:", envVariables.SSL.SSL_PAYMENT_API);
+
+    const formData = new URLSearchParams();
+    Object.entries(data).forEach(([key, value]) => {
+      formData.append(key, value as string);
+    });
+
     const response = await axios({
       method: "POST",
       url: envVariables.SSL.SSL_PAYMENT_API,
-      data: data,
+      data: formData,
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       timeout: 30000, // 30 seconds
     });
@@ -56,7 +67,13 @@ const sslPaymentInit = async (payload: ISSLCommerz) => {
     return response.data;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (err: any) {
-    throw new AppError(StatusCodes.BAD_REQUEST, err.message);
+    if (err instanceof AppError) {
+      throw err;
+    }
+    throw new AppError(
+      StatusCodes.BAD_GATEWAY,
+      err?.message || "Payment gateway request failed",
+    );
   }
 };
 

@@ -9,6 +9,7 @@ const category_route_1 = __importDefault(require("../modules/category/category.r
 const enrollment_route_1 = __importDefault(require("../modules/enrollment/enrollment.route"));
 const payment_route_1 = __importDefault(require("../modules/payment/payment.route"));
 const user_route_1 = __importDefault(require("../modules/user/user.route"));
+const workshop_route_1 = __importDefault(require("../modules/workshop/workshop.route"));
 const router = (0, express_1.Router)();
 const moduleRoutes = [
     {
@@ -18,6 +19,10 @@ const moduleRoutes = [
     {
         path: "/auth",
         route: auth_route_1.default,
+    },
+    {
+        path: "/workshop",
+        route: workshop_route_1.default,
     },
     {
         path: "/category",

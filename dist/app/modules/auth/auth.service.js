@@ -7,6 +7,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const http_status_codes_1 = require("http-status-codes");
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+const validator_1 = __importDefault(require("validator"));
 const env_1 = __importDefault(require("../../config/env"));
 const AppError_1 = __importDefault(require("../../errorHelpers/AppError"));
 const sendEmail_1 = __importDefault(require("../../utils/sendEmail"));
@@ -65,6 +66,12 @@ const forgotPassword = async (email) => {
     if (typeof email !== "string") {
         throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Invalid email");
     }
+    if (email.length > 254) {
+        throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Invalid email length");
+    }
+    if (!validator_1.default.isEmail(email)) {
+        throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Invalid email format");
+    }
     const isUserExists = await user_model_1.default.findOne({ email: { $eq: email } });
     if (!isUserExists) {
         throw new AppError_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "User not found");
@@ -111,7 +118,7 @@ const resetPassword = async (oldPassword, newPassword, decodedToken) => {
         throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Old password does not match");
     }
     user.password = await bcryptjs_1.default.hash(newPassword, Number(env_1.default.BCRYPT_SALT_ROUND));
-    user.save();
+    await user.save();
 };
 const AuthServices = {
     getNewAccessToken,

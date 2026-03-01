@@ -96,6 +96,18 @@ const updateUser = async (
     throw new AppError(StatusCodes.NOT_FOUND, "User not found");
   }
 
+  const isAdmin =
+    decodedToken.role === UserRole.ADMIN ||
+    decodedToken.role === UserRole.SUPER_ADMIN;
+  const isOwnProfile = decodedToken.userId === userId;
+
+  if (!isAdmin && !isOwnProfile) {
+    throw new AppError(
+      StatusCodes.FORBIDDEN,
+      "You are not authorized to update this user",
+    );
+  }
+
   const sanitizedPayload: Partial<IUser> = {};
 
   if (payload.role) {
@@ -127,17 +139,21 @@ const updateUser = async (
     );
   }
 
+  const sensitiveFields = ["isDeleted", "isActive", "isVerified", "role"];
+
   const allowedFields = [
     "name",
     "password",
     "phone",
     "age",
     "address",
-    "isDeleted",
-    "isActive",
-    "isVerified",
-    "role",
   ];
+
+  if (isAdmin) {
+    allowedFields.push(...sensitiveFields);
+  } else if (isOwnProfile) {
+    allowedFields.push("name", "phone", "age", "address");
+  }
 
   for (const key of Object.keys(payload)) {
     if (key === "role" || key === "password") continue;

@@ -2,6 +2,7 @@
 import bcrypt from "bcryptjs";
 import { StatusCodes } from "http-status-codes";
 import jwt, { JwtPayload } from "jsonwebtoken";
+import validator from 'validator';
 import envVariables from "../../config/env";
 import AppError from "../../errorHelpers/AppError";
 import sendEmail from "../../utils/sendEmail";
@@ -102,6 +103,13 @@ const forgotPassword = async (email: string) => {
     throw new AppError(StatusCodes.BAD_REQUEST, "Invalid email");
   }
 
+  if (email.length > 254) {
+    throw new AppError(StatusCodes.BAD_REQUEST, "Invalid email length");
+  }
+
+  if (!validator.isEmail(email)) {
+    throw new AppError(StatusCodes.BAD_REQUEST, "Invalid email format");
+  }
   const isUserExists = await User.findOne({ email: { $eq: email } });
 
   if (!isUserExists) {
@@ -178,7 +186,7 @@ const resetPassword = async (
     Number(envVariables.BCRYPT_SALT_ROUND),
   );
 
-  user.save();
+  await user.save();
 };
 
 const AuthServices = {
