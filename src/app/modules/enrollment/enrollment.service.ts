@@ -210,6 +210,14 @@ const updateEnrollmentStatus = async (
     throw new AppError(
       StatusCodes.FORBIDDEN,
       "Only admins can update enrollment status",
+  const allowedStatuses = Object.values(ENROLLMENT_STATUS);
+  if (!allowedStatuses.includes(status)) {
+    throw new AppError(
+      StatusCodes.BAD_REQUEST,
+      "Invalid enrollment status",
+    );
+  }
+
     );
   }
 
