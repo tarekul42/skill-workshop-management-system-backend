@@ -170,8 +170,11 @@ const getAllEnrollments = async (query: Record<string, string>) => {
 
   const filter: Record<string, unknown> = {};
 
-  if (status) {
-    filter.status = status;
+  if (typeof status === "string") {
+    const allowedStatuses = Object.values(ENROLLMENT_STATUS);
+    if (allowedStatuses.includes(status as ENROLLMENT_STATUS)) {
+      filter.status = status;
+    }
   }
 
   const skip = (Number(page) - 1) * Number(limit);
