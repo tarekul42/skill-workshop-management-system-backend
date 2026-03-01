@@ -132,7 +132,7 @@ const updateWorkshop = async (id, payload) => {
     }
     if (safePayload.title && safePayload.title !== existingWorkshop.title) {
         const duplicateWorkshop = await workshop_model_1.WorkShop.findOne({
-            title: safePayload.title,
+            title: { $eq: safePayload.title },
         });
         if (duplicateWorkshop) {
             throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Workshop with this title already exists");
@@ -148,16 +148,31 @@ const updateWorkshop = async (id, payload) => {
         safePayload.price = payload.price;
     }
     if (payload.startDate !== undefined) {
+        if (typeof payload.startDate !== "string") {
+            throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Invalid startDate format");
+        }
         safePayload.startDate = payload.startDate;
     }
     if (payload.endDate !== undefined) {
-        safePayload.endDate = payload.endDate;
+        if (typeof payload.endDate !== "string") {
+            throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Invalid endDate format");
+        }
     }
     if (Array.isArray(payload.whatYouLearn)) {
-        safePayload.whatYouLearn = payload.whatYouLearn;
+        const sanitizedWhatYouLearn = payload.whatYouLearn.filter((item) => typeof item === "string");
+        if (sanitizedWhatYouLearn.length !== payload.whatYouLearn.length &&
+            payload.whatYouLearn.length > 0) {
+            throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Invalid whatYouLearn format");
+        }
+        safePayload.whatYouLearn = sanitizedWhatYouLearn;
     }
     if (Array.isArray(payload.prerequisites)) {
-        safePayload.prerequisites = payload.prerequisites;
+        const sanitizedPrerequisites = payload.prerequisites.filter((item) => typeof item === "string");
+        if (sanitizedPrerequisites.length !== payload.prerequisites.length &&
+            payload.prerequisites.length > 0) {
+            throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Invalid prerequisites format");
+        }
+        safePayload.prerequisites = sanitizedPrerequisites;
     }
     if (Array.isArray(payload.benefits)) {
         safePayload.benefits = payload.benefits;
@@ -203,7 +218,9 @@ const updateWorkshop = async (id, payload) => {
                 return false;
             }
         };
-        const validImages = payload.images.filter((img) => isValidUrl(img));
+        const validImages = payload.images
+            .filter((img) => typeof img === "string")
+            .filter((img) => isValidUrl(img));
         if (validImages.length === 0 && payload.images.length > 0) {
             throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Invalid images format", "Images must be valid URLs");
         }

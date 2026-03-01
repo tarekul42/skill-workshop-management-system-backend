@@ -40,6 +40,10 @@ const loadEnvVariables = () => {
         "SMTP_PORT",
         "SMTP_HOST",
         "SMTP_FROM",
+        "REDIS_HOST",
+        "REDIS_PORT",
+        "REDIS_USERNAME",
+        "REDIS_PASSWORD",
     ];
     requiredEnvVariables.forEach((envVariables) => {
         if (!process.env[envVariables]) {
@@ -85,6 +89,12 @@ const loadEnvVariables = () => {
             SMTP_PORT: process.env.SMTP_PORT,
             SMTP_HOST: process.env.SMTP_HOST,
             SMTP_FROM: process.env.SMTP_FROM,
+        },
+        REDIS: {
+            REDIS_HOST: process.env.REDIS_HOST,
+            REDIS_PORT: process.env.REDIS_PORT,
+            REDIS_USERNAME: process.env.REDIS_USERNAME,
+            REDIS_PASSWORD: process.env.REDIS_PASSWORD,
         },
     };
 };
