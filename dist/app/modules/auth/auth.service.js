@@ -7,13 +7,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const http_status_codes_1 = require("http-status-codes");
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+const validator_1 = __importDefault(require("validator"));
 const env_1 = __importDefault(require("../../config/env"));
 const AppError_1 = __importDefault(require("../../errorHelpers/AppError"));
 const sendEmail_1 = __importDefault(require("../../utils/sendEmail"));
 const userTokens_1 = require("../../utils/userTokens");
 const user_interface_1 = require("../user/user.interface");
 const user_model_1 = __importDefault(require("../user/user.model"));
-const validator_1 = __importDefault(require("validator"));
 const getNewAccessToken = async (refreshToken) => {
     if (!refreshToken) {
         throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "No refresh token found");

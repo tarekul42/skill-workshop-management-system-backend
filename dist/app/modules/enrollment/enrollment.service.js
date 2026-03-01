@@ -122,8 +122,14 @@ const getSingleEnrollment = async (enrollmentId, userId, userRole) => {
 const getAllEnrollments = async (query) => {
     const { status, page = 1, limit = 10 } = query;
     const filter = {};
-    if (status) {
-        filter.status = status;
+    if (typeof status === "string") {
+        const allowedStatuses = Object.values(enrollment_interface_1.ENROLLMENT_STATUS);
+        if (allowedStatuses.includes(status)) {
+            filter.status = status;
+        }
+        if (allowedStatuses.includes(status)) {
+            filter.status = status;
+        }
     }
     const skip = (Number(page) - 1) * Number(limit);
     const [enrollments, total] = await Promise.all([
@@ -149,6 +155,10 @@ const getAllEnrollments = async (query) => {
 const updateEnrollmentStatus = async (enrollmentId, status, userRole) => {
     if (userRole !== "ADMIN" && userRole !== "SUPER_ADMIN") {
         throw new AppError_1.default(http_status_codes_1.StatusCodes.FORBIDDEN, "Only admins can update enrollment status");
+    }
+    const allowedStatuses = Object.values(enrollment_interface_1.ENROLLMENT_STATUS);
+    if (!allowedStatuses.includes(status)) {
+        throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Invalid enrollment status");
     }
     const enrollment = await enrollment_model_1.default.findById(enrollmentId);
     if (!enrollment) {
