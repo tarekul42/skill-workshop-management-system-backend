@@ -7,6 +7,7 @@ const mongoose_1 = __importDefault(require("mongoose"));
 const app_1 = __importDefault(require("./app"));
 const env_1 = __importDefault(require("./app/config/env"));
 const seedSuperAdmin_1 = __importDefault(require("./app/utils/seedSuperAdmin"));
+const redis_config_1 = require("./app/config/redis.config");
 let server;
 const startServer = async () => {
     try {
@@ -23,6 +24,7 @@ const startServer = async () => {
     }
 };
 (async () => {
+    await (0, redis_config_1.connectRedis)();
     await startServer();
     await (0, seedSuperAdmin_1.default)();
 })();
