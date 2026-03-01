@@ -170,8 +170,14 @@ const getAllEnrollments = async (query: Record<string, string>) => {
 
   const filter: Record<string, unknown> = {};
 
-  if (status) {
-    filter.status = status;
+  if (typeof status === "string") {
+    const allowedStatuses = Object.values(ENROLLMENT_STATUS) as string[];
+    if (allowedStatuses.includes(status)) {
+      filter.status = status;
+    }
+    if (allowedStatuses.includes(status as ENROLLMENT_STATUS)) {
+      filter.status = status;
+    }
   }
 
   const skip = (Number(page) - 1) * Number(limit);
@@ -207,6 +213,14 @@ const updateEnrollmentStatus = async (
     throw new AppError(
       StatusCodes.FORBIDDEN,
       "Only admins can update enrollment status",
+  const allowedStatuses = Object.values(ENROLLMENT_STATUS);
+  if (!allowedStatuses.includes(status)) {
+    throw new AppError(
+      StatusCodes.BAD_REQUEST,
+      "Invalid enrollment status",
+    );
+  }
+
     );
   }
 
