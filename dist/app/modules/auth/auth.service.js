@@ -13,6 +13,7 @@ const sendEmail_1 = __importDefault(require("../../utils/sendEmail"));
 const userTokens_1 = require("../../utils/userTokens");
 const user_interface_1 = require("../user/user.interface");
 const user_model_1 = __importDefault(require("../user/user.model"));
+const validator_1 = __importDefault(require("validator"));
 const getNewAccessToken = async (refreshToken) => {
     if (!refreshToken) {
         throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "No refresh token found");
@@ -65,8 +66,10 @@ const forgotPassword = async (email) => {
     if (typeof email !== "string") {
         throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Invalid email");
     }
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
+    if (email.length > 254) {
+        throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Invalid email length");
+    }
+    if (!validator_1.default.isEmail(email)) {
         throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Invalid email format");
     }
     const isUserExists = await user_model_1.default.findOne({ email: { $eq: email } });

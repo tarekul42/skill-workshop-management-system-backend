@@ -8,13 +8,17 @@ const catchAsync_1 = __importDefault(require("../../utils/catchAsync"));
 const sendResponse_1 = __importDefault(require("../../utils/sendResponse"));
 const enrollment_service_1 = __importDefault(require("./enrollment.service"));
 const createEnrollment = (0, catchAsync_1.default)(async (req, res) => {
-    const decodeToken = req.user;
-    const enrollment = await enrollment_service_1.default.createEnrollment(req.body, decodeToken.userId);
+    const userId = req.user.userId;
+    const payload = req.body;
+    const result = await enrollment_service_1.default.createEnrollment(payload, userId);
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_codes_1.StatusCodes.CREATED,
         success: true,
         message: "Enrollment created successfully",
-        data: enrollment,
+        data: {
+            enrollment: result.enrollment,
+            paymentUrl: result.paymentUrl,
+        },
     });
 });
 const getUserEnrollments = (0, catchAsync_1.default)(async (req, res) => {

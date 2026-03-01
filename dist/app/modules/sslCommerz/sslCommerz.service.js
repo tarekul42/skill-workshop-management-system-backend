@@ -41,10 +41,19 @@ const sslPaymentInit = async (payload) => {
             ship_postcode: 1000,
             ship_country: "N/A",
         };
+        // Diagnostic logging for Bug #11 (Environment variable quotes)
+        // eslint-disable-next-line no-console
+        console.log("SSL Store ID:", env_1.default.SSL.SSL_STORE_ID);
+        // eslint-disable-next-line no-console
+        console.log("SSL API URL:", env_1.default.SSL.SSL_PAYMENT_API);
+        const formData = new URLSearchParams();
+        Object.entries(data).forEach(([key, value]) => {
+            formData.append(key, value);
+        });
         const response = await (0, axios_1.default)({
             method: "POST",
             url: env_1.default.SSL.SSL_PAYMENT_API,
-            data: data,
+            data: formData,
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
             timeout: 30000, // 30 seconds
         });
