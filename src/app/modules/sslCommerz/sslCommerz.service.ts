@@ -86,7 +86,7 @@ const validatePayment = async (payload: any) => {
     console.log("sslCommerz validate api response", response.data);
 
     await Payment.updateOne(
-      { transactionId: payload.tran_id },
+      { transactionId: { $eq: payload.tran_id } },
       { paymentGatewayData: response.data },
       { runValidators: true },
     );
