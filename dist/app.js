@@ -15,7 +15,6 @@ const notFound_1 = __importDefault(require("./app/middlewares/notFound"));
 const route_1 = __importDefault(require("./app/route"));
 const rateLimiter_1 = require("./app/utils/rateLimiter");
 const app = (0, express_1.default)();
-app.set("trust proxy", 1);
 if (env_1.default.EXPRESS_SESSION_SECRET.length < 32) {
     // eslint-disable-next-line no-console
     console.warn("Warning: EXPRESS_SESSION_SECRET should be at least 32 characters for security.");

@@ -89,7 +89,7 @@ const verifyOtp = async (email: string, otp: string) => {
       { isVerified: true },
       { runValidators: true },
     ),
-    redisClient.del([redisKey]),
+    redisClient.del([redisKey, attemptsKey]),
   ]);
 };
 

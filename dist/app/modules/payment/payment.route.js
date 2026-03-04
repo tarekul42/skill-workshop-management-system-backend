@@ -13,5 +13,7 @@ router.post("/init-payment/:enrollmentId", rateLimiter_1.authLimiter, (0, checkA
 router.post("/success", payment_controller_1.default.successPayment);
 router.post("/fail", payment_controller_1.default.failPayment);
 router.post("/cancel", payment_controller_1.default.cancelPayment);
+router.get("/invoice/:paymentId", rateLimiter_1.authLimiter, (0, checkAuth_1.default)(...Object.values(user_interface_1.UserRole)), payment_controller_1.default.getInvoiceDownloadUrl);
+router.post("/validate-payment", rateLimiter_1.authLimiter, (0, checkAuth_1.default)(...Object.values(user_interface_1.UserRole)), payment_controller_1.default.validatePayment);
 const PaymentRoutes = router;
 exports.default = PaymentRoutes;

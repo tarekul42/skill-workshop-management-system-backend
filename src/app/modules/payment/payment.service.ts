@@ -8,13 +8,20 @@ import { ISSLCommerz } from "../sslCommerz/sslCommerz.interface";
 import SSLService from "../sslCommerz/sslCommerz.service";
 import { PAYMENT_STATUS } from "./payment.interface";
 import Payment from "./payment.model";
+import { generatePDF, IInvoiceData } from "../../utils/invoice";
+import { IUser } from "../user/user.interface";
+import { IWorkshop } from "../workshop/workshop.interface";
+import { uploadBufferToCloudinary } from "../../config/cloudinary.config";
+import sendEmail from "../../utils/sendEmail";
 
 const initPayment = async (enrollmentId: string) => {
   if (!enrollmentId || !Types.ObjectId.isValid(enrollmentId)) {
     throw new AppError(StatusCodes.BAD_REQUEST, "Invalid enrollment ID");
   }
 
-  const payment = await Payment.findOne({ enrollment: { $eq: new Types.ObjectId(enrollmentId) } });
+  const payment = await Payment.findOne({
+    enrollment: { $eq: new Types.ObjectId(enrollmentId) },
+  });
 
   if (!payment) {
     throw new AppError(StatusCodes.NOT_FOUND, "Payment not found");
@@ -24,20 +31,16 @@ const initPayment = async (enrollmentId: string) => {
     throw new AppError(StatusCodes.BAD_REQUEST, "Payment already completed");
   }
 
-  const enrollment = await Enrollment.findOne({ _id: { $eq: new Types.ObjectId(payment.enrollment as any) } }).populate(
-    "user",
-    "name email phone address",
-  );
+  const enrollment = await Enrollment.findOne({
+    _id: { $eq: new Types.ObjectId(payment.enrollment as any) },
+  }).populate("user", "name email phone address");
 
   if (!enrollment) {
     throw new AppError(StatusCodes.NOT_FOUND, "Enrollment not found");
   }
 
   if (enrollment.status !== ENROLLMENT_STATUS.PENDING) {
-    throw new AppError(
-      StatusCodes.BAD_REQUEST,
-      "Enrollment is not pending",
-    );
+    throw new AppError(StatusCodes.BAD_REQUEST, "Enrollment is not pending");
   }
 
   const user = enrollment.user as any;
@@ -88,21 +91,74 @@ const successPayment = async (query: Record<string, string>) => {
       throw new AppError(StatusCodes.NOT_FOUND, "Payment not found");
     }
 
-    await Enrollment.findOneAndUpdate(
+    const updatedEnrollment = await Enrollment.findOneAndUpdate(
       { _id: { $eq: new Types.ObjectId(updatedPayment.enrollment as any) } },
       { status: ENROLLMENT_STATUS.COMPLETE },
-      { runValidators: true, session },
-    );
+      { new: true, runValidators: true, session },
+    )
+      .populate("workshop", "title")
+      .populate("user", "name email");
+
+    if (!updatedEnrollment) {
+      throw new AppError(StatusCodes.NOT_FOUND, "Enrollment not found");
+    }
 
     await session.commitTransaction();
     session.endSession();
+
+    // Post-transaction processing: Invoice generation, Cloudinary upload, and Email notification
+    try {
+      const invoiceData: IInvoiceData = {
+        transactionId: updatedPayment.transactionId,
+        enrollmentDate: updatedEnrollment.createdAt as Date,
+        userName: (updatedEnrollment.user as unknown as IUser).name,
+        workshopTitle: (updatedEnrollment.workshop as unknown as IWorkshop).title,
+        studentCount: updatedEnrollment.studentCount,
+        totalAmount: updatedPayment.amount,
+      };
+
+      const pdfBuffer = await generatePDF(invoiceData);
+
+      const cloudinaryResult = await uploadBufferToCloudinary(
+        pdfBuffer,
+        "invoice",
+      );
+
+      if (cloudinaryResult) {
+        await Payment.findByIdAndUpdate(
+          updatedPayment._id,
+          { invoiceUrl: cloudinaryResult.secure_url },
+          { runValidators: true },
+        );
+      }
+
+      await sendEmail({
+        to: (updatedEnrollment.user as unknown as IUser).email,
+        subject: "Your Enrollment Invoice",
+        templateName: "invoice",
+        templateData: invoiceData,
+        attachments: [
+          {
+            filename: "invoice.pdf",
+            content: pdfBuffer,
+            contentType: "application/pdf",
+          },
+        ],
+      });
+    } catch (postError) {
+      // Log error but don't fail the response since payment was successful
+      // eslint-disable-next-line no-console
+      console.error("Error in post-payment processing:", postError);
+    }
 
     return {
       success: true,
       message: "Payment completed successfully",
     };
   } catch (err) {
-    await session.abortTransaction();
+    if (session.inTransaction()) {
+      await session.abortTransaction();
+    }
     session.endSession();
     throw err;
   }
@@ -194,11 +250,30 @@ const cancelPayment = async (query: Record<string, string>) => {
   }
 };
 
+const getInvoiceDownloadUrl = async (paymentId: string) => {
+  if (!paymentId || !Types.ObjectId.isValid(paymentId)) {
+    throw new AppError(StatusCodes.BAD_REQUEST, "Invalid payment ID");
+  }
+
+  const payment = await Payment.findById(paymentId).select("invoiceUrl");
+
+  if (!payment) {
+    throw new AppError(StatusCodes.NOT_FOUND, "Payment not found");
+  }
+
+  if (!payment.invoiceUrl) {
+    throw new AppError(StatusCodes.NOT_FOUND, "Invoice not found");
+  }
+
+  return payment.invoiceUrl;
+};
+
 const PaymentService = {
   initPayment,
   successPayment,
   failPayment,
   cancelPayment,
+  getInvoiceDownloadUrl,
 };
 
 export default PaymentService;

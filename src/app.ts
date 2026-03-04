@@ -12,8 +12,6 @@ import { authLimiter, generalLimiter } from "./app/utils/rateLimiter";
 
 const app = express();
 
-app.set("trust proxy", 1);
-
 if (envVariables.EXPRESS_SESSION_SECRET.length < 32) {
   // eslint-disable-next-line no-console
   console.warn(

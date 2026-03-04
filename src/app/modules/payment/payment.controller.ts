@@ -4,6 +4,7 @@ import envVariables from "../../config/env";
 import catchAsync from "../../utils/catchAsync";
 import sendResponse from "../../utils/sendResponse";
 import PaymentService from "./payment.service";
+import SSLService from "../sslCommerz/sslCommerz.service";
 
 const initPayment = catchAsync(async (req: Request, res: Response) => {
   const enrollmentId = req.params.enrollmentId;
@@ -93,11 +94,41 @@ const cancelPayment = catchAsync(async (req: Request, res: Response) => {
   }
 });
 
+const getInvoiceDownloadUrl = catchAsync(
+  async (req: Request, res: Response) => {
+    const paymentId = req.params.paymentId;
+
+    const invoiceUrl = await PaymentService.getInvoiceDownloadUrl(
+      paymentId as string,
+    );
+
+    sendResponse(res, {
+      success: true,
+      statusCode: StatusCodes.OK,
+      message: "Invoice URL retrieved successfully",
+      data: invoiceUrl,
+    });
+  },
+);
+
+const validatePayment = catchAsync(async (req: Request, res: Response) => {
+  await SSLService.validatePayment(req.body);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: "Payment validated successfully",
+    data: null,
+  });
+});
+
 const PaymentController = {
   initPayment,
   successPayment,
   failPayment,
   cancelPayment,
+  getInvoiceDownloadUrl,
+  validatePayment,
 };
 
 export default PaymentController;
