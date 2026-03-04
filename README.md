@@ -71,7 +71,7 @@ The codebase adheres to a strict **Component-Based Modular Architecture**. Each 
 
 1.  **Clone the repository**:
     ```bash
-    git clone [repository-url]
+    git clone https://github.com/tarekul42/skill-workshop-management-system-backend
     cd skill-workshop-management-system-backend
     ```
 

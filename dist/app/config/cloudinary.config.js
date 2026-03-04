@@ -3,16 +3,45 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteImageFromCloudinary = exports.cloudinaryUpload = void 0;
+exports.deleteImageFromCloudinary = exports.uploadBufferToCloudinary = exports.cloudinaryUpload = void 0;
+/* eslint-disable no-console */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 const cloudinary_1 = require("cloudinary");
 const http_status_codes_1 = require("http-status-codes");
 const AppError_1 = __importDefault(require("../errorHelpers/AppError"));
 const env_1 = __importDefault(require("./env"));
+const stream_1 = __importDefault(require("stream"));
 cloudinary_1.v2.config({
     cloud_name: env_1.default.CLOUDINARY.CLOUDINARY_CLOUD_NAME,
     api_key: env_1.default.CLOUDINARY.CLOUDINARY_API_KEY,
     api_secret: env_1.default.CLOUDINARY.CLOUDINARY_API_SECRET,
 });
+const uploadBufferToCloudinary = async (buffer, fileName) => {
+    try {
+        return new Promise((resolve, reject) => {
+            const public_id = `pdf/${fileName}-${Date.now()}`;
+            const bufferStream = new stream_1.default.PassThrough();
+            bufferStream.end(buffer);
+            cloudinary_1.v2.uploader
+                .upload_stream({
+                resource_type: "auto",
+                public_id: public_id,
+                folder: "pdf",
+            }, (error, result) => {
+                if (error) {
+                    return reject(error);
+                }
+                resolve(result);
+            })
+                .end(buffer);
+        });
+    }
+    catch (error) {
+        console.log(error);
+        throw new AppError_1.default(http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR, "Cloudinary upload failed", error.message);
+    }
+};
+exports.uploadBufferToCloudinary = uploadBufferToCloudinary;
 const deleteImageFromCloudinary = async (url) => {
     try {
         const regex = /\/v\d+\/([^/]+)\.(jpg|jpeg|png|gif|webp)$/i;
@@ -24,7 +53,6 @@ const deleteImageFromCloudinary = async (url) => {
         else {
             throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Invalid Cloudinary URL format", `Could not extract public ID from URL: ${url}`);
         }
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
     }
     catch (err) {
         throw new AppError_1.default(http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR, "Cloudinary image deletion failed", err.message);
