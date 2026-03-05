@@ -2,7 +2,7 @@
 import bcrypt from "bcryptjs";
 import { StatusCodes } from "http-status-codes";
 import jwt, { JwtPayload } from "jsonwebtoken";
-import validator from 'validator';
+import validator from "validator";
 import envVariables from "../../config/env";
 import AppError from "../../errorHelpers/AppError";
 import sendEmail from "../../utils/sendEmail";

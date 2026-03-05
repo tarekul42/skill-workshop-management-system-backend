@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import ejs from "ejs";
 import { StatusCodes } from "http-status-codes";
 import nodemailer from "nodemailer";
@@ -21,7 +20,7 @@ interface SendEmailOptions {
   to: string;
   subject: string;
   templateName: string;
-  templateData?: Record<string, any>;
+  templateData?: Record<string, unknown>;
   attachments?: {
     filename: string;
     content: Buffer | string;
@@ -53,7 +52,7 @@ const sendEmail = async ({
     logger.info({
       message: `\u2709\uFE0F Email sent to ${to}: ${info.messageId}`,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error({ message: "Email sending error", err: error });
     throw new AppError(StatusCodes.BAD_REQUEST, "Email sending error");
   }

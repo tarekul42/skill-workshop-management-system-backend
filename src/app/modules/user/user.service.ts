@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import bcrypt from "bcryptjs";
 import { StatusCodes } from "http-status-codes";
 import { JwtPayload } from "jsonwebtoken";
@@ -141,13 +140,7 @@ const updateUser = async (
 
   const sensitiveFields = ["isDeleted", "isActive", "isVerified", "role"];
 
-  const allowedFields = [
-    "name",
-    "password",
-    "phone",
-    "age",
-    "address",
-  ];
+  const allowedFields = ["name", "password", "phone", "age", "address"];
 
   if (isAdmin) {
     allowedFields.push(...sensitiveFields);
@@ -162,7 +155,7 @@ const updateUser = async (
 
     if (allowedFields.includes(key)) {
       const typedKey = key as keyof IUser;
-      (sanitizedPayload as any)[typedKey] = payload[typedKey];
+      sanitizedPayload[typedKey] = payload[typedKey] as never;
     }
   }
 

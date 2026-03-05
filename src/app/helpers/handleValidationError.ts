@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { StatusCodes } from "http-status-codes";
 import mongoose from "mongoose";
 import {
@@ -13,11 +12,12 @@ const handleValidationError = (
 
   const errors = Object.values(err.errors);
 
-  errors.forEach((errorObject: any) =>
-    errorSources.push({
-      path: errorObject.path,
-      message: errorObject.message,
-    }),
+  errors.forEach(
+    (errorObject: mongoose.Error.ValidatorError | mongoose.Error.CastError) =>
+      errorSources.push({
+        path: errorObject.path,
+        message: errorObject.message,
+      }),
   );
 
   return {

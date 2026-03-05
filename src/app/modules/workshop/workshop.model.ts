@@ -78,7 +78,9 @@ workshopSchema.pre("save", async function () {
 });
 
 workshopSchema.pre("findOneAndUpdate", async function () {
-  const update = this.getUpdate() as Partial<IWorkshop> & { _id?: Types.ObjectId };
+  const update = this.getUpdate() as Partial<IWorkshop> & {
+    _id?: Types.ObjectId;
+  };
   const query = this.getQuery();
 
   if (update?.title) {

@@ -12,9 +12,8 @@ import envVariables from "./env";
 
 // 1. SERIALIZATION
 // We store the MongoDB _id in the session
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-passport.serializeUser((user: any, done) => {
-  done(null, user._id);
+passport.serializeUser((user: Express.User | { _id: string }, done) => {
+  done(null, (user as { _id?: string })._id);
 });
 
 // 2. DESERIALIZATION

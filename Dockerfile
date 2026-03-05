@@ -1,20 +1,25 @@
-# Use an official Node.js LTS image
-FROM node:22.12.0-slim
+# Stage 1: Build
+FROM oven/bun:1 AS build
+WORKDIR /app
+COPY package.json bun.lock ./
+RUN bun install --frozen-lockfile
+COPY . .
+RUN bun run build
 
-# Set working directory inside the container
+# Stage 2: Production
+FROM oven/bun:1-slim
 WORKDIR /app
 
-# Copy package files first (better caching)
-COPY package*.json ./
+# Set environment to production
+ENV NODE_ENV=production
 
-# Install all dependencies (including dev ones, needed for build)
-RUN npm install
+COPY package.json bun.lock ./
 
-# Copy source code
-COPY . .
+# Remove --frozen-lockfile to resolve potential sync issues during production install
+RUN bun install --prod
 
-# Build TypeScript to JavaScript (this creates /app/dist)
-RUN npm run build
-
-# Run the production app using the "start" script
-CMD ["npm", "start"]
+COPY --from=build /app/dist ./dist
+# Copy ejs templates as they are not copied by tsc
+COPY --from=build /app/src/app/utils/templates ./dist/app/utils/templates
+EXPOSE 5000
+CMD ["bun", "dist/server.js"]

@@ -12,7 +12,6 @@ const user_model_1 = __importDefault(require("../modules/user/user.model"));
 const env_1 = __importDefault(require("./env"));
 // 1. SERIALIZATION
 // We store the MongoDB _id in the session
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 passport_1.default.serializeUser((user, done) => {
     done(null, user._id);
 });

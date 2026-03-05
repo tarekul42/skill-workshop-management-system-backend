@@ -3,7 +3,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-/* eslint-disable @typescript-eslint/no-explicit-any */
 const http_status_codes_1 = require("http-status-codes");
 const mongoose_1 = require("mongoose");
 const AppError_1 = __importDefault(require("../../errorHelpers/AppError"));
@@ -30,7 +29,7 @@ const initPayment = async (enrollmentId) => {
         throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Payment already completed");
     }
     const enrollment = await enrollment_model_1.default.findOne({
-        _id: { $eq: new mongoose_1.Types.ObjectId(payment.enrollment) },
+        _id: { $eq: new mongoose_1.Types.ObjectId(String(payment.enrollment)) },
     }).populate("user", "name email phone address");
     if (!enrollment) {
         throw new AppError_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "Enrollment not found");
@@ -68,7 +67,7 @@ const successPayment = async (query) => {
         if (!updatedPayment) {
             throw new AppError_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "Payment not found");
         }
-        const updatedEnrollment = await enrollment_model_1.default.findOneAndUpdate({ _id: { $eq: new mongoose_1.Types.ObjectId(updatedPayment.enrollment) } }, { status: enrollment_interface_1.ENROLLMENT_STATUS.COMPLETE }, { new: true, runValidators: true, session })
+        const updatedEnrollment = await enrollment_model_1.default.findOneAndUpdate({ _id: { $eq: new mongoose_1.Types.ObjectId(String(updatedPayment.enrollment)) } }, { status: enrollment_interface_1.ENROLLMENT_STATUS.COMPLETE }, { new: true, runValidators: true, session })
             .populate("workshop", "title")
             .populate("user", "name email");
         if (!updatedEnrollment) {
@@ -82,7 +81,8 @@ const successPayment = async (query) => {
                 transactionId: updatedPayment.transactionId,
                 enrollmentDate: updatedEnrollment.createdAt,
                 userName: updatedEnrollment.user.name,
-                workshopTitle: updatedEnrollment.workshop.title,
+                workshopTitle: updatedEnrollment.workshop
+                    .title,
                 studentCount: updatedEnrollment.studentCount,
                 totalAmount: updatedPayment.amount,
             };
@@ -107,7 +107,10 @@ const successPayment = async (query) => {
         }
         catch (postError) {
             // Log error but don't fail the response since payment was successful
-            logger_1.default.error({ message: "Error in post-payment processing", err: postError });
+            logger_1.default.error({
+                message: "Error in post-payment processing",
+                err: postError,
+            });
         }
         return {
             success: true,

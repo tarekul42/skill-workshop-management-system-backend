@@ -2,6 +2,8 @@ import { NextFunction, Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import { deleteImageFromCloudinary } from "../config/cloudinary.config";
 import envVariables from "../config/env";
+import mongoose from "mongoose";
+import { ZodError } from "zod";
 import AppError from "../errorHelpers/AppError";
 import handleCastError from "../helpers/handleCastError";
 import handleDuplicateError from "../helpers/handleDuplicateError";
@@ -11,8 +13,7 @@ import { IErrorSources } from "../interfaces/error.types";
 import logger from "../utils/logger";
 
 const globalErrorHandler = async (
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  err: any,
+  err: unknown,
   req: Request,
   res: Response,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -44,41 +45,53 @@ const globalErrorHandler = async (
     }
   } catch (cleanupError) {
     // Log but don't throw - cleanup failure shouldn't prevent error response
-    logger.error({ message: "Failed to clean up uploaded images", err: cleanupError });
+    logger.error({
+      message: "Failed to clean up uploaded images",
+      err: cleanupError,
+    });
   }
 
   let statusCode = StatusCodes.INTERNAL_SERVER_ERROR;
-  let message = `Something went wrong!!! ${err.message}`;
+  let message = "Something went wrong!!!";
+  if (err instanceof Error) {
+    message = `Something went wrong!!! ${err.message}`;
+  }
   let errorSources: IErrorSources[] = [];
 
   if (err instanceof AppError) {
     statusCode = err.statusCode;
     message = err.message;
-  } else if (err.code === 11000) {
-    const simplifiedError = handleDuplicateError(err);
-
-    statusCode = simplifiedError.statusCode;
-    message = simplifiedError.message;
-  } else if (err.name === "CastError") {
-    const simplifiedError = handleCastError(err);
-
-    statusCode = simplifiedError.statusCode;
-    message = simplifiedError.message;
-  } else if (err.name === "ZodError") {
-    const simplifiedError = handleZodError(err);
-
-    statusCode = simplifiedError.statusCode;
-    message = simplifiedError.message;
-    errorSources = simplifiedError.errorSources as IErrorSources[];
-  } else if (err.name === "ValidationError") {
-    const simplifiedError = handleValidationError(err);
-
-    statusCode = simplifiedError.statusCode;
-    message = simplifiedError.message;
-    errorSources = simplifiedError.errorSources as IErrorSources[];
   } else if (err instanceof Error) {
-    statusCode = 500;
-    message = err.message;
+    if ("code" in err && (err as { code?: number }).code === 11000) {
+      const simplifiedError = handleDuplicateError(err);
+
+      statusCode = simplifiedError.statusCode;
+      message = simplifiedError.message;
+    } else if (err.name === "CastError") {
+      const simplifiedError = handleCastError(
+        err as unknown as mongoose.Error.CastError,
+      );
+
+      statusCode = simplifiedError.statusCode;
+      message = simplifiedError.message;
+    } else if (err.name === "ZodError") {
+      const simplifiedError = handleZodError(err as unknown as ZodError);
+
+      statusCode = simplifiedError.statusCode;
+      message = simplifiedError.message;
+      errorSources = simplifiedError.errorSources as IErrorSources[];
+    } else if (err.name === "ValidationError") {
+      const simplifiedError = handleValidationError(
+        err as unknown as mongoose.Error.ValidationError,
+      );
+
+      statusCode = simplifiedError.statusCode;
+      message = simplifiedError.message;
+      errorSources = simplifiedError.errorSources as IErrorSources[];
+    } else {
+      statusCode = 500;
+      message = err.message;
+    }
   }
 
   res.status(statusCode).json({
@@ -86,7 +99,10 @@ const globalErrorHandler = async (
     message,
     errorSources,
     err: envVariables.NODE_ENV === "development" ? err : null,
-    stack: envVariables.NODE_ENV === "development" ? err?.stack : null,
+    stack:
+      envVariables.NODE_ENV === "development" && err instanceof Error
+        ? err.stack
+        : null,
   });
 };
 

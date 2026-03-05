@@ -3,8 +3,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-/* eslint-disable no-console */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 const ejs_1 = __importDefault(require("ejs"));
 const http_status_codes_1 = require("http-status-codes");
 const nodemailer_1 = __importDefault(require("nodemailer"));
@@ -36,7 +34,9 @@ const sendEmail = async ({ to, subject, templateName, templateData, attachments,
                 contentType: attachments.contentType,
             })),
         });
-        logger_1.default.info({ message: `\u2709\uFE0F Email sent to ${to}: ${info.messageId}` });
+        logger_1.default.info({
+            message: `\u2709\uFE0F Email sent to ${to}: ${info.messageId}`,
+        });
     }
     catch (error) {
         logger_1.default.error({ message: "Email sending error", err: error });

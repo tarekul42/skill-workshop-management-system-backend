@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Types } from "mongoose";
 
 enum PAYMENT_STATUS {
@@ -13,7 +12,7 @@ interface IPayment {
   enrollment: Types.ObjectId;
   transactionId: string;
   amount: number;
-  paymentGatewayData?: any;
+  paymentGatewayData?: Record<string, unknown>;
   invoiceUrl?: string;
   status: PAYMENT_STATUS;
 }

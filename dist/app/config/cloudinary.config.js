@@ -4,7 +4,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteImageFromCloudinary = exports.uploadBufferToCloudinary = exports.cloudinaryUpload = void 0;
-/* eslint-disable @typescript-eslint/no-explicit-any */
 const cloudinary_1 = require("cloudinary");
 const http_status_codes_1 = require("http-status-codes");
 const AppError_1 = __importDefault(require("../errorHelpers/AppError"));
@@ -45,7 +44,7 @@ const deleteImageFromCloudinary = async (url) => {
         }
     }
     catch (err) {
-        throw new AppError_1.default(http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR, "Cloudinary image deletion failed", err.message);
+        throw new AppError_1.default(http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR, "Cloudinary image deletion failed", err instanceof Error ? err.message : String(err));
     }
 };
 exports.deleteImageFromCloudinary = deleteImageFromCloudinary;

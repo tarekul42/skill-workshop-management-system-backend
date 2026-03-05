@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import axios from "axios";
 import { StatusCodes } from "http-status-codes";
 import envVariables from "../../config/env";
@@ -72,18 +71,22 @@ const sslPaymentInit = async (payload: ISSLCommerz) => {
       );
     }
     return response.data;
-  } catch (err: any) {
+  } catch (err: unknown) {
     if (err instanceof AppError) {
       throw err;
     }
+    const errorMessage = err instanceof Error ? err.message : String(err);
     throw new AppError(
       StatusCodes.BAD_GATEWAY,
-      err?.message || "Payment gateway request failed",
+      errorMessage || "Payment gateway request failed",
     );
   }
 };
 
-const validatePayment = async (payload: any) => {
+const validatePayment = async (payload: {
+  val_id: string;
+  tran_id: string;
+}) => {
   try {
     const response = await axios({
       method: "GET",
@@ -99,11 +102,12 @@ const validatePayment = async (payload: any) => {
       { paymentGatewayData: response.data },
       { runValidators: true },
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
     logger.error({ message: "Payment validation error", err: error });
     throw new AppError(
       StatusCodes.BAD_GATEWAY,
-      error?.message || "Payment validation failed",
+      errorMessage || "Payment validation failed",
     );
   }
 };

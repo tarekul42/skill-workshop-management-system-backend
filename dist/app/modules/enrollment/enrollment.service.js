@@ -3,7 +3,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-/* eslint-disable @typescript-eslint/no-explicit-any */
 const http_status_codes_1 = require("http-status-codes");
 const mongoose_1 = require("mongoose");
 const AppError_1 = __importDefault(require("../../errorHelpers/AppError"));
@@ -68,10 +67,11 @@ const createEnrollment = async (payload, userId) => {
             .populate("user", "name email phone address")
             .populate("workshop", "title price")
             .populate("payment");
-        const userAddress = (updatedEnrollment?.user).address;
-        const userEmail = (updatedEnrollment?.user).email;
-        const userPhoneNumber = (updatedEnrollment?.user).phone;
-        const userName = (updatedEnrollment?.user).name;
+        const userObj = updatedEnrollment?.user;
+        const userAddress = userObj?.address;
+        const userEmail = userObj?.email;
+        const userPhoneNumber = userObj?.phone;
+        const userName = userObj?.name;
         const sslPayload = {
             address: userAddress,
             email: userEmail,
@@ -111,7 +111,7 @@ const getSingleEnrollment = async (enrollmentId, userId, userRole) => {
     if (!enrollment) {
         throw new AppError_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "Enrollment not found");
     }
-    const isOwner = enrollment.user && enrollment.user._id?.toString() === userId;
+    const isOwner = enrollment.user && String(enrollment.user._id) === userId;
     const isAdmin = userRole === "ADMIN" || userRole === "SUPER_ADMIN";
     if (!isOwner && !isAdmin) {
         throw new AppError_1.default(http_status_codes_1.StatusCodes.FORBIDDEN, "You are not authorized to view this enrollment");
