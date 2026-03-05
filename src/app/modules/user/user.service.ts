@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import bcrypt from "bcryptjs";
 import { StatusCodes } from "http-status-codes";
 import { JwtPayload } from "jsonwebtoken";
@@ -162,7 +162,7 @@ const updateUser = async (
 
     if (allowedFields.includes(key)) {
       const typedKey = key as keyof IUser;
-      (sanitizedPayload as any)[typedKey] = payload[typedKey];
+      sanitizedPayload[typedKey] = payload[typedKey] as never;
     }
   }
 

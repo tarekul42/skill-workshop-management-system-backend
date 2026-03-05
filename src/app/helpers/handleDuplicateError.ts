@@ -1,8 +1,8 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { StatusCodes } from "http-status-codes";
 import { IGenericErrorResponse } from "../interfaces/error.types";
 
-const handleDuplicateError = (err: any): IGenericErrorResponse => {
+const handleDuplicateError = (err: Error): IGenericErrorResponse => {
   const matchedArray = err.message.match(/"([^"]*)"/);
   const fieldName = matchedArray ? matchedArray[1] : "field";
 

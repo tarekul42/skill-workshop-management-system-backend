@@ -3,7 +3,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-/* eslint-disable no-console */
 const http_status_codes_1 = require("http-status-codes");
 const cloudinary_config_1 = require("../../config/cloudinary.config");
 const AppError_1 = __importDefault(require("../../errorHelpers/AppError"));

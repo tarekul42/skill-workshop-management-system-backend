@@ -49,6 +49,7 @@ interface IEnvConfig {
     REDIS_USERNAME: string;
     REDIS_PASSWORD: string;
   };
+  CSRF_SECRET: string;
 }
 
 const loadEnvVariables = (): IEnvConfig => {
@@ -91,6 +92,7 @@ const loadEnvVariables = (): IEnvConfig => {
     "REDIS_PORT",
     "REDIS_USERNAME",
     "REDIS_PASSWORD",
+    "CSRF_SECRET",
   ];
 
   requiredEnvVariables.forEach((envVariables) => {
@@ -148,6 +150,7 @@ const loadEnvVariables = (): IEnvConfig => {
       REDIS_USERNAME: process.env.REDIS_USERNAME as string,
       REDIS_PASSWORD: process.env.REDIS_PASSWORD as string,
     },
+    CSRF_SECRET: process.env.CSRF_SECRET as string,
   };
 };
 

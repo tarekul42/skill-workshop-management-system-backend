@@ -2,9 +2,17 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 import express, { Request, Response } from "express";
 import expressSession from "express-session";
+import helmet from "helmet";
+import hpp from "hpp";
+import mongoSanitize from "express-mongo-sanitize";
+import morgan from "morgan";
 import passport from "passport";
 import envVariables from "./app/config/env";
 import "./app/config/passport";
+import {
+  doubleCsrfProtection,
+  generateCsrfToken,
+} from "./app/config/csrf.config";
 import globalErrorHandler from "./app/middlewares/globalErrorHandler";
 import notFound from "./app/middlewares/notFound";
 import router from "./app/route";
@@ -20,6 +28,21 @@ if (envVariables.EXPRESS_SESSION_SECRET.length < 32) {
   });
 }
 
+// ──── Security Headers ────
+app.use(helmet());
+
+// ──── HTTP Request Logger ────
+app.use(morgan(envVariables.NODE_ENV === "production" ? "combined" : "dev"));
+
+// ──── Body Parsers ────
+app.use(express.json({ limit: "16kb" }));
+app.use(express.urlencoded({ extended: true, limit: "16kb" }));
+
+// ──── Input Sanitization ────
+app.use(mongoSanitize()); // strip $ and . from req.body/query/params
+app.use(hpp()); // prevent HTTP parameter pollution
+
+// ──── Session & Auth ────
 app.use(
   expressSession({
     secret: envVariables.EXPRESS_SESSION_SECRET,
@@ -34,9 +57,8 @@ app.use(
 );
 app.use(passport.initialize());
 app.use(cookieParser());
-app.use(express.json());
-app.set("trust proxy", 1);
-app.use(express.urlencoded({ extended: true }));
+
+// ──── CORS ────
 app.use(
   cors({
     origin: envVariables.FRONTEND_URL,
@@ -44,6 +66,18 @@ app.use(
   }),
 );
 
+app.set("trust proxy", 1);
+
+// ──── CSRF Protection ────
+app.use(doubleCsrfProtection);
+
+// ──── CSRF Token Endpoint ────
+app.get("/api/v1/csrf-token", (req: Request, res: Response) => {
+  const token = generateCsrfToken(req, res);
+  res.status(200).json({ csrfToken: token });
+});
+
+// ──── Routes ────
 app.use("/api/v1", generalLimiter, router);
 
 app.use("/auth", authLimiter);
@@ -66,3 +100,4 @@ app.use(globalErrorHandler);
 app.use(notFound);
 
 export default app;
+

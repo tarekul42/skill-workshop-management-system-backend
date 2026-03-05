@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { StatusCodes } from "http-status-codes";
 import { Types } from "mongoose";
 import AppError from "../../errorHelpers/AppError";
@@ -33,7 +33,7 @@ const initPayment = async (enrollmentId: string) => {
   }
 
   const enrollment = await Enrollment.findOne({
-    _id: { $eq: new Types.ObjectId(payment.enrollment as any) },
+    _id: { $eq: new Types.ObjectId(String(payment.enrollment)) },
   }).populate("user", "name email phone address");
 
   if (!enrollment) {
@@ -44,7 +44,7 @@ const initPayment = async (enrollmentId: string) => {
     throw new AppError(StatusCodes.BAD_REQUEST, "Enrollment is not pending");
   }
 
-  const user = enrollment.user as any;
+  const user = enrollment.user as unknown as { address: string; email: string; phone: string; name: string };
 
   if (!user?.address || !user?.phone) {
     throw new AppError(
@@ -93,7 +93,7 @@ const successPayment = async (query: Record<string, string>) => {
     }
 
     const updatedEnrollment = await Enrollment.findOneAndUpdate(
-      { _id: { $eq: new Types.ObjectId(updatedPayment.enrollment as any) } },
+      { _id: { $eq: new Types.ObjectId(String(updatedPayment.enrollment)) } },
       { status: ENROLLMENT_STATUS.COMPLETE },
       { new: true, runValidators: true, session },
     )
@@ -138,7 +138,7 @@ const successPayment = async (query: Record<string, string>) => {
         to: (updatedEnrollment.user as unknown as IUser).email,
         subject: "Your Enrollment Invoice",
         templateName: "invoice",
-        templateData: invoiceData,
+        templateData: invoiceData as unknown as Record<string, unknown>,
         attachments: [
           {
             filename: "invoice.pdf",

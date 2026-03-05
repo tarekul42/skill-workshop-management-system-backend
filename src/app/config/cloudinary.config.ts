@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { v2 as cloudinary, UploadApiResponse } from "cloudinary";
 import { StatusCodes } from "http-status-codes";
 import AppError from "../errorHelpers/AppError";
@@ -57,11 +57,11 @@ const deleteImageFromCloudinary = async (url: string) => {
         `Could not extract public ID from URL: ${url}`,
       );
     }
-  } catch (err: any) {
+  } catch (err: unknown) {
     throw new AppError(
       StatusCodes.INTERNAL_SERVER_ERROR,
       "Cloudinary image deletion failed",
-      err.message,
+      err instanceof Error ? err.message : String(err),
     );
   }
 };

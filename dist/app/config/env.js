@@ -45,6 +45,7 @@ const loadEnvVariables = () => {
         "REDIS_PORT",
         "REDIS_USERNAME",
         "REDIS_PASSWORD",
+        "CSRF_SECRET",
     ];
     requiredEnvVariables.forEach((envVariables) => {
         if (!process.env[envVariables]) {
@@ -98,6 +99,7 @@ const loadEnvVariables = () => {
             REDIS_USERNAME: process.env.REDIS_USERNAME,
             REDIS_PASSWORD: process.env.REDIS_PASSWORD,
         },
+        CSRF_SECRET: process.env.CSRF_SECRET,
     };
 };
 const envVariables = loadEnvVariables();

@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { StatusCodes } from "http-status-codes";
 import { Types } from "mongoose";
 import AppError from "../../errorHelpers/AppError";
@@ -103,10 +103,11 @@ const createEnrollment = async (
       .populate("workshop", "title price")
       .populate("payment");
 
-    const userAddress = (updatedEnrollment?.user as any).address;
-    const userEmail = (updatedEnrollment?.user as any).email;
-    const userPhoneNumber = (updatedEnrollment?.user as any).phone;
-    const userName = (updatedEnrollment?.user as any).name;
+    const userObj = updatedEnrollment?.user as unknown as { address: string; email: string; phone: string; name: string };
+    const userAddress = userObj?.address;
+    const userEmail = userObj?.email;
+    const userPhoneNumber = userObj?.phone;
+    const userName = userObj?.name;
 
     const sslPayload: ISSLCommerz = {
       address: userAddress,
@@ -154,7 +155,7 @@ const getSingleEnrollment = async (enrollmentId: string, userId: string, userRol
     throw new AppError(StatusCodes.NOT_FOUND, "Enrollment not found");
   }
 
-  const isOwner = enrollment.user && (enrollment.user as any)._id?.toString() === userId;
+  const isOwner = enrollment.user && String((enrollment.user as unknown as { _id: Types.ObjectId })._id) === userId;
   const isAdmin = userRole === "ADMIN" || userRole === "SUPER_ADMIN";
 
   if (!isOwner && !isAdmin) {

@@ -3,8 +3,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-/* eslint-disable no-console */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 const axios_1 = __importDefault(require("axios"));
 const http_status_codes_1 = require("http-status-codes");
 const env_1 = __importDefault(require("../../config/env"));
@@ -46,8 +44,14 @@ const sslPaymentInit = async (payload) => {
             ship_country: "N/A",
         };
         // Diagnostic logging for Bug #11 (Environment variable quotes)
-        logger_1.default.debug({ message: "SSL Store ID:", val: env_1.default.SSL.SSL_STORE_ID });
-        logger_1.default.debug({ message: "SSL API URL:", val: env_1.default.SSL.SSL_PAYMENT_API });
+        logger_1.default.debug({
+            message: "SSL Store ID:",
+            val: env_1.default.SSL.SSL_STORE_ID,
+        });
+        logger_1.default.debug({
+            message: "SSL API URL:",
+            val: env_1.default.SSL.SSL_PAYMENT_API,
+        });
         const formData = new URLSearchParams();
         Object.entries(data).forEach(([key, value]) => {
             formData.append(key, value);
@@ -68,7 +72,8 @@ const sslPaymentInit = async (payload) => {
         if (err instanceof AppError_1.default) {
             throw err;
         }
-        throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_GATEWAY, err?.message || "Payment gateway request failed");
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_GATEWAY, errorMessage || "Payment gateway request failed");
     }
 };
 const validatePayment = async (payload) => {
@@ -77,12 +82,16 @@ const validatePayment = async (payload) => {
             method: "GET",
             url: `${env_1.default.SSL.SSL_VALIDATION_API}?val_id=${payload.val_id}&store_id=${env_1.default.SSL.SSL_STORE_ID}&store_password=${env_1.default.SSL.SSL_STORE_PASS}`,
         });
-        logger_1.default.info({ message: "sslCommerz validate api response", data: response.data });
+        logger_1.default.info({
+            message: "sslCommerz validate api response",
+            data: response.data,
+        });
         await payment_model_1.default.updateOne({ transactionId: { $eq: payload.tran_id } }, { paymentGatewayData: response.data }, { runValidators: true });
     }
     catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
         logger_1.default.error({ message: "Payment validation error", err: error });
-        throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_GATEWAY, error?.message || "Payment validation failed");
+        throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_GATEWAY, errorMessage || "Payment validation failed");
     }
 };
 const SSLService = {

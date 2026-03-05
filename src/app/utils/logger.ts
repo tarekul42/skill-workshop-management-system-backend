@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+
 /* Simple structured logger placeholder. Replace with Winston/Pino in production */
 /* eslint-disable no-console */
 
@@ -13,7 +13,7 @@ const withBase = (level: string, payload: LogPayload) => ({
 const logger = {
   error: (payload: LogPayload) => {
     // Stringify errors properly if present
-    const out: any = { ...payload };
+    const out: Record<string, unknown> = { ...payload };
     if (payload.err instanceof Error) {
       out.err = {
         name: payload.err.name,
