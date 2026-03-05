@@ -4,7 +4,7 @@ import express, { Request, Response } from "express";
 import expressSession from "express-session";
 import helmet from "helmet";
 import hpp from "hpp";
-import mongoSanitize from "express-mongo-sanitize";
+import mongoSanitize from "./app/middlewares/mongoSanitize";
 import morgan from "morgan";
 import passport from "passport";
 import envVariables from "./app/config/env";
@@ -39,7 +39,7 @@ app.use(express.json({ limit: "16kb" }));
 app.use(express.urlencoded({ extended: true, limit: "16kb" }));
 
 // ──── Input Sanitization ────
-app.use(mongoSanitize()); // strip $ and . from req.body/query/params
+app.use(mongoSanitize); // strip $ and . from req.body/query/params
 app.use(hpp()); // prevent HTTP parameter pollution
 
 // ──── Session & Auth ────
