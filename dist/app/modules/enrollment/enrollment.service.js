@@ -104,14 +104,18 @@ const getUserEnrollments = async (userId) => {
     };
 };
 const getSingleEnrollment = async (enrollmentId, userId, userRole) => {
-    const enrollment = await enrollment_model_1.default.findOne({ _id: { $eq: new mongoose_1.Types.ObjectId(enrollmentId) } })
+    const enrollment = await enrollment_model_1.default.findOne({
+        _id: { $eq: new mongoose_1.Types.ObjectId(enrollmentId) },
+    })
         .populate("user", "name email phone address")
         .populate("workshop", "title price images location startDate endDate")
         .populate("payment", "status amount transactionId invoiceUrl");
     if (!enrollment) {
         throw new AppError_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "Enrollment not found");
     }
-    const isOwner = enrollment.user && String(enrollment.user._id) === userId;
+    const isOwner = enrollment.user &&
+        String(enrollment.user._id) ===
+            userId;
     const isAdmin = userRole === "ADMIN" || userRole === "SUPER_ADMIN";
     if (!isOwner && !isAdmin) {
         throw new AppError_1.default(http_status_codes_1.StatusCodes.FORBIDDEN, "You are not authorized to view this enrollment");
@@ -161,7 +165,9 @@ const updateEnrollmentStatus = async (enrollmentId, status, userRole) => {
     if (!allowedStatuses.includes(status)) {
         throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Invalid enrollment status");
     }
-    const enrollment = await enrollment_model_1.default.findOne({ _id: { $eq: new mongoose_1.Types.ObjectId(enrollmentId) } });
+    const enrollment = await enrollment_model_1.default.findOne({
+        _id: { $eq: new mongoose_1.Types.ObjectId(enrollmentId) },
+    });
     if (!enrollment) {
         throw new AppError_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "Enrollment not found");
     }

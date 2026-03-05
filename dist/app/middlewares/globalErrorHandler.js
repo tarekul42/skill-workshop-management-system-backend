@@ -37,7 +37,10 @@ next) => {
     }
     catch (cleanupError) {
         // Log but don't throw - cleanup failure shouldn't prevent error response
-        logger_1.default.error({ message: "Failed to clean up uploaded images", err: cleanupError });
+        logger_1.default.error({
+            message: "Failed to clean up uploaded images",
+            err: cleanupError,
+        });
     }
     let statusCode = http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR;
     let message = "Something went wrong!!!";
@@ -50,7 +53,7 @@ next) => {
         message = err.message;
     }
     else if (err instanceof Error) {
-        if ('code' in err && err.code === 11000) {
+        if ("code" in err && err.code === 11000) {
             const simplifiedError = (0, handleDuplicateError_1.default)(err);
             statusCode = simplifiedError.statusCode;
             message = simplifiedError.message;
@@ -82,7 +85,9 @@ next) => {
         message,
         errorSources,
         err: env_1.default.NODE_ENV === "development" ? err : null,
-        stack: env_1.default.NODE_ENV === "development" && err instanceof Error ? err.stack : null,
+        stack: env_1.default.NODE_ENV === "development" && err instanceof Error
+            ? err.stack
+            : null,
     });
 };
 exports.default = globalErrorHandler;

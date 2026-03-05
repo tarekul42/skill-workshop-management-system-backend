@@ -9,7 +9,7 @@ const express_1 = __importDefault(require("express"));
 const express_session_1 = __importDefault(require("express-session"));
 const helmet_1 = __importDefault(require("helmet"));
 const hpp_1 = __importDefault(require("hpp"));
-const express_mongo_sanitize_1 = __importDefault(require("express-mongo-sanitize"));
+const mongoSanitize_1 = __importDefault(require("./app/middlewares/mongoSanitize"));
 const morgan_1 = __importDefault(require("morgan"));
 const passport_1 = __importDefault(require("passport"));
 const env_1 = __importDefault(require("./app/config/env"));
@@ -34,7 +34,7 @@ app.use((0, morgan_1.default)(env_1.default.NODE_ENV === "production" ? "combine
 app.use(express_1.default.json({ limit: "16kb" }));
 app.use(express_1.default.urlencoded({ extended: true, limit: "16kb" }));
 // ──── Input Sanitization ────
-app.use((0, express_mongo_sanitize_1.default)()); // strip $ and . from req.body/query/params
+app.use(mongoSanitize_1.default); // strip $ and . from req.body/query/params
 app.use((0, hpp_1.default)()); // prevent HTTP parameter pollution
 // ──── Session & Auth ────
 app.use((0, express_session_1.default)({
