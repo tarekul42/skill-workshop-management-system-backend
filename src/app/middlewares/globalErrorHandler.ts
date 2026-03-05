@@ -45,7 +45,10 @@ const globalErrorHandler = async (
     }
   } catch (cleanupError) {
     // Log but don't throw - cleanup failure shouldn't prevent error response
-    logger.error({ message: "Failed to clean up uploaded images", err: cleanupError });
+    logger.error({
+      message: "Failed to clean up uploaded images",
+      err: cleanupError,
+    });
   }
 
   let statusCode = StatusCodes.INTERNAL_SERVER_ERROR;
@@ -59,13 +62,15 @@ const globalErrorHandler = async (
     statusCode = err.statusCode;
     message = err.message;
   } else if (err instanceof Error) {
-    if ('code' in err && (err as { code?: number }).code === 11000) {
+    if ("code" in err && (err as { code?: number }).code === 11000) {
       const simplifiedError = handleDuplicateError(err);
 
       statusCode = simplifiedError.statusCode;
       message = simplifiedError.message;
     } else if (err.name === "CastError") {
-      const simplifiedError = handleCastError(err as unknown as mongoose.Error.CastError);
+      const simplifiedError = handleCastError(
+        err as unknown as mongoose.Error.CastError,
+      );
 
       statusCode = simplifiedError.statusCode;
       message = simplifiedError.message;
@@ -76,7 +81,9 @@ const globalErrorHandler = async (
       message = simplifiedError.message;
       errorSources = simplifiedError.errorSources as IErrorSources[];
     } else if (err.name === "ValidationError") {
-      const simplifiedError = handleValidationError(err as unknown as mongoose.Error.ValidationError);
+      const simplifiedError = handleValidationError(
+        err as unknown as mongoose.Error.ValidationError,
+      );
 
       statusCode = simplifiedError.statusCode;
       message = simplifiedError.message;
@@ -92,7 +99,10 @@ const globalErrorHandler = async (
     message,
     errorSources,
     err: envVariables.NODE_ENV === "development" ? err : null,
-    stack: envVariables.NODE_ENV === "development" && err instanceof Error ? err.stack : null,
+    stack:
+      envVariables.NODE_ENV === "development" && err instanceof Error
+        ? err.stack
+        : null,
   });
 };
 

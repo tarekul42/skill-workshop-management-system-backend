@@ -11,7 +11,9 @@ const redisClient = createClient({
   },
 });
 
-redisClient.on("error", (err) => logger.error({ message: "Redis Client Error", err }));
+redisClient.on("error", (err) =>
+  logger.error({ message: "Redis Client Error", err }),
+);
 
 const connectRedis = async () => {
   if (!redisClient.isOpen) {

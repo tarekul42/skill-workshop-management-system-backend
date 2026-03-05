@@ -1,4 +1,3 @@
-
 import { StatusCodes } from "http-status-codes";
 import { ZodError } from "zod";
 import {
@@ -7,14 +6,12 @@ import {
 } from "../interfaces/error.types";
 
 const handleZodError = (err: ZodError): IGenericErrorResponse => {
-  const errorSources: IErrorSources[] = err.issues.map(
-    (issue) => ({
-      // Explicitly convert the value to a string to handle array indices (numbers)
-      // and satisfy the 'string' type requirement of IErrorSources.
-      path: String(issue.path[issue.path.length - 1] ?? "value"),
-      message: issue.message,
-    }),
-  );
+  const errorSources: IErrorSources[] = err.issues.map((issue) => ({
+    // Explicitly convert the value to a string to handle array indices (numbers)
+    // and satisfy the 'string' type requirement of IErrorSources.
+    path: String(issue.path[issue.path.length - 1] ?? "value"),
+    message: issue.message,
+  }));
 
   return {
     statusCode: StatusCodes.BAD_REQUEST,

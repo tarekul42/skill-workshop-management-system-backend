@@ -1,4 +1,3 @@
-
 import ejs from "ejs";
 import { StatusCodes } from "http-status-codes";
 import nodemailer from "nodemailer";

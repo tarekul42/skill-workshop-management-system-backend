@@ -1,4 +1,3 @@
-
 import { StatusCodes } from "http-status-codes";
 import { IGenericErrorResponse } from "../interfaces/error.types";
 

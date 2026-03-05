@@ -1,4 +1,3 @@
-
 /* Simple structured logger placeholder. Replace with Winston/Pino in production */
 /* eslint-disable no-console */
 

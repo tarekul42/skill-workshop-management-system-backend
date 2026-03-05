@@ -1,4 +1,3 @@
-
 import { v2 as cloudinary, UploadApiResponse } from "cloudinary";
 import { StatusCodes } from "http-status-codes";
 import AppError from "../errorHelpers/AppError";

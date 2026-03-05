@@ -1,4 +1,3 @@
-
 import { StatusCodes } from "http-status-codes";
 import { Types } from "mongoose";
 import AppError from "../../errorHelpers/AppError";
@@ -44,7 +43,12 @@ const initPayment = async (enrollmentId: string) => {
     throw new AppError(StatusCodes.BAD_REQUEST, "Enrollment is not pending");
   }
 
-  const user = enrollment.user as unknown as { address: string; email: string; phone: string; name: string };
+  const user = enrollment.user as unknown as {
+    address: string;
+    email: string;
+    phone: string;
+    name: string;
+  };
 
   if (!user?.address || !user?.phone) {
     throw new AppError(

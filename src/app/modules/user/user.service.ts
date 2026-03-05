@@ -1,4 +1,3 @@
-
 import bcrypt from "bcryptjs";
 import { StatusCodes } from "http-status-codes";
 import { JwtPayload } from "jsonwebtoken";
@@ -141,13 +140,7 @@ const updateUser = async (
 
   const sensitiveFields = ["isDeleted", "isActive", "isVerified", "role"];
 
-  const allowedFields = [
-    "name",
-    "password",
-    "phone",
-    "age",
-    "address",
-  ];
+  const allowedFields = ["name", "password", "phone", "age", "address"];
 
   if (isAdmin) {
     allowedFields.push(...sensitiveFields);

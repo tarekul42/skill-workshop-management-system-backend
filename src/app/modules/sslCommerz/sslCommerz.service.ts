@@ -1,4 +1,3 @@
-
 import axios from "axios";
 import { StatusCodes } from "http-status-codes";
 import envVariables from "../../config/env";
@@ -84,7 +83,10 @@ const sslPaymentInit = async (payload: ISSLCommerz) => {
   }
 };
 
-const validatePayment = async (payload: { val_id: string; tran_id: string }) => {
+const validatePayment = async (payload: {
+  val_id: string;
+  tran_id: string;
+}) => {
   try {
     const response = await axios({
       method: "GET",
