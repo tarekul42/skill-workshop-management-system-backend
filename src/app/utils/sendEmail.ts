@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import ejs from "ejs";
 import { StatusCodes } from "http-status-codes";
@@ -6,6 +5,7 @@ import nodemailer from "nodemailer";
 import path from "path";
 import envVariables from "../config/env";
 import AppError from "../errorHelpers/AppError";
+import logger from "./logger";
 
 const transporter = nodemailer.createTransport({
   secure: true,
@@ -50,9 +50,11 @@ const sendEmail = async ({
         contentType: attachments.contentType,
       })),
     });
-    console.log(`\u2709\uFE0F Email sent to ${to}: ${info.messageId}`);
+    logger.info({
+      message: `\u2709\uFE0F Email sent to ${to}: ${info.messageId}`,
+    });
   } catch (error: any) {
-    console.log("Email sending error:", error.message);
+    logger.error({ message: "Email sending error", err: error });
     throw new AppError(StatusCodes.BAD_REQUEST, "Email sending error");
   }
 };

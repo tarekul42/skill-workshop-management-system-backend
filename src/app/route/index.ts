@@ -2,7 +2,9 @@ import { Router } from "express";
 import AuthRoutes from "../modules/auth/auth.route";
 import CategoryRoutes from "../modules/category/category.route";
 import EnrollmentRoutes from "../modules/enrollment/enrollment.route";
+import OTPRoutes from "../modules/otp/otp.route";
 import PaymentRoutes from "../modules/payment/payment.route";
+import StatsRoutes from "../modules/stats/stats.route";
 import UserRoutes from "../modules/user/user.route";
 import WorkshopRoutes from "../modules/workshop/workshop.route";
 
@@ -32,6 +34,14 @@ const moduleRoutes = [
   {
     path: "/payment",
     route: PaymentRoutes,
+  },
+  {
+    path: "/otp",
+    route: OTPRoutes,
+  },
+  {
+    path: "/stats",
+    route: StatsRoutes,
   },
 ];
 

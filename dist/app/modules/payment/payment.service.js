@@ -12,18 +12,26 @@ const enrollment_model_1 = __importDefault(require("../enrollment/enrollment.mod
 const sslCommerz_service_1 = __importDefault(require("../sslCommerz/sslCommerz.service"));
 const payment_interface_1 = require("./payment.interface");
 const payment_model_1 = __importDefault(require("./payment.model"));
+const invoice_1 = require("../../utils/invoice");
+const cloudinary_config_1 = require("../../config/cloudinary.config");
+const sendEmail_1 = __importDefault(require("../../utils/sendEmail"));
+const logger_1 = __importDefault(require("../../utils/logger"));
 const initPayment = async (enrollmentId) => {
     if (!enrollmentId || !mongoose_1.Types.ObjectId.isValid(enrollmentId)) {
         throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Invalid enrollment ID");
     }
-    const payment = await payment_model_1.default.findOne({ enrollment: { $eq: new mongoose_1.Types.ObjectId(enrollmentId) } });
+    const payment = await payment_model_1.default.findOne({
+        enrollment: { $eq: new mongoose_1.Types.ObjectId(enrollmentId) },
+    });
     if (!payment) {
         throw new AppError_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "Payment not found");
     }
     if (payment.status === payment_interface_1.PAYMENT_STATUS.PAID) {
         throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Payment already completed");
     }
-    const enrollment = await enrollment_model_1.default.findOne({ _id: { $eq: new mongoose_1.Types.ObjectId(payment.enrollment) } }).populate("user", "name email phone address");
+    const enrollment = await enrollment_model_1.default.findOne({
+        _id: { $eq: new mongoose_1.Types.ObjectId(payment.enrollment) },
+    }).populate("user", "name email phone address");
     if (!enrollment) {
         throw new AppError_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "Enrollment not found");
     }
@@ -60,16 +68,56 @@ const successPayment = async (query) => {
         if (!updatedPayment) {
             throw new AppError_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "Payment not found");
         }
-        await enrollment_model_1.default.findOneAndUpdate({ _id: { $eq: new mongoose_1.Types.ObjectId(updatedPayment.enrollment) } }, { status: enrollment_interface_1.ENROLLMENT_STATUS.COMPLETE }, { runValidators: true, session });
+        const updatedEnrollment = await enrollment_model_1.default.findOneAndUpdate({ _id: { $eq: new mongoose_1.Types.ObjectId(updatedPayment.enrollment) } }, { status: enrollment_interface_1.ENROLLMENT_STATUS.COMPLETE }, { new: true, runValidators: true, session })
+            .populate("workshop", "title")
+            .populate("user", "name email");
+        if (!updatedEnrollment) {
+            throw new AppError_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "Enrollment not found");
+        }
         await session.commitTransaction();
         session.endSession();
+        // Post-transaction processing: Invoice generation, Cloudinary upload, and Email notification
+        try {
+            const invoiceData = {
+                transactionId: updatedPayment.transactionId,
+                enrollmentDate: updatedEnrollment.createdAt,
+                userName: updatedEnrollment.user.name,
+                workshopTitle: updatedEnrollment.workshop.title,
+                studentCount: updatedEnrollment.studentCount,
+                totalAmount: updatedPayment.amount,
+            };
+            const pdfBuffer = await (0, invoice_1.generatePDF)(invoiceData);
+            const cloudinaryResult = await (0, cloudinary_config_1.uploadBufferToCloudinary)(pdfBuffer, "invoice");
+            if (cloudinaryResult) {
+                await payment_model_1.default.findByIdAndUpdate(updatedPayment._id, { invoiceUrl: cloudinaryResult.secure_url }, { runValidators: true });
+            }
+            await (0, sendEmail_1.default)({
+                to: updatedEnrollment.user.email,
+                subject: "Your Enrollment Invoice",
+                templateName: "invoice",
+                templateData: invoiceData,
+                attachments: [
+                    {
+                        filename: "invoice.pdf",
+                        content: pdfBuffer,
+                        contentType: "application/pdf",
+                    },
+                ],
+            });
+        }
+        catch (postError) {
+            // Log error but don't fail the response since payment was successful
+            logger_1.default.error({ message: "Error in post-payment processing", err: postError });
+        }
         return {
             success: true,
             message: "Payment completed successfully",
         };
     }
     catch (err) {
-        await session.abortTransaction();
+        if (session.inTransaction()) {
+            await session.abortTransaction();
+        }
         session.endSession();
         throw err;
     }
@@ -128,10 +176,24 @@ const cancelPayment = async (query) => {
         throw err;
     }
 };
+const getInvoiceDownloadUrl = async (paymentId) => {
+    if (!paymentId || !mongoose_1.Types.ObjectId.isValid(paymentId)) {
+        throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Invalid payment ID");
+    }
+    const payment = await payment_model_1.default.findById(paymentId).select("invoiceUrl");
+    if (!payment) {
+        throw new AppError_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "Payment not found");
+    }
+    if (!payment.invoiceUrl) {
+        throw new AppError_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "Invoice not found");
+    }
+    return payment.invoiceUrl;
+};
 const PaymentService = {
     initPayment,
     successPayment,
     failPayment,
     cancelPayment,
+    getInvoiceDownloadUrl,
 };
 exports.default = PaymentService;

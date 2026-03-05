@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import { StatusCodes } from "http-status-codes";
 import { deleteImageFromCloudinary } from "../../config/cloudinary.config";
 import AppError from "../../errorHelpers/AppError";
@@ -9,6 +8,7 @@ import {
 } from "./workshop.constant";
 import { ILevel, IWorkshop } from "./workshop.interface";
 import { Level, WorkShop } from "./workshop.model";
+import logger from "../../utils/logger";
 
 const createLevel = async (payload: ILevel) => {
   if (!payload || typeof payload.name !== "string") {
@@ -179,7 +179,7 @@ const updateWorkshop = async (id: string, payload: Partial<IWorkshop>) => {
 
   if (safePayload.title && safePayload.title !== existingWorkshop.title) {
     const duplicateWorkshop = await WorkShop.findOne({
-      title: safePayload.title,
+      title: { $eq: safePayload.title },
     });
 
     if (duplicateWorkshop) {
@@ -200,16 +200,45 @@ const updateWorkshop = async (id: string, payload: Partial<IWorkshop>) => {
     safePayload.price = payload.price;
   }
   if (payload.startDate !== undefined) {
+    if (typeof payload.startDate !== "string") {
+      throw new AppError(StatusCodes.BAD_REQUEST, "Invalid startDate format");
+    }
     safePayload.startDate = payload.startDate;
   }
   if (payload.endDate !== undefined) {
-    safePayload.endDate = payload.endDate;
+    if (typeof payload.endDate !== "string") {
+      throw new AppError(StatusCodes.BAD_REQUEST, "Invalid endDate format");
+    }
   }
   if (Array.isArray(payload.whatYouLearn)) {
-    safePayload.whatYouLearn = payload.whatYouLearn;
+    const sanitizedWhatYouLearn = payload.whatYouLearn.filter(
+      (item): item is string => typeof item === "string",
+    );
+    if (
+      sanitizedWhatYouLearn.length !== payload.whatYouLearn.length &&
+      payload.whatYouLearn.length > 0
+    ) {
+      throw new AppError(
+        StatusCodes.BAD_REQUEST,
+        "Invalid whatYouLearn format",
+      );
+    }
+    safePayload.whatYouLearn = sanitizedWhatYouLearn;
   }
   if (Array.isArray(payload.prerequisites)) {
-    safePayload.prerequisites = payload.prerequisites;
+    const sanitizedPrerequisites = payload.prerequisites.filter(
+      (item): item is string => typeof item === "string",
+    );
+    if (
+      sanitizedPrerequisites.length !== payload.prerequisites.length &&
+      payload.prerequisites.length > 0
+    ) {
+      throw new AppError(
+        StatusCodes.BAD_REQUEST,
+        "Invalid prerequisites format",
+      );
+    }
+    safePayload.prerequisites = sanitizedPrerequisites;
   }
   if (Array.isArray(payload.benefits)) {
     safePayload.benefits = payload.benefits;
@@ -266,7 +295,9 @@ const updateWorkshop = async (id: string, payload: Partial<IWorkshop>) => {
       }
     };
 
-    const validImages = payload.images.filter((img) => isValidUrl(img));
+    const validImages = payload.images
+      .filter((img): img is string => typeof img === "string")
+      .filter((img) => isValidUrl(img));
 
     if (validImages.length === 0 && payload.images.length > 0) {
       throw new AppError(
@@ -300,9 +331,9 @@ const updateWorkshop = async (id: string, payload: Partial<IWorkshop>) => {
 
     const failures = results.filter((r) => r.status === "rejected");
     if (failures.length > 0) {
-      console.error(
-        `Failed to delete ${failures.length} images from Cloudinary`,
-      );
+      logger.error({
+        message: `Failed to delete ${failures.length} images from Cloudinary`,
+      });
     }
   }
 

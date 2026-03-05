@@ -13,6 +13,7 @@ interface IEnrollment {
   payment?: Types.ObjectId;
   studentCount: number;
   status: ENROLLMENT_STATUS;
+  createdAt?: Date;
 }
 
 export { ENROLLMENT_STATUS, IEnrollment };

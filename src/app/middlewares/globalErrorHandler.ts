@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import { NextFunction, Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import { deleteImageFromCloudinary } from "../config/cloudinary.config";
@@ -9,6 +8,7 @@ import handleDuplicateError from "../helpers/handleDuplicateError";
 import handleValidationError from "../helpers/handleValidationError";
 import handleZodError from "../helpers/handleZodError";
 import { IErrorSources } from "../interfaces/error.types";
+import logger from "../utils/logger";
 
 const globalErrorHandler = async (
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -19,7 +19,7 @@ const globalErrorHandler = async (
   next: NextFunction,
 ) => {
   if (envVariables.NODE_ENV === "development") {
-    console.log(err);
+    logger.error({ message: "Global error caught", err });
   }
 
   // Clean up uploaded images on error - failures should not prevent error response
@@ -44,7 +44,7 @@ const globalErrorHandler = async (
     }
   } catch (cleanupError) {
     // Log but don't throw - cleanup failure shouldn't prevent error response
-    console.error("Failed to clean up uploaded images:", cleanupError);
+    logger.error({ message: "Failed to clean up uploaded images", err: cleanupError });
   }
 
   let statusCode = StatusCodes.INTERNAL_SERVER_ERROR;

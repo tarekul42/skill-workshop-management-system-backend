@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import { StatusCodes } from "http-status-codes";
 import { deleteImageFromCloudinary } from "../../config/cloudinary.config";
 import AppError from "../../errorHelpers/AppError";
@@ -6,6 +5,7 @@ import QueryBuilder from "../../utils/queryBuilder";
 import { categorySearchableFields } from "./category.constant";
 import { ICategory } from "./category.interface";
 import { Category } from "./category.model";
+import logger from "../../utils/logger";
 
 const createCategory = async (payload: ICategory) => {
   if (typeof payload.name !== "string") {
@@ -142,7 +142,10 @@ const updateCategory = async (id: string, payload: Partial<ICategory>) => {
       await deleteImageFromCloudinary(existingCategory.thumbnail);
     } catch (error) {
       // Log error but don't fail the request - category update already succeeded
-      console.error("Failed to delete old thumbnail from Cloudinary:", error);
+      logger.error({
+        message: "Failed to delete old thumbnail from Cloudinary",
+        err: error,
+      });
     }
   }
 

@@ -11,13 +11,14 @@ const handleCastError_1 = __importDefault(require("../helpers/handleCastError"))
 const handleDuplicateError_1 = __importDefault(require("../helpers/handleDuplicateError"));
 const handleValidationError_1 = __importDefault(require("../helpers/handleValidationError"));
 const handleZodError_1 = __importDefault(require("../helpers/handleZodError"));
+const logger_1 = __importDefault(require("../utils/logger"));
 const globalErrorHandler = async (
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 err, req, res, 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 next) => {
     if (env_1.default.NODE_ENV === "development") {
-        console.log(err);
+        logger_1.default.error({ message: "Global error caught", err });
     }
     // Clean up uploaded images on error - failures should not prevent error response
     try {
@@ -38,7 +39,7 @@ next) => {
     }
     catch (cleanupError) {
         // Log but don't throw - cleanup failure shouldn't prevent error response
-        console.error("Failed to clean up uploaded images:", cleanupError);
+        logger_1.default.error({ message: "Failed to clean up uploaded images", err: cleanupError });
     }
     let statusCode = http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR;
     let message = `Something went wrong!!! ${err.message}`;

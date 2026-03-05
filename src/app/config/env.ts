@@ -23,6 +23,7 @@ interface IEnvConfig {
     SSL_STORE_PASS: string;
     SSL_PAYMENT_API: string;
     SSL_VALIDATION_API: string;
+    SSL_IPN_URL: string;
     SSL_SUCCESS_BACKEND_URL: string;
     SSL_FAIL_BACKEND_URL: string;
     SSL_CANCEL_BACKEND_URL: string;
@@ -41,6 +42,12 @@ interface IEnvConfig {
     SMTP_PORT: string;
     SMTP_HOST: string;
     SMTP_FROM: string;
+  };
+  REDIS: {
+    REDIS_HOST: string;
+    REDIS_PORT: string;
+    REDIS_USERNAME: string;
+    REDIS_PASSWORD: string;
   };
 }
 
@@ -65,6 +72,7 @@ const loadEnvVariables = (): IEnvConfig => {
     "SSL_STORE_PASS",
     "SSL_PAYMENT_API",
     "SSL_VALIDATION_API",
+    "SSL_IPN_URL",
     "SSL_SUCCESS_BACKEND_URL",
     "SSL_FAIL_BACKEND_URL",
     "SSL_CANCEL_BACKEND_URL",
@@ -79,6 +87,10 @@ const loadEnvVariables = (): IEnvConfig => {
     "SMTP_PORT",
     "SMTP_HOST",
     "SMTP_FROM",
+    "REDIS_HOST",
+    "REDIS_PORT",
+    "REDIS_USERNAME",
+    "REDIS_PASSWORD",
   ];
 
   requiredEnvVariables.forEach((envVariables) => {
@@ -110,6 +122,7 @@ const loadEnvVariables = (): IEnvConfig => {
       SSL_STORE_PASS: process.env.SSL_STORE_PASS as string,
       SSL_PAYMENT_API: process.env.SSL_PAYMENT_API as string,
       SSL_VALIDATION_API: process.env.SSL_VALIDATION_API as string,
+      SSL_IPN_URL: process.env.SSL_IPN_URL as string,
       SSL_SUCCESS_BACKEND_URL: process.env.SSL_SUCCESS_BACKEND_URL as string,
       SSL_FAIL_BACKEND_URL: process.env.SSL_FAIL_BACKEND_URL as string,
       SSL_CANCEL_BACKEND_URL: process.env.SSL_CANCEL_BACKEND_URL as string,
@@ -128,6 +141,12 @@ const loadEnvVariables = (): IEnvConfig => {
       SMTP_PORT: process.env.SMTP_PORT as string,
       SMTP_HOST: process.env.SMTP_HOST as string,
       SMTP_FROM: process.env.SMTP_FROM as string,
+    },
+    REDIS: {
+      REDIS_HOST: process.env.REDIS_HOST as string,
+      REDIS_PORT: process.env.REDIS_PORT as string,
+      REDIS_USERNAME: process.env.REDIS_USERNAME as string,
+      REDIS_PASSWORD: process.env.REDIS_PASSWORD as string,
     },
   };
 };

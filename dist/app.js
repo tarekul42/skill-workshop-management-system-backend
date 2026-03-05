@@ -14,11 +14,12 @@ const globalErrorHandler_1 = __importDefault(require("./app/middlewares/globalEr
 const notFound_1 = __importDefault(require("./app/middlewares/notFound"));
 const route_1 = __importDefault(require("./app/route"));
 const rateLimiter_1 = require("./app/utils/rateLimiter");
+const logger_1 = __importDefault(require("./app/utils/logger"));
 const app = (0, express_1.default)();
-app.set("trust proxy", 1);
 if (env_1.default.EXPRESS_SESSION_SECRET.length < 32) {
-    // eslint-disable-next-line no-console
-    console.warn("Warning: EXPRESS_SESSION_SECRET should be at least 32 characters for security.");
+    logger_1.default.warn({
+        message: "Warning: EXPRESS_SESSION_SECRET should be at least 32 characters for security.",
+    });
 }
 app.use((0, express_session_1.default)({
     secret: env_1.default.EXPRESS_SESSION_SECRET,
@@ -33,6 +34,7 @@ app.use((0, express_session_1.default)({
 app.use(passport_1.default.initialize());
 app.use((0, cookie_parser_1.default)());
 app.use(express_1.default.json());
+app.set("trust proxy", 1);
 app.use(express_1.default.urlencoded({ extended: true }));
 app.use((0, cors_1.default)({
     origin: env_1.default.FRONTEND_URL,

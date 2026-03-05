@@ -1,8 +1,11 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import axios from "axios";
 import { StatusCodes } from "http-status-codes";
 import envVariables from "../../config/env";
 import AppError from "../../errorHelpers/AppError";
 import { ISSLCommerz } from "./sslCommerz.interface";
+import Payment from "../payment/payment.model";
+import logger from "../../utils/logger";
 
 const sslPaymentInit = async (payload: ISSLCommerz) => {
   try {
@@ -15,7 +18,7 @@ const sslPaymentInit = async (payload: ISSLCommerz) => {
       success_url: `${envVariables.SSL.SSL_SUCCESS_BACKEND_URL}?transactionId=${payload.transactionId}&amount=${payload.amount}&status=success`,
       fail_url: `${envVariables.SSL.SSL_FAIL_BACKEND_URL}?transactionId=${payload.transactionId}&amount=${payload.amount}&status=fail`,
       cancel_url: `${envVariables.SSL.SSL_CANCEL_BACKEND_URL}?transactionId=${payload.transactionId}&amount=${payload.amount}&status=cancel`,
-      // ipn_url: "http://localhost:3030/ipn",
+      ipn_url: envVariables.SSL.SSL_IPN_URL,
       shipping_method: "N/A",
       product_name: "Workshop",
       product_category: "Service",
@@ -40,10 +43,14 @@ const sslPaymentInit = async (payload: ISSLCommerz) => {
     };
 
     // Diagnostic logging for Bug #11 (Environment variable quotes)
-    // eslint-disable-next-line no-console
-    console.log("SSL Store ID:", envVariables.SSL.SSL_STORE_ID);
-    // eslint-disable-next-line no-console
-    console.log("SSL API URL:", envVariables.SSL.SSL_PAYMENT_API);
+    logger.debug({
+      message: "SSL Store ID:",
+      val: envVariables.SSL.SSL_STORE_ID,
+    });
+    logger.debug({
+      message: "SSL API URL:",
+      val: envVariables.SSL.SSL_PAYMENT_API,
+    });
 
     const formData = new URLSearchParams();
     Object.entries(data).forEach(([key, value]) => {
@@ -65,7 +72,6 @@ const sslPaymentInit = async (payload: ISSLCommerz) => {
       );
     }
     return response.data;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (err: any) {
     if (err instanceof AppError) {
       throw err;
@@ -77,8 +83,34 @@ const sslPaymentInit = async (payload: ISSLCommerz) => {
   }
 };
 
+const validatePayment = async (payload: any) => {
+  try {
+    const response = await axios({
+      method: "GET",
+      url: `${envVariables.SSL.SSL_VALIDATION_API}?val_id=${payload.val_id}&store_id=${envVariables.SSL.SSL_STORE_ID}&store_password=${envVariables.SSL.SSL_STORE_PASS}`,
+    });
+    logger.info({
+      message: "sslCommerz validate api response",
+      data: response.data,
+    });
+
+    await Payment.updateOne(
+      { transactionId: { $eq: payload.tran_id } },
+      { paymentGatewayData: response.data },
+      { runValidators: true },
+    );
+  } catch (error: any) {
+    logger.error({ message: "Payment validation error", err: error });
+    throw new AppError(
+      StatusCodes.BAD_GATEWAY,
+      error?.message || "Payment validation failed",
+    );
+  }
+};
+
 const SSLService = {
   sslPaymentInit,
+  validatePayment,
 };
 
 export default SSLService;

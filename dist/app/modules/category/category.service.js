@@ -10,6 +10,7 @@ const AppError_1 = __importDefault(require("../../errorHelpers/AppError"));
 const queryBuilder_1 = __importDefault(require("../../utils/queryBuilder"));
 const category_constant_1 = require("./category.constant");
 const category_model_1 = require("./category.model");
+const logger_1 = __importDefault(require("../../utils/logger"));
 const createCategory = async (payload) => {
     if (typeof payload.name !== "string") {
         throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Invalid category name");
@@ -110,7 +111,7 @@ const updateCategory = async (id, payload) => {
         }
         catch (error) {
             // Log error but don't fail the request - category update already succeeded
-            console.error("Failed to delete old thumbnail from Cloudinary:", error);
+            logger_1.default.error({ message: "Failed to delete old thumbnail from Cloudinary", err: error });
         }
     }
     return updatedCategory;

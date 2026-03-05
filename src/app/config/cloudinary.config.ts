@@ -1,4 +1,5 @@
-import { v2 as cloudinary } from "cloudinary";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { v2 as cloudinary, UploadApiResponse } from "cloudinary";
 import { StatusCodes } from "http-status-codes";
 import AppError from "../errorHelpers/AppError";
 import envVariables from "./env";
@@ -8,6 +9,37 @@ cloudinary.config({
   api_key: envVariables.CLOUDINARY.CLOUDINARY_API_KEY,
   api_secret: envVariables.CLOUDINARY.CLOUDINARY_API_SECRET,
 });
+
+const uploadBufferToCloudinary = async (
+  buffer: Buffer,
+  fileName: string,
+): Promise<UploadApiResponse | undefined> => {
+  return new Promise((resolve, reject) => {
+    const public_id = `${fileName}-${Date.now()}`;
+
+    cloudinary.uploader
+      .upload_stream(
+        {
+          resource_type: "auto",
+          public_id: public_id,
+          folder: "pdf",
+        },
+        (error, result) => {
+          if (error) {
+            return reject(
+              new AppError(
+                StatusCodes.INTERNAL_SERVER_ERROR,
+                "Cloudinary upload failed",
+                error.message,
+              ),
+            );
+          }
+          resolve(result);
+        },
+      )
+      .end(buffer);
+  });
+};
 
 const deleteImageFromCloudinary = async (url: string) => {
   try {
@@ -25,7 +57,6 @@ const deleteImageFromCloudinary = async (url: string) => {
         `Could not extract public ID from URL: ${url}`,
       );
     }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (err: any) {
     throw new AppError(
       StatusCodes.INTERNAL_SERVER_ERROR,
@@ -37,4 +68,8 @@ const deleteImageFromCloudinary = async (url: string) => {
 
 const cloudinaryUpload = cloudinary;
 
-export { cloudinaryUpload, deleteImageFromCloudinary };
+export {
+  cloudinaryUpload,
+  uploadBufferToCloudinary,
+  deleteImageFromCloudinary,
+};

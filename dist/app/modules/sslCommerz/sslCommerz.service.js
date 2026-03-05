@@ -3,10 +3,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+/* eslint-disable no-console */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 const axios_1 = __importDefault(require("axios"));
 const http_status_codes_1 = require("http-status-codes");
 const env_1 = __importDefault(require("../../config/env"));
 const AppError_1 = __importDefault(require("../../errorHelpers/AppError"));
+const payment_model_1 = __importDefault(require("../payment/payment.model"));
+const logger_1 = __importDefault(require("../../utils/logger"));
 const sslPaymentInit = async (payload) => {
     try {
         const data = {
@@ -18,7 +22,7 @@ const sslPaymentInit = async (payload) => {
             success_url: `${env_1.default.SSL.SSL_SUCCESS_BACKEND_URL}?transactionId=${payload.transactionId}&amount=${payload.amount}&status=success`,
             fail_url: `${env_1.default.SSL.SSL_FAIL_BACKEND_URL}?transactionId=${payload.transactionId}&amount=${payload.amount}&status=fail`,
             cancel_url: `${env_1.default.SSL.SSL_CANCEL_BACKEND_URL}?transactionId=${payload.transactionId}&amount=${payload.amount}&status=cancel`,
-            // ipn_url: "http://localhost:3030/ipn",
+            ipn_url: env_1.default.SSL.SSL_IPN_URL,
             shipping_method: "N/A",
             product_name: "Workshop",
             product_category: "Service",
@@ -42,10 +46,8 @@ const sslPaymentInit = async (payload) => {
             ship_country: "N/A",
         };
         // Diagnostic logging for Bug #11 (Environment variable quotes)
-        // eslint-disable-next-line no-console
-        console.log("SSL Store ID:", env_1.default.SSL.SSL_STORE_ID);
-        // eslint-disable-next-line no-console
-        console.log("SSL API URL:", env_1.default.SSL.SSL_PAYMENT_API);
+        logger_1.default.debug({ message: "SSL Store ID:", val: env_1.default.SSL.SSL_STORE_ID });
+        logger_1.default.debug({ message: "SSL API URL:", val: env_1.default.SSL.SSL_PAYMENT_API });
         const formData = new URLSearchParams();
         Object.entries(data).forEach(([key, value]) => {
             formData.append(key, value);
@@ -61,7 +63,6 @@ const sslPaymentInit = async (payload) => {
             throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_GATEWAY, "Invalid response from payment gateway");
         }
         return response.data;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
     }
     catch (err) {
         if (err instanceof AppError_1.default) {
@@ -70,7 +71,22 @@ const sslPaymentInit = async (payload) => {
         throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_GATEWAY, err?.message || "Payment gateway request failed");
     }
 };
+const validatePayment = async (payload) => {
+    try {
+        const response = await (0, axios_1.default)({
+            method: "GET",
+            url: `${env_1.default.SSL.SSL_VALIDATION_API}?val_id=${payload.val_id}&store_id=${env_1.default.SSL.SSL_STORE_ID}&store_password=${env_1.default.SSL.SSL_STORE_PASS}`,
+        });
+        logger_1.default.info({ message: "sslCommerz validate api response", data: response.data });
+        await payment_model_1.default.updateOne({ transactionId: { $eq: payload.tran_id } }, { paymentGatewayData: response.data }, { runValidators: true });
+    }
+    catch (error) {
+        logger_1.default.error({ message: "Payment validation error", err: error });
+        throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_GATEWAY, error?.message || "Payment validation failed");
+    }
+};
 const SSLService = {
     sslPaymentInit,
+    validatePayment,
 };
 exports.default = SSLService;

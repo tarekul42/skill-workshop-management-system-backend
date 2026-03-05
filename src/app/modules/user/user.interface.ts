@@ -34,6 +34,7 @@ interface IUser {
   auths: IAuthProvider[];
   enrollments?: Types.ObjectId[];
   instructors?: Types.ObjectId[];
+  createdAt?: Date;
 }
 
 export { IAuthProvider, IsActive, IUser, UserRole };
