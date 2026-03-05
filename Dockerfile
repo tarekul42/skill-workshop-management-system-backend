@@ -9,8 +9,15 @@ RUN bun run build
 # Stage 2: Production
 FROM oven/bun:1-slim
 WORKDIR /app
+
+# Set environment to production
+ENV NODE_ENV=production
+
 COPY package.json bun.lock ./
-RUN bun install --prod --frozen-lockfile
+
+# Remove --frozen-lockfile to resolve potential sync issues during production install
+RUN bun install --prod
+
 COPY --from=build /app/dist ./dist
 # Copy ejs templates as they are not copied by tsc
 COPY --from=build /app/src/app/utils/templates ./dist/app/utils/templates
