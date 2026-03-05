@@ -9,6 +9,7 @@ const category_route_1 = __importDefault(require("../modules/category/category.r
 const enrollment_route_1 = __importDefault(require("../modules/enrollment/enrollment.route"));
 const otp_route_1 = __importDefault(require("../modules/otp/otp.route"));
 const payment_route_1 = __importDefault(require("../modules/payment/payment.route"));
+const stats_route_1 = __importDefault(require("../modules/stats/stats.route"));
 const user_route_1 = __importDefault(require("../modules/user/user.route"));
 const workshop_route_1 = __importDefault(require("../modules/workshop/workshop.route"));
 const router = (0, express_1.Router)();
@@ -40,6 +41,10 @@ const moduleRoutes = [
     {
         path: "/otp",
         route: otp_route_1.default,
+    },
+    {
+        path: "/stats",
+        route: stats_route_1.default,
     },
 ];
 moduleRoutes.forEach((route) => {

@@ -15,6 +15,7 @@ const payment_model_1 = __importDefault(require("./payment.model"));
 const invoice_1 = require("../../utils/invoice");
 const cloudinary_config_1 = require("../../config/cloudinary.config");
 const sendEmail_1 = __importDefault(require("../../utils/sendEmail"));
+const logger_1 = __importDefault(require("../../utils/logger"));
 const initPayment = async (enrollmentId) => {
     if (!enrollmentId || !mongoose_1.Types.ObjectId.isValid(enrollmentId)) {
         throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Invalid enrollment ID");
@@ -106,8 +107,7 @@ const successPayment = async (query) => {
         }
         catch (postError) {
             // Log error but don't fail the response since payment was successful
-            // eslint-disable-next-line no-console
-            console.error("Error in post-payment processing:", postError);
+            logger_1.default.error({ message: "Error in post-payment processing", err: postError });
         }
         return {
             success: true,

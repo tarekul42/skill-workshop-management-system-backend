@@ -1,6 +1,6 @@
-/* eslint-disable no-console */
 import { createClient } from "redis";
 import envVariables from "./env";
+import logger from "../utils/logger";
 
 const redisClient = createClient({
   username: envVariables.REDIS.REDIS_USERNAME,
@@ -11,12 +11,12 @@ const redisClient = createClient({
   },
 });
 
-redisClient.on("error", (err) => console.log("Redis Client Error", err));
+redisClient.on("error", (err) => logger.error({ message: "Redis Client Error", err }));
 
 const connectRedis = async () => {
   if (!redisClient.isOpen) {
     await redisClient.connect();
-    console.log("Redis Connected");
+    logger.info({ message: "Redis Connected" });
   }
 };
 

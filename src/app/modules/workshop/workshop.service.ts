@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import { StatusCodes } from "http-status-codes";
 import { deleteImageFromCloudinary } from "../../config/cloudinary.config";
 import AppError from "../../errorHelpers/AppError";
@@ -9,6 +8,7 @@ import {
 } from "./workshop.constant";
 import { ILevel, IWorkshop } from "./workshop.interface";
 import { Level, WorkShop } from "./workshop.model";
+import logger from "../../utils/logger";
 
 const createLevel = async (payload: ILevel) => {
   if (!payload || typeof payload.name !== "string") {
@@ -331,9 +331,9 @@ const updateWorkshop = async (id: string, payload: Partial<IWorkshop>) => {
 
     const failures = results.filter((r) => r.status === "rejected");
     if (failures.length > 0) {
-      console.error(
-        `Failed to delete ${failures.length} images from Cloudinary`,
-      );
+      logger.error({
+        message: `Failed to delete ${failures.length} images from Cloudinary`,
+      });
     }
   }
 

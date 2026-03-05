@@ -13,6 +13,7 @@ import { IUser } from "../user/user.interface";
 import { IWorkshop } from "../workshop/workshop.interface";
 import { uploadBufferToCloudinary } from "../../config/cloudinary.config";
 import sendEmail from "../../utils/sendEmail";
+import logger from "../../utils/logger";
 
 const initPayment = async (enrollmentId: string) => {
   if (!enrollmentId || !Types.ObjectId.isValid(enrollmentId)) {
@@ -112,7 +113,8 @@ const successPayment = async (query: Record<string, string>) => {
         transactionId: updatedPayment.transactionId,
         enrollmentDate: updatedEnrollment.createdAt as Date,
         userName: (updatedEnrollment.user as unknown as IUser).name,
-        workshopTitle: (updatedEnrollment.workshop as unknown as IWorkshop).title,
+        workshopTitle: (updatedEnrollment.workshop as unknown as IWorkshop)
+          .title,
         studentCount: updatedEnrollment.studentCount,
         totalAmount: updatedPayment.amount,
       };
@@ -147,8 +149,10 @@ const successPayment = async (query: Record<string, string>) => {
       });
     } catch (postError) {
       // Log error but don't fail the response since payment was successful
-      // eslint-disable-next-line no-console
-      console.error("Error in post-payment processing:", postError);
+      logger.error({
+        message: "Error in post-payment processing",
+        err: postError,
+      });
     }
 
     return {

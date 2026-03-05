@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import { NextFunction, Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import { JwtPayload } from "jsonwebtoken";
@@ -11,6 +10,7 @@ import setAuthCookie from "../../utils/setCookie";
 import { createUserTokens } from "../../utils/userTokens";
 import { IUser } from "../user/user.interface";
 import AuthServices from "./auth.service";
+import logger from "../../utils/logger";
 
 type TPassportError = Error | null;
 
@@ -98,7 +98,7 @@ const logout = catchAsync(async (req: Request, res: Response) => {
   if (req.session) {
     req.session.destroy((err) => {
       if (err) {
-        console.error("Session destroy error:", err);
+        logger.error({ message: "Session destroy error", err });
       }
     });
   }

@@ -10,6 +10,7 @@ const http_status_codes_1 = require("http-status-codes");
 const env_1 = __importDefault(require("../../config/env"));
 const AppError_1 = __importDefault(require("../../errorHelpers/AppError"));
 const payment_model_1 = __importDefault(require("../payment/payment.model"));
+const logger_1 = __importDefault(require("../../utils/logger"));
 const sslPaymentInit = async (payload) => {
     try {
         const data = {
@@ -45,8 +46,8 @@ const sslPaymentInit = async (payload) => {
             ship_country: "N/A",
         };
         // Diagnostic logging for Bug #11 (Environment variable quotes)
-        console.log("SSL Store ID:", env_1.default.SSL.SSL_STORE_ID);
-        console.log("SSL API URL:", env_1.default.SSL.SSL_PAYMENT_API);
+        logger_1.default.debug({ message: "SSL Store ID:", val: env_1.default.SSL.SSL_STORE_ID });
+        logger_1.default.debug({ message: "SSL API URL:", val: env_1.default.SSL.SSL_PAYMENT_API });
         const formData = new URLSearchParams();
         Object.entries(data).forEach(([key, value]) => {
             formData.append(key, value);
@@ -76,11 +77,11 @@ const validatePayment = async (payload) => {
             method: "GET",
             url: `${env_1.default.SSL.SSL_VALIDATION_API}?val_id=${payload.val_id}&store_id=${env_1.default.SSL.SSL_STORE_ID}&store_password=${env_1.default.SSL.SSL_STORE_PASS}`,
         });
-        console.log("sslCommerz validate api response", response.data);
-        await payment_model_1.default.updateOne({ transactionId: payload.tran_id }, { paymentGatewayData: response.data }, { runValidators: true });
+        logger_1.default.info({ message: "sslCommerz validate api response", data: response.data });
+        await payment_model_1.default.updateOne({ transactionId: { $eq: payload.tran_id } }, { paymentGatewayData: response.data }, { runValidators: true });
     }
     catch (error) {
-        console.log(error);
+        logger_1.default.error({ message: "Payment validation error", err: error });
         throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_GATEWAY, error?.message || "Payment validation failed");
     }
 };

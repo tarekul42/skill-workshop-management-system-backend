@@ -1,7 +1,7 @@
-/* eslint-disable no-console */
 import { StatusCodes } from "http-status-codes";
 import AppError from "../errorHelpers/AppError";
 import PDFDocument from "pdfkit";
+import logger from "./logger";
 
 interface IInvoiceData {
   transactionId: string;
@@ -22,10 +22,10 @@ const generatePDF = async (invoiceData: IInvoiceData): Promise<Buffer> => {
       resolve(Buffer.concat(buffer));
     });
     doc.on("error", (err) => {
-      console.log(err);
+      logger.error({ message: "PDF creation error", err });
       reject(
         new AppError(
-          StatusCodes.BAD_REQUEST,
+          StatusCodes.INTERNAL_SERVER_ERROR,
           `PDF creation failed. Error: ${err.message}`,
         ),
       );
@@ -36,7 +36,7 @@ const generatePDF = async (invoiceData: IInvoiceData): Promise<Buffer> => {
     doc.moveDown();
     doc.fontSize(14).text(`Transaction ID: ${invoiceData.transactionId}`);
     doc.text(
-      `Enrollment Date: ${invoiceData.enrollmentDate.toLocaleDateString()}`,
+      `Enrollment Date: ${invoiceData.enrollmentDate.toLocaleDateString("en-US")}`,
     );
     doc.text(`Customer: ${invoiceData.userName}`);
     doc.moveDown();

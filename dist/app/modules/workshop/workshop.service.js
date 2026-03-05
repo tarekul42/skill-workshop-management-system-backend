@@ -10,6 +10,7 @@ const AppError_1 = __importDefault(require("../../errorHelpers/AppError"));
 const queryBuilder_1 = __importDefault(require("../../utils/queryBuilder"));
 const workshop_constant_1 = require("./workshop.constant");
 const workshop_model_1 = require("./workshop.model");
+const logger_1 = __importDefault(require("../../utils/logger"));
 const createLevel = async (payload) => {
     if (!payload || typeof payload.name !== "string") {
         throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Invalid level name");
@@ -238,7 +239,9 @@ const updateWorkshop = async (id, payload) => {
         const results = await Promise.allSettled(validDeletions.map((url) => (0, cloudinary_config_1.deleteImageFromCloudinary)(url)));
         const failures = results.filter((r) => r.status === "rejected");
         if (failures.length > 0) {
-            console.error(`Failed to delete ${failures.length} images from Cloudinary`);
+            logger_1.default.error({
+                message: `Failed to delete ${failures.length} images from Cloudinary`,
+            });
         }
     }
     return updatedWorkshop;

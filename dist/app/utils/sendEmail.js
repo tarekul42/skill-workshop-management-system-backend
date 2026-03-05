@@ -11,6 +11,7 @@ const nodemailer_1 = __importDefault(require("nodemailer"));
 const path_1 = __importDefault(require("path"));
 const env_1 = __importDefault(require("../config/env"));
 const AppError_1 = __importDefault(require("../errorHelpers/AppError"));
+const logger_1 = __importDefault(require("./logger"));
 const transporter = nodemailer_1.default.createTransport({
     secure: true,
     auth: {
@@ -35,10 +36,10 @@ const sendEmail = async ({ to, subject, templateName, templateData, attachments,
                 contentType: attachments.contentType,
             })),
         });
-        console.log(`\u2709\uFE0F Email sent to ${to}: ${info.messageId}`);
+        logger_1.default.info({ message: `\u2709\uFE0F Email sent to ${to}: ${info.messageId}` });
     }
     catch (error) {
-        console.log("Email sending error:", error.message);
+        logger_1.default.error({ message: "Email sending error", err: error });
         throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Email sending error");
     }
 };

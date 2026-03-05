@@ -8,18 +8,21 @@ const app_1 = __importDefault(require("./app"));
 const env_1 = __importDefault(require("./app/config/env"));
 const seedSuperAdmin_1 = __importDefault(require("./app/utils/seedSuperAdmin"));
 const redis_config_1 = require("./app/config/redis.config");
+const logger_1 = __importDefault(require("./app/utils/logger"));
 let server;
 const startServer = async () => {
     try {
-        console.log("Connecting to database....");
+        logger_1.default.info({ message: "Connecting to database...." });
         await mongoose_1.default.connect(env_1.default.DATABASE_URL);
-        console.log("Connected to Database.");
+        logger_1.default.info({ message: "Connected to Database." });
         server = app_1.default.listen(env_1.default.PORT, () => {
-            console.log(`Skill workshop management system backend is running on port: ${env_1.default.PORT}`);
+            logger_1.default.info({
+                message: `Skill workshop management system backend is running on port: ${env_1.default.PORT}`,
+            });
         });
     }
     catch (error) {
-        console.error("Failed to connect to database or start server:", error);
+        logger_1.default.error({ message: "Failed to connect to database or start server", err: error });
         process.exit(1);
     }
 };
@@ -29,7 +32,7 @@ const startServer = async () => {
     await (0, seedSuperAdmin_1.default)();
 })();
 process.on("unhandledRejection", (error) => {
-    console.error("Unhandled Rejection Detected. Server shutting down.\n", error);
+    logger_1.default.error({ message: "Unhandled Rejection Detected. Server shutting down.", err: error });
     if (server) {
         server.close(() => {
             process.exit(1);
@@ -38,7 +41,7 @@ process.on("unhandledRejection", (error) => {
     process.exit(1);
 });
 process.on("uncaughtException", (error) => {
-    console.error("Uncaught Exception Detected. Server shutting down.\n", error);
+    logger_1.default.error({ message: "Uncaught Exception Detected. Server shutting down.", err: error });
     if (server) {
         server.close(() => {
             process.exit(1);
@@ -47,7 +50,7 @@ process.on("uncaughtException", (error) => {
     process.exit(1);
 });
 process.on("SIGTERM", () => {
-    console.log("SIGTERM received. Server shutting down.");
+    logger_1.default.info({ message: "SIGTERM received. Server shutting down." });
     if (server) {
         server.close(() => {
             process.exit(1);
@@ -56,7 +59,7 @@ process.on("SIGTERM", () => {
     process.exit(1);
 });
 process.on("SIGINT", () => {
-    console.log("SIGINT received. Server shutting down.");
+    logger_1.default.info({ message: "SIGINT received. Server shutting down." });
     if (server) {
         server.close(() => {
             process.exit(1);

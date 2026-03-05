@@ -1,8 +1,8 @@
-/* eslint-disable no-console */
 import bcrypt from "bcryptjs";
 import envVariables from "../config/env";
 import { IAuthProvider, IUser, UserRole } from "../modules/user/user.interface";
 import User from "../modules/user/user.model";
+import logger from "./logger";
 
 const seedSuperAdmin = async () => {
   try {
@@ -11,7 +11,7 @@ const seedSuperAdmin = async () => {
     });
 
     if (isSuperAdminExists) {
-      console.log("Super Admin already exists!");
+      logger.info({ message: "Super Admin already exists!" });
       return;
     }
 
@@ -36,7 +36,7 @@ const seedSuperAdmin = async () => {
 
     await User.create(payload);
   } catch (err) {
-    console.error(err);
+    logger.error({ message: "Error seeding super admin", err });
   }
 };
 
