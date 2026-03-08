@@ -18,8 +18,11 @@ import notFound from "./app/middlewares/notFound";
 import router from "./app/route";
 import { authLimiter, generalLimiter } from "./app/utils/rateLimiter";
 import logger from "./app/utils/logger";
+import connectRedis from "connect-redis";
+import { redisClient } from "./app/config/redis.config";
 
 const app = express();
+const RedisStore = connectRedis(expressSession);
 
 if (envVariables.EXPRESS_SESSION_SECRET.length < 32) {
   logger.warn({
@@ -32,7 +35,7 @@ if (envVariables.EXPRESS_SESSION_SECRET.length < 32) {
 app.use(helmet());
 
 // ──── HTTP Request Logger ────
-app.use(morgan(envVariables.NODE_ENV === "production" ? "combined" : "dev"));
+app.use(morgan(envVariables.NODE_ENV === "production" ? "tiny" : "dev"));
 
 // ──── Body Parsers ────
 app.use(express.json({ limit: "16kb" }));
@@ -45,6 +48,7 @@ app.use(hpp()); // prevent HTTP parameter pollution
 // ──── Session & Auth ────
 app.use(
   expressSession({
+    store: new RedisStore({ client: redisClient }),
     secret: envVariables.EXPRESS_SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
@@ -52,6 +56,7 @@ app.use(
       secure: envVariables.NODE_ENV === "production",
       httpOnly: true,
       sameSite: envVariables.NODE_ENV === "production" ? "strict" : "lax",
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
     },
   }),
 );
