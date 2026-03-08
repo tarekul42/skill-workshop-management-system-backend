@@ -20,7 +20,10 @@ const notFound_1 = __importDefault(require("./app/middlewares/notFound"));
 const route_1 = __importDefault(require("./app/route"));
 const rateLimiter_1 = require("./app/utils/rateLimiter");
 const logger_1 = __importDefault(require("./app/utils/logger"));
+const connect_redis_1 = __importDefault(require("connect-redis"));
+const redis_config_1 = require("./app/config/redis.config");
 const app = (0, express_1.default)();
+const RedisStore = (0, connect_redis_1.default)(express_session_1.default);
 if (env_1.default.EXPRESS_SESSION_SECRET.length < 32) {
     logger_1.default.warn({
         message: "Warning: EXPRESS_SESSION_SECRET should be at least 32 characters for security.",
@@ -29,7 +32,7 @@ if (env_1.default.EXPRESS_SESSION_SECRET.length < 32) {
 // ──── Security Headers ────
 app.use((0, helmet_1.default)());
 // ──── HTTP Request Logger ────
-app.use((0, morgan_1.default)(env_1.default.NODE_ENV === "production" ? "combined" : "dev"));
+app.use((0, morgan_1.default)(env_1.default.NODE_ENV === "production" ? "tiny" : "dev"));
 // ──── Body Parsers ────
 app.use(express_1.default.json({ limit: "16kb" }));
 app.use(express_1.default.urlencoded({ extended: true, limit: "16kb" }));
@@ -38,6 +41,7 @@ app.use(mongoSanitize_1.default); // strip $ and . from req.body/query/params
 app.use((0, hpp_1.default)()); // prevent HTTP parameter pollution
 // ──── Session & Auth ────
 app.use((0, express_session_1.default)({
+    store: new RedisStore({ client: redis_config_1.redisClient }),
     secret: env_1.default.EXPRESS_SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
@@ -45,6 +49,7 @@ app.use((0, express_session_1.default)({
         secure: env_1.default.NODE_ENV === "production",
         httpOnly: true,
         sameSite: env_1.default.NODE_ENV === "production" ? "strict" : "lax",
+        maxAge: 24 * 60 * 60 * 1000, // 24 hours
     },
 }));
 app.use(passport_1.default.initialize());

@@ -1,6 +1,17 @@
 import { rateLimit } from "express-rate-limit";
+import { RedisStore } from "rate-limit-redis";
+import { redisClient } from "../config/redis.config";
+
+const commonOptions = {
+  standardHeaders: true,
+  legacyHeaders: false,
+  store: new RedisStore({
+    sendCommand: (...args: string[]) => redisClient.sendCommand(args),
+  }),
+};
 
 const generalLimiter = rateLimit({
+  ...commonOptions,
   windowMs: 1 * 60 * 1000,
   max: 60,
   message: {
@@ -10,6 +21,7 @@ const generalLimiter = rateLimit({
 });
 
 const authLimiter = rateLimit({
+  ...commonOptions,
   windowMs: 15 * 60 * 1000,
   max: 10,
   message: {
@@ -19,6 +31,7 @@ const authLimiter = rateLimit({
 });
 
 const strictLimiter = rateLimit({
+  ...commonOptions,
   windowMs: 15 * 60 * 1000,
   max: 5,
   message: {
@@ -26,19 +39,16 @@ const strictLimiter = rateLimit({
     message:
       "Too many attempts on this sensitive operation, please try again later.",
   },
-  standardHeaders: true,
-  legacyHeaders: false,
 });
 
 const adminCrudLimiter = rateLimit({
+  ...commonOptions,
   windowMs: 15 * 60 * 1000,
   max: 100,
   message: {
     status: 429,
     message: "Too many requests, please try again later.",
   },
-  standardHeaders: true,
-  legacyHeaders: false,
 });
 
 export { adminCrudLimiter, authLimiter, generalLimiter, strictLimiter };
