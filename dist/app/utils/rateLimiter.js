@@ -4,50 +4,41 @@ exports.strictLimiter = exports.generalLimiter = exports.authLimiter = exports.a
 const express_rate_limit_1 = require("express-rate-limit");
 const rate_limit_redis_1 = require("rate-limit-redis");
 const redis_config_1 = require("../config/redis.config");
-const commonOptions = {
-    standardHeaders: true,
-    legacyHeaders: false,
-    store: new rate_limit_redis_1.RedisStore({
-        sendCommand: (...args) => redis_config_1.redisClient.sendCommand(args),
-    }),
+const createLimiter = (prefix, windowMs, max, message) => {
+    return (0, express_rate_limit_1.rateLimit)({
+        standardHeaders: true,
+        legacyHeaders: false,
+        store: new rate_limit_redis_1.RedisStore({
+            sendCommand: async (...args) => {
+                if (!redis_config_1.redisClient.isOpen) {
+                    await redis_config_1.redisClient.connect();
+                }
+                return redis_config_1.redisClient.sendCommand(args);
+            },
+            prefix,
+        }),
+        windowMs,
+        max,
+        message,
+    });
 };
-const generalLimiter = (0, express_rate_limit_1.rateLimit)({
-    ...commonOptions,
-    windowMs: 1 * 60 * 1000,
-    max: 60,
-    message: {
-        status: 429,
-        message: "Too many requests, please try again later.",
-    },
+const generalLimiter = createLimiter("rl:general:", 1 * 60 * 1000, 60, {
+    status: 429,
+    message: "Too many requests, please try again later.",
 });
 exports.generalLimiter = generalLimiter;
-const authLimiter = (0, express_rate_limit_1.rateLimit)({
-    ...commonOptions,
-    windowMs: 15 * 60 * 1000,
-    max: 10,
-    message: {
-        status: 429,
-        message: "Too many attempts, please try again later.",
-    },
+const authLimiter = createLimiter("rl:auth:", 15 * 60 * 1000, 10, {
+    status: 429,
+    message: "Too many attempts, please try again later.",
 });
 exports.authLimiter = authLimiter;
-const strictLimiter = (0, express_rate_limit_1.rateLimit)({
-    ...commonOptions,
-    windowMs: 15 * 60 * 1000,
-    max: 5,
-    message: {
-        status: 429,
-        message: "Too many attempts on this sensitive operation, please try again later.",
-    },
+const strictLimiter = createLimiter("rl:strict:", 15 * 60 * 1000, 5, {
+    status: 429,
+    message: "Too many attempts on this sensitive operation, please try again later.",
 });
 exports.strictLimiter = strictLimiter;
-const adminCrudLimiter = (0, express_rate_limit_1.rateLimit)({
-    ...commonOptions,
-    windowMs: 15 * 60 * 1000,
-    max: 100,
-    message: {
-        status: 429,
-        message: "Too many requests, please try again later.",
-    },
+const adminCrudLimiter = createLimiter("rl:admin:", 15 * 60 * 1000, 100, {
+    status: 429,
+    message: "Too many requests, please try again later.",
 });
 exports.adminCrudLimiter = adminCrudLimiter;

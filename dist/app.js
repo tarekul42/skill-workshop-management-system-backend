@@ -20,10 +20,9 @@ const notFound_1 = __importDefault(require("./app/middlewares/notFound"));
 const route_1 = __importDefault(require("./app/route"));
 const rateLimiter_1 = require("./app/utils/rateLimiter");
 const logger_1 = __importDefault(require("./app/utils/logger"));
-const connect_redis_1 = __importDefault(require("connect-redis"));
+const connect_redis_1 = require("connect-redis");
 const redis_config_1 = require("./app/config/redis.config");
 const app = (0, express_1.default)();
-const RedisStore = (0, connect_redis_1.default)(express_session_1.default);
 if (env_1.default.EXPRESS_SESSION_SECRET.length < 32) {
     logger_1.default.warn({
         message: "Warning: EXPRESS_SESSION_SECRET should be at least 32 characters for security.",
@@ -41,7 +40,7 @@ app.use(mongoSanitize_1.default); // strip $ and . from req.body/query/params
 app.use((0, hpp_1.default)()); // prevent HTTP parameter pollution
 // ──── Session & Auth ────
 app.use((0, express_session_1.default)({
-    store: new RedisStore({ client: redis_config_1.redisClient }),
+    store: new connect_redis_1.RedisStore({ client: redis_config_1.redisClient }),
     secret: env_1.default.EXPRESS_SESSION_SECRET,
     resave: false,
     saveUninitialized: false,

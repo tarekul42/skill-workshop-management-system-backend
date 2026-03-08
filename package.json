@@ -18,7 +18,6 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@types/bcryptjs": "^3.0.0",
-    "@types/connect-redis": "^0.0.23",
     "@types/cookie-parser": "^1.4.10",
     "@types/cors": "^2.8.19",
     "@types/dotenv": "^8.2.3",

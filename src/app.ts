@@ -18,11 +18,10 @@ import notFound from "./app/middlewares/notFound";
 import router from "./app/route";
 import { authLimiter, generalLimiter } from "./app/utils/rateLimiter";
 import logger from "./app/utils/logger";
-import connectRedis from "connect-redis";
+import { RedisStore } from "connect-redis";
 import { redisClient } from "./app/config/redis.config";
 
 const app = express();
-const RedisStore = connectRedis(expressSession);
 
 if (envVariables.EXPRESS_SESSION_SECRET.length < 32) {
   logger.warn({
