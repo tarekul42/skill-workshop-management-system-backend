@@ -1,7 +1,11 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.WorkShop = exports.Level = void 0;
 const mongoose_1 = require("mongoose");
+const logger_1 = __importDefault(require("../../utils/logger"));
 const levelSchema = new mongoose_1.Schema({
     name: { type: String, required: true, unique: true },
 }, {
@@ -57,9 +61,11 @@ const generateUniqueSlug = async (baseSlug, excludeId) => {
     return slug;
 };
 workshopSchema.pre("save", async function () {
+    logger_1.default.info({ message: "Pre-save hook title", title: this.title });
     if (this.isModified("title") || !this.slug) {
-        const baseSlug = this.title.toLowerCase().split(" ").join("-");
+        const baseSlug = (this.title || "").toLowerCase().split(" ").join("-");
         this.slug = await generateUniqueSlug(baseSlug);
+        logger_1.default.info({ message: "Generated slug", slug: this.slug });
     }
 });
 workshopSchema.pre("findOneAndUpdate", async function () {

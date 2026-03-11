@@ -134,9 +134,17 @@ npm start
 
 ---
 
+## API Documentation
+
+The API is fully documented using **Swagger / OpenAPI 3.0**. You can explore the interactive documentation, test endpoints, and view data models at:
+
+**[http://localhost:5000/api-docs](http://localhost:5000/api-docs)**
+
+---
+
 ## API Endpoints
 
-### Authentication (`/api/auth`)
+### Authentication (`/api/v1/auth`)
 | Method | Endpoint | Description | Access |
 |--------|----------|-------------|--------|
 | POST | `/auth/login` | Login with credentials | Public |
@@ -149,7 +157,7 @@ npm start
 | GET | `/auth/google` | Google OAuth login | Public |
 | GET | `/auth/google/callback` | Google OAuth callback | Public |
 
-### Users (`/api/user`)
+### Users (`/api/v1/user`)
 | Method | Endpoint | Description | Access |
 |--------|----------|-------------|--------|
 | POST | `/user/register` | Register new user | Public |
@@ -158,7 +166,7 @@ npm start
 | GET | `/user/:id` | Get single user | Admin |
 | PATCH | `/user/:id` | Update user | Auth |
 
-### Workshops (`/api/workshop`)
+### Workshops (`/api/v1/workshop`)
 | Method | Endpoint | Description | Access |
 |--------|----------|-------------|--------|
 | GET | `/workshop` | Get all workshops | Public |
@@ -169,7 +177,7 @@ npm start
 | GET | `/workshop/levels` | Get all levels | Public |
 | POST | `/workshop/create-level` | Create level | Admin |
 
-### Categories (`/api/category`)
+### Categories (`/api/v1/category`)
 | Method | Endpoint | Description | Access |
 |--------|----------|-------------|--------|
 | GET | `/category` | Get all categories | Public |
@@ -178,7 +186,7 @@ npm start
 | PATCH | `/category/:id` | Update category | Admin |
 | DELETE | `/category/:id` | Delete category | Admin |
 
-### Enrollments (`/api/enrollment`)
+### Enrollments (`/api/v1/enrollment`)
 | Method | Endpoint | Description | Access |
 |--------|----------|-------------|--------|
 | GET | `/enrollment` | Get user enrollments | Auth |
@@ -186,7 +194,7 @@ npm start
 | POST | `/enrollment/create` | Create enrollment | Auth |
 | DELETE | `/enrollment/:id` | Cancel enrollment | Auth |
 
-### Payments (`/api/payment`)
+### Payments (`/api/v1/payment`)
 | Method | Endpoint | Description | Access |
 |--------|----------|-------------|--------|
 | POST | `/payment/init-payment/:enrollmentId` | Initialize payment | Auth |
@@ -196,19 +204,27 @@ npm start
 | GET | `/payment/invoice/:paymentId` | Download invoice | Auth |
 | POST | `/payment/validate-payment` | Validate payment | Auth |
 
-### OTP (`/api/otp`)
+### OTP (`/api/v1/otp`)
 | Method | Endpoint | Description | Access |
 |--------|----------|-------------|--------|
 | POST | `/otp/send` | Send OTP to email | Public |
 | POST | `/otp/verify` | Verify OTP | Public |
 
-### Stats (`/api/stats`)
+### Stats (`/api/v1/stats`)
 | Method | Endpoint | Description | Access |
 |--------|----------|-------------|--------|
 | GET | `/stats/enrollment` | Enrollment statistics | Admin |
 | GET | `/stats/payment` | Payment statistics | Admin |
 | GET | `/stats/users` | User statistics | Admin |
 | GET | `/stats/workshops` | Workshop statistics | Admin |
+
+### Health (`/api/v1/health`)
+| Method | Endpoint | Description | Access |
+|--------|----------|-------------|--------|
+| GET | `/health/` | Root health endpoint | Public |
+| GET | `/health/ping` | Simple health ping | Public |
+| GET | `/health/check-version`| Get API version | Public |
+| GET | `/health/health-check` | Detailed health status | Public |
 
 ---
 
@@ -285,10 +301,10 @@ FRONTEND_URL=http://localhost:3000
 ## Scripts
 
 ```bash
-npm run dev      # Start development server
-npm run build    # Build for production
-npm run start    # Start production server
-npm run lint     # Run ESLint
+bun run dev      # Start development server
+bun run build    # Build for production
+bun run start    # Start production server
+bun run lint     # Run ESLint
 ```
 
 ---

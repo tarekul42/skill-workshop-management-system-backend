@@ -10,6 +10,11 @@ const CSRF_EXEMPT_PATHS = [
   "/api/v1/payment/fail",
   "/api/v1/payment/cancel",
   "/api/v1/auth/google/callback",
+  "/api/v1/user/register",
+  "/api/v1/auth/login",
+  "/api/v1/auth/forgot-password",
+  "/api/v1/otp/send",
+  "/api/v1/otp/verify",
   "/health-check",
 ];
 
@@ -27,8 +32,10 @@ const { doubleCsrfProtection, generateCsrfToken } = doubleCsrf({
   },
   ignoredMethods: ["GET", "HEAD", "OPTIONS"],
   getCsrfTokenFromRequest: (req) => req.headers["x-csrf-token"] as string,
-  skipCsrfProtection: (req) =>
-    CSRF_EXEMPT_PATHS.some((path) => req.path === path),
+  skipCsrfProtection: (req) => {
+    const isExempt = CSRF_EXEMPT_PATHS.some((path) => req.path === path);
+    return isExempt;
+  },
 });
 
 export { doubleCsrfProtection, generateCsrfToken };

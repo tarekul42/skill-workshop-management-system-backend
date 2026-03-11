@@ -11,10 +11,14 @@ const checkAuth =
   (...authRoles: string[]) =>
   async (req: Request, _res: Response, next: NextFunction) => {
     try {
-      const accessToken = req.headers.authorization;
+      let accessToken = req.headers.authorization;
 
       if (!accessToken) {
         throw new AppError(StatusCodes.FORBIDDEN, "Access token is missing");
+      }
+
+      if (accessToken.startsWith("Bearer ")) {
+        accessToken = accessToken.split(" ")[1];
       }
 
       const verifiedToken = verifyToken(

@@ -20,9 +20,12 @@ import { authLimiter, generalLimiter } from "./app/utils/rateLimiter";
 import logger from "./app/utils/logger";
 import { RedisStore } from "connect-redis";
 import { redisClient } from "./app/config/redis.config";
+import { swaggerSpec } from "./app/config/swagger.config";
+import swaggerUi from "swagger-ui-express";
 
 const app = express();
 
+// ──── Security Check ────
 if (envVariables.EXPRESS_SESSION_SECRET.length < 32) {
   logger.warn({
     message:
@@ -30,15 +33,49 @@ if (envVariables.EXPRESS_SESSION_SECRET.length < 32) {
   });
 }
 
-// ──── Security Headers ────
-app.use(helmet());
-
 // ──── HTTP Request Logger ────
 app.use(morgan(envVariables.NODE_ENV === "production" ? "tiny" : "dev"));
+
+// ──── Request Debugger ────
+app.use((req, _res, next) => {
+  logger.info({
+    message: `Incoming Request: ${req.method} ${req.originalUrl}`,
+  });
+  next();
+});
+
+// ──── Security Headers ────
+// contentSecurityPolicy is configured to allow swagger-ui-express assets
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        imgSrc: ["'self'", "data:", "validator.swagger.io"],
+        connectSrc: ["'self'"],
+      },
+    },
+  }),
+);
+
+app.set("trust proxy", 1);
+
+// ──── CORS ────
+app.use(
+  cors({
+    origin: envVariables.FRONTEND_URL,
+    credentials: true,
+  }),
+);
 
 // ──── Body Parsers ────
 app.use(express.json({ limit: "16kb" }));
 app.use(express.urlencoded({ extended: true, limit: "16kb" }));
+
+// ──── Cookie Parser ────
+app.use(cookieParser());
 
 // ──── Input Sanitization ────
 app.use(mongoSanitize); // strip $ and . from req.body/query/params
@@ -60,20 +97,17 @@ app.use(
   }),
 );
 app.use(passport.initialize());
-app.use(cookieParser());
-
-// ──── CORS ────
-app.use(
-  cors({
-    origin: envVariables.FRONTEND_URL,
-    credentials: true,
-  }),
-);
-
-app.set("trust proxy", 1);
 
 // ──── CSRF Protection ────
 app.use(doubleCsrfProtection);
+
+
+// ──── Swagger Documentation ────
+app.get("/api-docs.json", (_req, res) => {
+  res.json(swaggerSpec);
+});
+
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // ──── CSRF Token Endpoint ────
 app.get("/api/v1/csrf-token", (req: Request, res: Response) => {
@@ -81,25 +115,18 @@ app.get("/api/v1/csrf-token", (req: Request, res: Response) => {
   res.status(200).json({ csrfToken: token });
 });
 
-// ──── Routes ────
+// ──── API Routes ────
 app.use("/api/v1", generalLimiter, router);
-
 app.use("/auth", authLimiter);
 
-app.get("/health-check", (_req: Request, res: Response) => {
-  res.status(200).json({
-    status: "ok",
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
-  });
-});
-
+// ──── Root Route ────
 app.get("/", (_req: Request, res: Response) => {
   res.status(200).json({
-    message: "Skill Workshop Management System Backend is up and running.",
+    message: "Welcome to the Skill Workshop Management System Backend!",
   });
 });
 
+// ──── Global Error Handler & 404 ────
 app.use(globalErrorHandler);
 app.use(notFound);
 

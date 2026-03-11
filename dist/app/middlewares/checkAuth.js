@@ -11,9 +11,12 @@ const user_model_1 = __importDefault(require("../modules/user/user.model"));
 const jwt_1 = require("../utils/jwt");
 const checkAuth = (...authRoles) => async (req, _res, next) => {
     try {
-        const accessToken = req.headers.authorization;
+        let accessToken = req.headers.authorization;
         if (!accessToken) {
             throw new AppError_1.default(http_status_codes_1.StatusCodes.FORBIDDEN, "Access token is missing");
+        }
+        if (accessToken.startsWith("Bearer ")) {
+            accessToken = accessToken.split(" ")[1];
         }
         const verifiedToken = (0, jwt_1.verifyToken)(accessToken, env_1.default.JWT_ACCESS_SECRET);
         if (!verifiedToken) {
