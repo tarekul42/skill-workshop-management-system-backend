@@ -16,7 +16,7 @@ const health_route_1 = require("../modules/health/health.route");
 const router = (0, express_1.Router)();
 const moduleRoutes = [
     {
-        path: "/",
+        path: "/health",
         route: health_route_1.HealthRoutes,
     },
     {

@@ -13,7 +13,7 @@ const router = Router();
 
 const moduleRoutes = [
   {
-    path: "/",
+    path: "/health",
     route: HealthRoutes,
   },
   {

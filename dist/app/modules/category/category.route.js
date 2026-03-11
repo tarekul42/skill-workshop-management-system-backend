@@ -48,16 +48,15 @@ const router = (0, express_1.Router)();
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: Category created successfully
- *                 data:
- *                   type: object
+ *               allOf:
+ *                 - $ref: "#/components/schemas/BaseResponse"
+ *                 - type: object
+ *                   properties:
+ *                     data: { $ref: "#/components/schemas/Category" }
+ *       400:
+ *         $ref: "#/components/responses/BadRequestError"
+ *       401:
+ *         $ref: "#/components/responses/UnauthorizedError"
  */
 router.post("/create", rateLimiter_1.adminCrudLimiter, (0, checkAuth_1.default)(user_interface_1.UserRole.ADMIN, user_interface_1.UserRole.SUPER_ADMIN), multer_config_1.default.single("file"), (0, validateRequest_1.default)(category_validation_1.createCategoryZodSchema), category_controller_1.default.createCategory);
 /**
@@ -72,15 +71,13 @@ router.post("/create", rateLimiter_1.adminCrudLimiter, (0, checkAuth_1.default)(
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 data:
- *                   type: array
- *                   items:
- *                     type: object
+ *               allOf:
+ *                 - $ref: "#/components/schemas/BaseResponse"
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       type: array
+ *                       items: { $ref: "#/components/schemas/Category" }
  */
 router.get("/", category_controller_1.default.getAllCategories);
 /**
@@ -101,13 +98,13 @@ router.get("/", category_controller_1.default.getAllCategories);
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 data:
- *                   type: object
+ *               allOf:
+ *                 - $ref: "#/components/schemas/BaseResponse"
+ *                 - type: object
+ *                   properties:
+ *                     data: { $ref: "#/components/schemas/Category" }
+ *       404:
+ *         $ref: "#/components/responses/NotFoundError"
  */
 router.get("/:slug", category_controller_1.default.getSingleCategory);
 /**
@@ -143,16 +140,15 @@ router.get("/:slug", category_controller_1.default.getSingleCategory);
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: Category updated successfully
- *                 data:
- *                   type: object
+ *               allOf:
+ *                 - $ref: "#/components/schemas/BaseResponse"
+ *                 - type: object
+ *                   properties:
+ *                     data: { $ref: "#/components/schemas/Category" }
+ *       400:
+ *         $ref: "#/components/responses/BadRequestError"
+ *       401:
+ *         $ref: "#/components/responses/UnauthorizedError"
  */
 router.patch("/:id", rateLimiter_1.adminCrudLimiter, (0, checkAuth_1.default)(user_interface_1.UserRole.ADMIN, user_interface_1.UserRole.SUPER_ADMIN), multer_config_1.default.single("file"), (0, validateRequest_1.default)(category_validation_1.updateCategoryZodSchema), category_controller_1.default.updateCategory);
 /**
@@ -175,14 +171,11 @@ router.patch("/:id", rateLimiter_1.adminCrudLimiter, (0, checkAuth_1.default)(us
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: Category deleted successfully
+ *               $ref: "#/components/schemas/BaseResponse"
+ *       401:
+ *         $ref: "#/components/responses/UnauthorizedError"
+ *       404:
+ *         $ref: "#/components/responses/NotFoundError"
  */
 router.delete("/:id", rateLimiter_1.adminCrudLimiter, (0, checkAuth_1.default)(user_interface_1.UserRole.ADMIN, user_interface_1.UserRole.SUPER_ADMIN), category_controller_1.default.deleteCategory);
 const CategoryRoutes = router;

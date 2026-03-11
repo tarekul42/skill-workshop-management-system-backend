@@ -122,8 +122,7 @@ app.use("/auth", authLimiter);
 // ──── Root Route ────
 app.get("/", (_req: Request, res: Response) => {
   res.status(200).json({
-    message: "Welcome to the Skill Workshop Management System API. Please use /api/v1 for API endpoints.",
-    documentation: "/api-docs",
+    message: "Welcome to the Skill Workshop Management System Backend!",
   });
 });
 

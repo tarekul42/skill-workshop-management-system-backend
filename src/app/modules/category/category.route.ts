@@ -49,16 +49,15 @@ const router = Router();
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: Category created successfully
- *                 data:
- *                   type: object
+ *               allOf:
+ *                 - $ref: "#/components/schemas/BaseResponse"
+ *                 - type: object
+ *                   properties:
+ *                     data: { $ref: "#/components/schemas/Category" }
+ *       400:
+ *         $ref: "#/components/responses/BadRequestError"
+ *       401:
+ *         $ref: "#/components/responses/UnauthorizedError"
  */
 router.post(
   "/create",
@@ -81,15 +80,13 @@ router.post(
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 data:
- *                   type: array
- *                   items:
- *                     type: object
+ *               allOf:
+ *                 - $ref: "#/components/schemas/BaseResponse"
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       type: array
+ *                       items: { $ref: "#/components/schemas/Category" }
  */
 router.get("/", CategoryController.getAllCategories);
 
@@ -111,13 +108,13 @@ router.get("/", CategoryController.getAllCategories);
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 data:
- *                   type: object
+ *               allOf:
+ *                 - $ref: "#/components/schemas/BaseResponse"
+ *                 - type: object
+ *                   properties:
+ *                     data: { $ref: "#/components/schemas/Category" }
+ *       404:
+ *         $ref: "#/components/responses/NotFoundError"
  */
 router.get("/:slug", CategoryController.getSingleCategory);
 
@@ -154,16 +151,15 @@ router.get("/:slug", CategoryController.getSingleCategory);
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: Category updated successfully
- *                 data:
- *                   type: object
+ *               allOf:
+ *                 - $ref: "#/components/schemas/BaseResponse"
+ *                 - type: object
+ *                   properties:
+ *                     data: { $ref: "#/components/schemas/Category" }
+ *       400:
+ *         $ref: "#/components/responses/BadRequestError"
+ *       401:
+ *         $ref: "#/components/responses/UnauthorizedError"
  */
 router.patch(
   "/:id",
@@ -194,14 +190,11 @@ router.patch(
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: Category deleted successfully
+ *               $ref: "#/components/schemas/BaseResponse"
+ *       401:
+ *         $ref: "#/components/responses/UnauthorizedError"
+ *       404:
+ *         $ref: "#/components/responses/NotFoundError"
  */
 router.delete(
   "/:id",

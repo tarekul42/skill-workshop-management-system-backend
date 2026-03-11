@@ -35,15 +35,13 @@ const router = express.Router();
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 data:
- *                   type: array
- *                   items:
- *                     type: object
+ *               allOf:
+ *                 - $ref: "#/components/schemas/BaseResponse"
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       type: array
+ *                       items: { $ref: "#/components/schemas/Level" }
  */
 router.get("/levels", WorkshopController.getAllLevels);
 
@@ -65,13 +63,13 @@ router.get("/levels", WorkshopController.getAllLevels);
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 data:
- *                   type: object
+ *               allOf:
+ *                 - $ref: "#/components/schemas/BaseResponse"
+ *                 - type: object
+ *                   properties:
+ *                     data: { $ref: "#/components/schemas/Level" }
+ *       404:
+ *         $ref: "#/components/responses/NotFoundError"
  */
 router.get("/levels/:id", WorkshopController.getSingleLevel);
 
@@ -100,16 +98,13 @@ router.get("/levels/:id", WorkshopController.getSingleLevel);
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: Level created successfully
- *                 data:
- *                   type: object
+ *               allOf:
+ *                 - $ref: "#/components/schemas/BaseResponse"
+ *                 - type: object
+ *                   properties:
+ *                     data: { $ref: "#/components/schemas/Level" }
+ *       401:
+ *         $ref: "#/components/responses/UnauthorizedError"
  */
 router.post(
   "/create-level",
@@ -148,16 +143,15 @@ router.post(
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: Level updated successfully
- *                 data:
- *                   type: object
+ *               allOf:
+ *                 - $ref: "#/components/schemas/BaseResponse"
+ *                 - type: object
+ *                   properties:
+ *                     data: { $ref: "#/components/schemas/Level" }
+ *       400:
+ *         $ref: "#/components/responses/BadRequestError"
+ *       401:
+ *         $ref: "#/components/responses/UnauthorizedError"
  */
 router.patch(
   "/levels/:id",
@@ -187,14 +181,11 @@ router.patch(
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: Level deleted successfully
+ *               $ref: "#/components/schemas/BaseResponse"
+ *       401:
+ *         $ref: "#/components/responses/UnauthorizedError"
+ *       404:
+ *         $ref: "#/components/responses/NotFoundError"
  */
 router.delete(
   "/levels/:id",
@@ -229,15 +220,13 @@ router.delete(
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 data:
- *                   type: array
- *                   items:
- *                     type: object
+ *               allOf:
+ *                 - $ref: "#/components/schemas/BaseResponse"
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       type: array
+ *                       items: { $ref: "#/components/schemas/Workshop" }
  */
 router.get("/", WorkshopController.getAllWorkshops);
 
@@ -259,13 +248,13 @@ router.get("/", WorkshopController.getAllWorkshops);
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 data:
- *                   type: object
+ *               allOf:
+ *                 - $ref: "#/components/schemas/BaseResponse"
+ *                 - type: object
+ *                   properties:
+ *                     data: { $ref: "#/components/schemas/Workshop" }
+ *       404:
+ *         $ref: "#/components/responses/NotFoundError"
  */
 router.get("/:slug", WorkshopController.getSingleWorkshop);
 
@@ -335,16 +324,15 @@ router.get("/:slug", WorkshopController.getSingleWorkshop);
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: Workshop created successfully
- *                 data:
- *                   type: object
+ *               allOf:
+ *                 - $ref: "#/components/schemas/BaseResponse"
+ *                 - type: object
+ *                   properties:
+ *                     data: { $ref: "#/components/schemas/Workshop" }
+ *       400:
+ *         $ref: "#/components/responses/BadRequestError"
+ *       401:
+ *         $ref: "#/components/responses/UnauthorizedError"
  */
 router.post(
   "/create",
@@ -426,16 +414,15 @@ router.post(
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: Workshop updated successfully
- *                 data:
- *                   type: object
+ *               allOf:
+ *                 - $ref: "#/components/schemas/BaseResponse"
+ *                 - type: object
+ *                   properties:
+ *                     data: { $ref: "#/components/schemas/Workshop" }
+ *       400:
+ *         $ref: "#/components/responses/BadRequestError"
+ *       401:
+ *         $ref: "#/components/responses/UnauthorizedError"
  */
 router.patch(
   "/:id",
@@ -466,14 +453,11 @@ router.patch(
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: Workshop deleted successfully
+ *               $ref: "#/components/schemas/BaseResponse"
+ *       401:
+ *         $ref: "#/components/responses/UnauthorizedError"
+ *       404:
+ *         $ref: "#/components/responses/NotFoundError"
  */
 router.delete(
   "/:id",

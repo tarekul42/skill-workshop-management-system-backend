@@ -96,6 +96,12 @@ app.get("/api/v1/csrf-token", (req, res) => {
 // ──── API Routes ────
 app.use("/api/v1", rateLimiter_1.generalLimiter, route_1.default);
 app.use("/auth", rateLimiter_1.authLimiter);
+// ──── Root Route ────
+app.get("/", (_req, res) => {
+    res.status(200).json({
+        message: "Welcome to the Skill Workshop Management System Backend!",
+    });
+});
 // ──── Global Error Handler & 404 ────
 app.use(globalErrorHandler_1.default);
 app.use(notFound_1.default);

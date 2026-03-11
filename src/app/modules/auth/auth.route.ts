@@ -46,25 +46,18 @@ const router = Router();
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: User logged in successfully
- *                 data:
- *                   type: object
+ *               allOf:
+ *                 - $ref: "#/components/schemas/BaseResponse"
+ *                 - type: object
  *                   properties:
- *                     accessToken:
- *                       type: string
- *                     refreshToken:
- *                       type: string
- *                     user:
+ *                     data:
  *                       type: object
+ *                       properties:
+ *                         accessToken: { type: "string" }
+ *                         refreshToken: { type: "string" }
+ *                         user: { $ref: "#/components/schemas/User" }
  *       401:
- *         description: Unauthorized
+ *         $ref: "#/components/responses/UnauthorizedError"
  */
 router.post("/login", authLimiter, AuthControllers.credentialsLogin);
 
@@ -81,21 +74,16 @@ router.post("/login", authLimiter, AuthControllers.credentialsLogin);
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: New access token generated successfully
- *                 data:
- *                   type: object
+ *               allOf:
+ *                 - $ref: "#/components/schemas/BaseResponse"
+ *                 - type: object
  *                   properties:
- *                     accessToken:
- *                       type: string
+ *                     data:
+ *                       type: object
+ *                       properties:
+ *                         accessToken: { type: "string" }
  *       400:
- *         description: No refresh token found
+ *         $ref: "#/components/responses/BadRequestError"
  */
 router.post("/refresh-token", authLimiter, AuthControllers.getNewAccessToken);
 
@@ -149,14 +137,11 @@ router.post("/logout", authLimiter, AuthControllers.logout);
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: Password changed successfully
+ *               $ref: "#/components/schemas/BaseResponse"
+ *       401:
+ *         $ref: "#/components/responses/UnauthorizedError"
+ *       403:
+ *         $ref: "#/components/responses/ForbiddenError"
  */
 router.post(
   "/change-password",
@@ -190,14 +175,9 @@ router.post(
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: Password set successfully
+ *               $ref: "#/components/schemas/BaseResponse"
+ *       401:
+ *         $ref: "#/components/responses/UnauthorizedError"
  */
 router.post(
   "/set-password",
@@ -229,14 +209,9 @@ router.post(
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: Email has been sent
+ *               $ref: "#/components/schemas/BaseResponse"
+ *       400:
+ *         $ref: "#/components/responses/BadRequestError"
  */
 router.post("/forgot-password", authLimiter, AuthControllers.forgotPassword);
 
@@ -268,14 +243,9 @@ router.post("/forgot-password", authLimiter, AuthControllers.forgotPassword);
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: Password reset successful
+ *               $ref: "#/components/schemas/BaseResponse"
+ *       400:
+ *         $ref: "#/components/responses/BadRequestError"
  */
 router.post(
   "/reset-password",

@@ -33,16 +33,16 @@ const router = express.Router();
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 data:
- *                   type: object
+ *               allOf:
+ *                 - $ref: "#/components/schemas/BaseResponse"
+ *                 - type: object
  *                   properties:
- *                     gatewayUrl:
- *                       type: string
+ *                     data:
+ *                       type: object
+ *                       properties:
+ *                         gatewayUrl: { type: "string" }
+ *       401:
+ *         $ref: "#/components/responses/UnauthorizedError"
  */
 router.post(
   "/init-payment/:enrollmentId",
@@ -110,16 +110,18 @@ router.post("/cancel", PaymentController.cancelPayment);
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 data:
- *                   type: object
+ *               allOf:
+ *                 - $ref: "#/components/schemas/BaseResponse"
+ *                 - type: object
  *                   properties:
- *                     url:
- *                       type: string
+ *                     data:
+ *                       type: object
+ *                       properties:
+ *                         url: { type: "string" }
+ *       401:
+ *         $ref: "#/components/responses/UnauthorizedError"
+ *       404:
+ *         $ref: "#/components/responses/NotFoundError"
  */
 router.get(
   "/invoice/:paymentId",
@@ -153,14 +155,11 @@ router.get(
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: Payment validated successfully
+ *               $ref: "#/components/schemas/BaseResponse"
+ *       400:
+ *         $ref: "#/components/responses/BadRequestError"
+ *       401:
+ *         $ref: "#/components/responses/UnauthorizedError"
  */
 router.post(
   "/validate-payment",

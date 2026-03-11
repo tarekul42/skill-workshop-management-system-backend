@@ -48,25 +48,18 @@ const router = (0, express_1.Router)();
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: User logged in successfully
- *                 data:
- *                   type: object
+ *               allOf:
+ *                 - $ref: "#/components/schemas/BaseResponse"
+ *                 - type: object
  *                   properties:
- *                     accessToken:
- *                       type: string
- *                     refreshToken:
- *                       type: string
- *                     user:
+ *                     data:
  *                       type: object
+ *                       properties:
+ *                         accessToken: { type: "string" }
+ *                         refreshToken: { type: "string" }
+ *                         user: { $ref: "#/components/schemas/User" }
  *       401:
- *         description: Unauthorized
+ *         $ref: "#/components/responses/UnauthorizedError"
  */
 router.post("/login", rateLimiter_1.authLimiter, auth_controller_1.default.credentialsLogin);
 /**
@@ -82,21 +75,16 @@ router.post("/login", rateLimiter_1.authLimiter, auth_controller_1.default.crede
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: New access token generated successfully
- *                 data:
- *                   type: object
+ *               allOf:
+ *                 - $ref: "#/components/schemas/BaseResponse"
+ *                 - type: object
  *                   properties:
- *                     accessToken:
- *                       type: string
+ *                     data:
+ *                       type: object
+ *                       properties:
+ *                         accessToken: { type: "string" }
  *       400:
- *         description: No refresh token found
+ *         $ref: "#/components/responses/BadRequestError"
  */
 router.post("/refresh-token", rateLimiter_1.authLimiter, auth_controller_1.default.getNewAccessToken);
 /**
@@ -149,14 +137,11 @@ router.post("/logout", rateLimiter_1.authLimiter, auth_controller_1.default.logo
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: Password changed successfully
+ *               $ref: "#/components/schemas/BaseResponse"
+ *       401:
+ *         $ref: "#/components/responses/UnauthorizedError"
+ *       403:
+ *         $ref: "#/components/responses/ForbiddenError"
  */
 router.post("/change-password", rateLimiter_1.authLimiter, (0, checkAuth_1.default)(...Object.values(user_interface_1.UserRole)), auth_controller_1.default.changePassword);
 /**
@@ -184,14 +169,9 @@ router.post("/change-password", rateLimiter_1.authLimiter, (0, checkAuth_1.defau
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: Password set successfully
+ *               $ref: "#/components/schemas/BaseResponse"
+ *       401:
+ *         $ref: "#/components/responses/UnauthorizedError"
  */
 router.post("/set-password", rateLimiter_1.authLimiter, (0, checkAuth_1.default)(...Object.values(user_interface_1.UserRole)), auth_controller_1.default.setPassword);
 /**
@@ -218,14 +198,9 @@ router.post("/set-password", rateLimiter_1.authLimiter, (0, checkAuth_1.default)
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: Email has been sent
+ *               $ref: "#/components/schemas/BaseResponse"
+ *       400:
+ *         $ref: "#/components/responses/BadRequestError"
  */
 router.post("/forgot-password", rateLimiter_1.authLimiter, auth_controller_1.default.forgotPassword);
 /**
@@ -256,14 +231,9 @@ router.post("/forgot-password", rateLimiter_1.authLimiter, auth_controller_1.def
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: Password reset successful
+ *               $ref: "#/components/schemas/BaseResponse"
+ *       400:
+ *         $ref: "#/components/responses/BadRequestError"
  */
 router.post("/reset-password", rateLimiter_1.authLimiter, (0, checkAuth_1.default)(...Object.values(user_interface_1.UserRole)), auth_controller_1.default.resetPassword);
 /**

@@ -11,7 +11,7 @@ const router = express.Router();
 
 /**
  * @openapi
- * /:
+ * /health/:
  *   get:
  *     summary: Root endpoint
  *     description: Check if the backend is running.
@@ -22,11 +22,7 @@ const router = express.Router();
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "Skill Workshop Management System Backend is up and running."
+ *               $ref: "#/components/schemas/BaseResponse"
  */
 router.get("/", (_req: Request, res: Response) => {
   res.status(200).json({
@@ -36,7 +32,7 @@ router.get("/", (_req: Request, res: Response) => {
 
 /**
  * @openapi
- * /ping:
+ * /health/ping:
  *   get:
  *     summary: Ping endpoint
  *     description: Simple health ping, returns pong.
@@ -47,11 +43,7 @@ router.get("/", (_req: Request, res: Response) => {
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: pong
+ *               $ref: "#/components/schemas/BaseResponse"
  */
 router.get("/ping", (_req, res) => {
   res.json({ message: "pong" });
@@ -59,7 +51,7 @@ router.get("/ping", (_req, res) => {
 
 /**
  * @openapi
- * /check-version:
+ * /health/check-version:
  *   get:
  *     summary: Check version
  *     description: Returns API version and server status.
@@ -70,17 +62,7 @@ router.get("/ping", (_req, res) => {
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 version:
- *                   type: string
- *                   example: "1.0.0"
- *                 timestamp:
- *                   type: string
- *                   format: date-time
- *                 message:
- *                   type: string
- *                   example: Server is running.
+ *               $ref: "#/components/schemas/BaseResponse"
  */
 router.get("/check-version", (_req: Request, res: Response) => {
   res.json({
@@ -92,7 +74,7 @@ router.get("/check-version", (_req: Request, res: Response) => {
 
 /**
  * @openapi
- * /health-check:
+ * /health/health-check:
  *   get:
  *     summary: Health check
  *     description: Returns server health status and uptime.
@@ -103,17 +85,7 @@ router.get("/check-version", (_req: Request, res: Response) => {
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: ok
- *                 timestamp:
- *                   type: string
- *                   format: date-time
- *                 uptime:
- *                   type: number
- *                   description: Process uptime in seconds
+ *               $ref: "#/components/schemas/BaseResponse"
  */
 router.get("/health-check", (_req: Request, res: Response) => {
   res.status(200).json({

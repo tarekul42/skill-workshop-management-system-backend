@@ -21,18 +21,26 @@ describe("Root & Health Endpoints", () => {
     const response = await request(app).get("/");
     expect(response.status).toBe(200);
     expect(response.body).toEqual({
+      message: "Welcome to the Skill Workshop Management System Backend!",
+    });
+  });
+
+  it("GET /api/v1/health/ should return 200 and the module status message", async () => {
+    const response = await request(app).get("/api/v1/health/");
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({
       message: "Skill Workshop Management System Backend is up and running.",
     });
   });
 
   it("GET /ping should return 200 and pong", async () => {
-    const response = await request(app).get("/ping");
+    const response = await request(app).get("/api/v1/health/ping");
     expect(response.status).toBe(200);
     expect(response.body).toEqual({ message: "pong" });
   });
 
   it("GET /check-version should return 200 with version info", async () => {
-    const response = await request(app).get("/check-version");
+    const response = await request(app).get("/api/v1/health/check-version");
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty("version", "1.0.0");
     expect(response.body).toHaveProperty("message", "Server is running.");
@@ -40,7 +48,7 @@ describe("Root & Health Endpoints", () => {
   });
 
   it("GET /health-check should return 200 with status and uptime", async () => {
-    const response = await request(app).get("/health-check");
+    const response = await request(app).get("/api/v1/health/health-check");
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty("status", "ok");
     expect(response.body).toHaveProperty("timestamp");
@@ -52,15 +60,15 @@ describe("Root & Health Endpoints", () => {
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty("openapi", "3.0.0");
     expect(response.body).toHaveProperty("paths");
-    expect(response.body.paths).toHaveProperty("/");
+    expect(response.body.paths).toHaveProperty("/health/");
   });
 
   it("should be documented in swagger", () => {
-    expect(swaggerSpec.paths).toHaveProperty("/");
-    expect(swaggerSpec.paths["/"].get.summary).toBe("Root endpoint");
-    expect(swaggerSpec.paths).toHaveProperty("/ping");
-    expect(swaggerSpec.paths).toHaveProperty("/check-version");
-    expect(swaggerSpec.paths).toHaveProperty("/health-check");
+    expect(swaggerSpec.paths).toHaveProperty("/health/");
+    expect(swaggerSpec.paths["/health/"].get.summary).toBe("Root endpoint");
+    expect(swaggerSpec.paths).toHaveProperty("/health/ping");
+    expect(swaggerSpec.paths).toHaveProperty("/health/check-version");
+    expect(swaggerSpec.paths).toHaveProperty("/health/health-check");
 
     expect(swaggerSpec.paths).toHaveProperty("/auth/login");
     expect(swaggerSpec.paths["/auth/login"].post.tags).toContain("Auth");

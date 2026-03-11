@@ -24,6 +24,14 @@ const router = express.Router();
  *     responses:
  *       200:
  *         description: Enrollment stats retrieved
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: "#/components/schemas/BaseResponse"
+ *       401:
+ *         $ref: "#/components/responses/UnauthorizedError"
+ *       403:
+ *         $ref: "#/components/responses/ForbiddenError"
  */
 router.get(
   "/enrollment",
@@ -43,6 +51,14 @@ router.get(
  *     responses:
  *       200:
  *         description: Payment stats retrieved
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: "#/components/schemas/BaseResponse"
+ *       401:
+ *         $ref: "#/components/responses/UnauthorizedError"
+ *       403:
+ *         $ref: "#/components/responses/ForbiddenError"
  */
 router.get(
   "/payment",
@@ -62,6 +78,14 @@ router.get(
  *     responses:
  *       200:
  *         description: User stats retrieved
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: "#/components/schemas/BaseResponse"
+ *       401:
+ *         $ref: "#/components/responses/UnauthorizedError"
+ *       403:
+ *         $ref: "#/components/responses/ForbiddenError"
  */
 router.get(
   "/users",
@@ -81,6 +105,14 @@ router.get(
  *     responses:
  *       200:
  *         description: Workshop stats retrieved
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: "#/components/schemas/BaseResponse"
+ *       401:
+ *         $ref: "#/components/responses/UnauthorizedError"
+ *       403:
+ *         $ref: "#/components/responses/ForbiddenError"
  */
 router.get(
   "/workshops",

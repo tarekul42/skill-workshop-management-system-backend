@@ -35,16 +35,16 @@ const router = express_1.default.Router();
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 data:
- *                   type: object
+ *               allOf:
+ *                 - $ref: "#/components/schemas/BaseResponse"
+ *                 - type: object
  *                   properties:
- *                     gatewayUrl:
- *                       type: string
+ *                     data:
+ *                       type: object
+ *                       properties:
+ *                         gatewayUrl: { type: "string" }
+ *       401:
+ *         $ref: "#/components/responses/UnauthorizedError"
  */
 router.post("/init-payment/:enrollmentId", rateLimiter_1.authLimiter, (0, checkAuth_1.default)(...Object.values(user_interface_1.UserRole)), payment_controller_1.default.initPayment);
 /**
@@ -103,16 +103,18 @@ router.post("/cancel", payment_controller_1.default.cancelPayment);
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 data:
- *                   type: object
+ *               allOf:
+ *                 - $ref: "#/components/schemas/BaseResponse"
+ *                 - type: object
  *                   properties:
- *                     url:
- *                       type: string
+ *                     data:
+ *                       type: object
+ *                       properties:
+ *                         url: { type: "string" }
+ *       401:
+ *         $ref: "#/components/responses/UnauthorizedError"
+ *       404:
+ *         $ref: "#/components/responses/NotFoundError"
  */
 router.get("/invoice/:paymentId", rateLimiter_1.authLimiter, (0, checkAuth_1.default)(...Object.values(user_interface_1.UserRole)), payment_controller_1.default.getInvoiceDownloadUrl);
 /**
@@ -140,14 +142,11 @@ router.get("/invoice/:paymentId", rateLimiter_1.authLimiter, (0, checkAuth_1.def
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: Payment validated successfully
+ *               $ref: "#/components/schemas/BaseResponse"
+ *       400:
+ *         $ref: "#/components/responses/BadRequestError"
+ *       401:
+ *         $ref: "#/components/responses/UnauthorizedError"
  */
 router.post("/validate-payment", rateLimiter_1.authLimiter, (0, checkAuth_1.default)(...Object.values(user_interface_1.UserRole)), payment_controller_1.default.validatePayment);
 const PaymentRoutes = router;

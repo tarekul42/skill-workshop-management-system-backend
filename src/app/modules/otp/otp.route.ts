@@ -31,6 +31,12 @@ const router = express.Router();
  *     responses:
  *       200:
  *         description: OTP sent successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: "#/components/schemas/BaseResponse"
+ *       400:
+ *         $ref: "#/components/responses/BadRequestError"
  */
 router.post("/send", OTPController.sendOtp);
 
@@ -58,6 +64,12 @@ router.post("/send", OTPController.sendOtp);
  *     responses:
  *       200:
  *         description: OTP verified successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: "#/components/schemas/BaseResponse"
+ *       400:
+ *         $ref: "#/components/responses/BadRequestError"
  */
 router.post("/verify", strictLimiter, OTPController.verifyOtp);
 

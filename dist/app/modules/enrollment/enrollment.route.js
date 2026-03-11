@@ -47,16 +47,15 @@ const router = express_1.default.Router();
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: Enrollment created successfully
- *                 data:
- *                   type: object
+ *               allOf:
+ *                 - $ref: "#/components/schemas/BaseResponse"
+ *                 - type: object
+ *                   properties:
+ *                     data: { $ref: "#/components/schemas/Enrollment" }
+ *       400:
+ *         $ref: "#/components/responses/BadRequestError"
+ *       401:
+ *         $ref: "#/components/responses/UnauthorizedError"
  */
 router.post("/", rateLimiter_1.adminCrudLimiter, (0, checkAuth_1.default)(...Object.values(user_interface_1.UserRole)), (0, validateRequest_1.default)(enrollment_validation_1.createEnrollmentZodSchema), enrollment_controller_1.default.createEnrollment);
 /**
@@ -73,15 +72,17 @@ router.post("/", rateLimiter_1.adminCrudLimiter, (0, checkAuth_1.default)(...Obj
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 data:
- *                   type: array
- *                   items:
- *                     type: object
+ *               allOf:
+ *                 - $ref: "#/components/schemas/BaseResponse"
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       type: array
+ *                       items: { $ref: "#/components/schemas/Enrollment" }
+ *       401:
+ *         $ref: "#/components/responses/UnauthorizedError"
+ *       403:
+ *         $ref: "#/components/responses/ForbiddenError"
  */
 router.get("/", rateLimiter_1.adminCrudLimiter, (0, checkAuth_1.default)(user_interface_1.UserRole.ADMIN, user_interface_1.UserRole.SUPER_ADMIN), enrollment_controller_1.default.getAllEnrollments);
 /**
@@ -98,15 +99,15 @@ router.get("/", rateLimiter_1.adminCrudLimiter, (0, checkAuth_1.default)(user_in
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 data:
- *                   type: array
- *                   items:
- *                     type: object
+ *               allOf:
+ *                 - $ref: "#/components/schemas/BaseResponse"
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       type: array
+ *                       items: { $ref: "#/components/schemas/Enrollment" }
+ *       401:
+ *         $ref: "#/components/responses/UnauthorizedError"
  */
 router.get("/my-enrollments", rateLimiter_1.adminCrudLimiter, (0, checkAuth_1.default)(...Object.values(user_interface_1.UserRole)), enrollment_controller_1.default.getUserEnrollments);
 /**
@@ -129,13 +130,15 @@ router.get("/my-enrollments", rateLimiter_1.adminCrudLimiter, (0, checkAuth_1.de
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 data:
- *                   type: object
+ *               allOf:
+ *                 - $ref: "#/components/schemas/BaseResponse"
+ *                 - type: object
+ *                   properties:
+ *                     data: { $ref: "#/components/schemas/Enrollment" }
+ *       401:
+ *         $ref: "#/components/responses/UnauthorizedError"
+ *       404:
+ *         $ref: "#/components/responses/NotFoundError"
  */
 router.get("/:enrollmentId", rateLimiter_1.adminCrudLimiter, (0, checkAuth_1.default)(...Object.values(user_interface_1.UserRole)), enrollment_controller_1.default.getSingleEnrollment);
 /**
@@ -170,16 +173,15 @@ router.get("/:enrollmentId", rateLimiter_1.adminCrudLimiter, (0, checkAuth_1.def
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: Enrollment status updated successfully
- *                 data:
- *                   type: object
+ *               allOf:
+ *                 - $ref: "#/components/schemas/BaseResponse"
+ *                 - type: object
+ *                   properties:
+ *                     data: { $ref: "#/components/schemas/Enrollment" }
+ *       400:
+ *         $ref: "#/components/responses/BadRequestError"
+ *       401:
+ *         $ref: "#/components/responses/UnauthorizedError"
  */
 router.patch("/:enrollmentId/status", rateLimiter_1.adminCrudLimiter, (0, checkAuth_1.default)(...Object.values(user_interface_1.UserRole)), (0, validateRequest_1.default)(enrollment_validation_1.updateEnrollmentStatusZodSchema), enrollment_controller_1.default.updateEnrollmentStatus);
 const EnrollmentRoutes = router;
