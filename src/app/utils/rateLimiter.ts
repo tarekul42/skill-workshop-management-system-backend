@@ -21,6 +21,7 @@ const createLimiter = (prefix: string, windowMs: number, max: number, message: o
   });
 };
 
+// Rate limiters for production
 const generalLimiter = createLimiter("rl:general:", 1 * 60 * 1000, 60, {
   status: 429,
   message: "Too many requests, please try again later.",
@@ -36,7 +37,7 @@ const strictLimiter = createLimiter("rl:strict:", 15 * 60 * 1000, 5, {
   message: "Too many attempts on this sensitive operation, please try again later.",
 });
 
-const adminCrudLimiter = createLimiter("rl:admin:", 15 * 60 * 1000, 100, {
+const adminCrudLimiter = createLimiter("rl:admin:", 15 * 60 * 1000, 30, {
   status: 429,
   message: "Too many requests, please try again later.",
 });

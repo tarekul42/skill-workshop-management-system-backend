@@ -1,4 +1,32 @@
 services:
+  mongodb:
+    image: mongo:7
+    container_name: skill-workshop-mongodb
+    ports:
+      - "27018:27017"
+    volumes:
+      - mongodb_data:/data/db
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  redis:
+    image: redis:7-alpine
+    container_name: skill-workshop-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
   backend:
     build: .
     container_name: skill-workshop-backend
@@ -6,4 +34,23 @@ services:
       - "5000:5000"
     env_file:
       - .env
+    environment:
+      # Defaults for local Docker development.
+      # If you set these in `.env`, Docker Compose will use your values instead.
+      DATABASE_URL: ${DATABASE_URL:-mongodb://mongodb:27017/skill-workshop-management-system}
+      REDIS_HOST: ${REDIS_HOST:-redis}
+      REDIS_PORT: ${REDIS_PORT:-6379}
+      REDIS_USERNAME: ${REDIS_USERNAME:-}
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      BACKEND_DEV_URL: ${BACKEND_DEV_URL:-http://localhost:5000}
+      BACKEND_PROD_URL: ${BACKEND_PROD_URL:-http://localhost:5000}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     restart: unless-stopped
+
+volumes:
+  mongodb_data:
+  redis_data:

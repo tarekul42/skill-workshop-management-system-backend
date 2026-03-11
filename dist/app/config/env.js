@@ -22,6 +22,8 @@ const loadEnvVariables = () => {
         "GOOGLE_CALLBACK_URL",
         "EXPRESS_SESSION_SECRET",
         "FRONTEND_URL",
+        "BACKEND_DEV_URL",
+        "BACKEND_PROD_URL",
         "SSL_STORE_ID",
         "SSL_STORE_PASS",
         "SSL_PAYMENT_API",
@@ -43,8 +45,6 @@ const loadEnvVariables = () => {
         "SMTP_FROM",
         "REDIS_HOST",
         "REDIS_PORT",
-        "REDIS_USERNAME",
-        "REDIS_PASSWORD",
         "CSRF_SECRET",
     ];
     requiredEnvVariables.forEach((envVariables) => {
@@ -68,6 +68,10 @@ const loadEnvVariables = () => {
         GOOGLE_CALLBACK_URL: process.env.GOOGLE_CALLBACK_URL,
         EXPRESS_SESSION_SECRET: process.env.EXPRESS_SESSION_SECRET,
         FRONTEND_URL: process.env.FRONTEND_URL,
+        BACKEND_URL: {
+            BACKEND_DEV_URL: process.env.BACKEND_DEV_URL,
+            BACKEND_PROD_URL: process.env.BACKEND_PROD_URL,
+        },
         SSL: {
             SSL_STORE_ID: process.env.SSL_STORE_ID,
             SSL_STORE_PASS: process.env.SSL_STORE_PASS,
@@ -96,8 +100,8 @@ const loadEnvVariables = () => {
         REDIS: {
             REDIS_HOST: process.env.REDIS_HOST,
             REDIS_PORT: process.env.REDIS_PORT,
-            REDIS_USERNAME: process.env.REDIS_USERNAME,
-            REDIS_PASSWORD: process.env.REDIS_PASSWORD,
+            REDIS_USERNAME: process.env.REDIS_USERNAME ?? "",
+            REDIS_PASSWORD: process.env.REDIS_PASSWORD ?? "",
         },
         CSRF_SECRET: process.env.CSRF_SECRET,
     };

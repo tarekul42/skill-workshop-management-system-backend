@@ -6,6 +6,25 @@ import { adminCrudLimiter } from "../../utils/rateLimiter";
 
 const router = express.Router();
 
+/**
+ * @openapi
+ * tags:
+ *   name: Stats
+ *   description: Admin statistics and analytics
+ */
+
+/**
+ * @openapi
+ * /stats/enrollment:
+ *   get:
+ *     summary: Get enrollment statistics
+ *     tags: [Stats]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Enrollment stats retrieved
+ */
 router.get(
   "/enrollment",
   checkAuth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
@@ -13,6 +32,18 @@ router.get(
   StatsController.getEnrollmentStatus,
 );
 
+/**
+ * @openapi
+ * /stats/payment:
+ *   get:
+ *     summary: Get payment statistics
+ *     tags: [Stats]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Payment stats retrieved
+ */
 router.get(
   "/payment",
   checkAuth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
@@ -20,6 +51,18 @@ router.get(
   StatsController.getPaymentStatus,
 );
 
+/**
+ * @openapi
+ * /stats/users:
+ *   get:
+ *     summary: Get user statistics
+ *     tags: [Stats]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: User stats retrieved
+ */
 router.get(
   "/users",
   checkAuth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
@@ -27,6 +70,18 @@ router.get(
   StatsController.getUserStats,
 );
 
+/**
+ * @openapi
+ * /stats/workshops:
+ *   get:
+ *     summary: Get workshop statistics
+ *     tags: [Stats]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Workshop stats retrieved
+ */
 router.get(
   "/workshops",
   checkAuth(UserRole.ADMIN, UserRole.SUPER_ADMIN),

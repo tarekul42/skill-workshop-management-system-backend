@@ -1,4 +1,5 @@
 import { model, Schema, Types } from "mongoose";
+import logger from "../../utils/logger";
 import { ILevel, IWorkshop } from "./workshop.interface";
 
 const levelSchema = new Schema<ILevel>(
@@ -71,9 +72,11 @@ const generateUniqueSlug = async (
 };
 
 workshopSchema.pre("save", async function () {
+  logger.info({ message: "Pre-save hook title", title: this.title });
   if (this.isModified("title") || !this.slug) {
-    const baseSlug = this.title.toLowerCase().split(" ").join("-");
+    const baseSlug = (this.title || "").toLowerCase().split(" ").join("-");
     this.slug = await generateUniqueSlug(baseSlug);
+    logger.info({ message: "Generated slug", slug: this.slug });
   }
 });
 

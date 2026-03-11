@@ -2,6 +2,9 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const validateRequest = (zodSchema) => async (req, _res, next) => {
     try {
+        if (!req.body) {
+            req.body = {};
+        }
         if (req.body.data && typeof req.body.data === "string") {
             req.body = JSON.parse(req.body.data);
         }
