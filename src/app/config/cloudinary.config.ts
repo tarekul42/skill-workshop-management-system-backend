@@ -2,6 +2,7 @@ import { v2 as cloudinary, UploadApiResponse } from "cloudinary";
 import { StatusCodes } from "http-status-codes";
 import AppError from "../errorHelpers/AppError";
 import envVariables from "./env";
+import logger from "../utils/logger";
 
 cloudinary.config({
   cloud_name: envVariables.CLOUDINARY.CLOUDINARY_CLOUD_NAME,
@@ -57,11 +58,7 @@ const deleteImageFromCloudinary = async (url: string) => {
       );
     }
   } catch (err: unknown) {
-    throw new AppError(
-      StatusCodes.INTERNAL_SERVER_ERROR,
-      "Cloudinary image deletion failed",
-      err instanceof Error ? err.message : String(err),
-    );
+    logger.warn({ message: "Cloudinary cleanup failed", error: String(err) });
   }
 };
 

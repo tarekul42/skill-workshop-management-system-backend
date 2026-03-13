@@ -21,7 +21,7 @@ const credentialsLogin = (0, catchAsync_1.default)(async (req, res, next) => {
         if (!user) {
             return next(new AppError_1.default(http_status_codes_1.StatusCodes.UNAUTHORIZED, info?.message || "Incorrect email or password"));
         }
-        const userTokens = (0, userTokens_1.createUserTokens)(user);
+        const userTokens = await (0, userTokens_1.createUserTokens)(user);
         (0, setCookie_1.default)(res, userTokens);
         (0, sendResponse_1.default)(res, {
             statusCode: http_status_codes_1.StatusCodes.OK,
@@ -136,7 +136,7 @@ const googleCallback = (0, catchAsync_1.default)(async (req, res) => {
     if (!user) {
         throw new AppError_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "User Not Found");
     }
-    const tokenInfo = (0, userTokens_1.createUserTokens)(user);
+    const tokenInfo = await (0, userTokens_1.createUserTokens)(user);
     (0, setCookie_1.default)(res, tokenInfo);
     res.redirect(`${env_1.default.FRONTEND_URL}/${redirectTo}`);
 });

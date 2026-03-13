@@ -4,7 +4,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const http_status_codes_1 = require("http-status-codes");
-const cloudinary_config_1 = require("../config/cloudinary.config");
 const env_1 = __importDefault(require("../config/env"));
 const AppError_1 = __importDefault(require("../errorHelpers/AppError"));
 const handleCastError_1 = __importDefault(require("../helpers/handleCastError"));
@@ -12,36 +11,13 @@ const handleDuplicateError_1 = __importDefault(require("../helpers/handleDuplica
 const handleValidationError_1 = __importDefault(require("../helpers/handleValidationError"));
 const handleZodError_1 = __importDefault(require("../helpers/handleZodError"));
 const logger_1 = __importDefault(require("../utils/logger"));
-const globalErrorHandler = async (err, req, res, 
+const globalErrorHandler = (err, req, res, 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 next) => {
     if (env_1.default.NODE_ENV === "development") {
         logger_1.default.error({ message: "Global error caught", err });
     }
-    // Clean up uploaded images on error - failures should not prevent error response
-    try {
-        if (req.file) {
-            await (0, cloudinary_config_1.deleteImageFromCloudinary)(req.file.path);
-        }
-        if (req.files) {
-            let filesToDelete = [];
-            if (Array.isArray(req.files)) {
-                filesToDelete = req.files;
-            }
-            else {
-                // Handle object form from multer fields()
-                filesToDelete = Object.values(req.files).flat();
-            }
-            await Promise.all(filesToDelete.map((file) => (0, cloudinary_config_1.deleteImageFromCloudinary)(file.path)));
-        }
-    }
-    catch (cleanupError) {
-        // Log but don't throw - cleanup failure shouldn't prevent error response
-        logger_1.default.error({
-            message: "Failed to clean up uploaded images",
-            err: cleanupError,
-        });
-    }
+    // Note: Image cleanup on error is handled at the route/controller level.
     let statusCode = http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR;
     let message = "Something went wrong!!!";
     if (err instanceof Error) {
@@ -52,42 +28,62 @@ next) => {
         statusCode = err.statusCode;
         message = err.message;
     }
-    else if (err instanceof Error) {
-        if ("code" in err && err.code === 11000) {
+    else if (err && typeof err === "object") {
+        const errorObj = err;
+        const errName = errorObj.name || "";
+        const errMessage = errorObj.message || "";
+        // Multer or custom file type errors should be 400
+        if (errName === "MulterError" ||
+            errMessage.includes("Invalid file type") ||
+            errMessage.includes("Unexpected field") ||
+            errMessage.includes("Invalid image file")) {
+            statusCode = http_status_codes_1.StatusCodes.BAD_REQUEST;
+            message = errMessage;
+        }
+        else if (errorObj.code === "EBADCSRFTOKEN") {
+            statusCode = http_status_codes_1.StatusCodes.FORBIDDEN;
+            message = "Invalid CSRF token";
+        }
+        else if (errorObj.code === 11000) {
             const simplifiedError = (0, handleDuplicateError_1.default)(err);
             statusCode = simplifiedError.statusCode;
             message = simplifiedError.message;
         }
-        else if (err.name === "CastError") {
+        else if (errName === "CastError") {
             const simplifiedError = (0, handleCastError_1.default)(err);
             statusCode = simplifiedError.statusCode;
             message = simplifiedError.message;
         }
-        else if (err.name === "ZodError") {
+        else if (errName === "ZodError") {
             const simplifiedError = (0, handleZodError_1.default)(err);
             statusCode = simplifiedError.statusCode;
             message = simplifiedError.message;
             errorSources = simplifiedError.errorSources;
         }
-        else if (err.name === "ValidationError") {
+        else if (errName === "ValidationError") {
             const simplifiedError = (0, handleValidationError_1.default)(err);
             statusCode = simplifiedError.statusCode;
             message = simplifiedError.message;
             errorSources = simplifiedError.errorSources;
         }
         else {
-            statusCode = 500;
-            message = err.message;
+            statusCode = http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR;
+            message = errMessage || "Something went wrong!!!";
         }
     }
-    res.status(statusCode).json({
+    else if (err instanceof Error) {
+        statusCode = http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR;
+        message = err.message;
+    }
+    const responseBody = {
         success: false,
         message,
         errorSources,
-        err: env_1.default.NODE_ENV === "development" ? err : null,
-        stack: env_1.default.NODE_ENV === "development" && err instanceof Error
-            ? err.stack
-            : null,
-    });
+    };
+    if (env_1.default.NODE_ENV === "development") {
+        responseBody.err = (err instanceof Error) ? { name: err.name, message: err.message } : { message: String(err) };
+        responseBody.stack = (err instanceof Error) ? err.stack : null;
+    }
+    res.status(statusCode).json(responseBody);
 };
 exports.default = globalErrorHandler;

@@ -1,3 +1,4 @@
+import { Request } from "express";
 import { CloudinaryStorage } from "multer-storage-cloudinary";
 import { cloudinaryUpload } from "./cloudinary.config";
 import multer from "multer";
@@ -29,6 +30,19 @@ const storage = new CloudinaryStorage({
   },
 });
 
-const multerUpload = multer({ storage: storage });
+const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+  const allowedMimeTypes = ["image/jpeg", "image/png", "image/webp"];
+  if (allowedMimeTypes.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new Error("Invalid file type. Only JPEG, PNG, and WebP are allowed."));
+  }
+};
+
+const multerUpload = multer({ 
+  storage: storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
+  fileFilter: fileFilter
+});
 
 export default multerUpload;

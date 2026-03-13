@@ -31,6 +31,7 @@ passport_1.default.use(new passport_google_oauth20_1.Strategy({
     clientID: env_1.default.GOOGLE_CLIENT_ID,
     clientSecret: env_1.default.GOOGLE_CLIENT_SECRET,
     callbackURL: env_1.default.GOOGLE_CALLBACK_URL,
+    state: true,
 }, async (accessToken, refreshToken, profile, done) => {
     // Extract data from Google Profile
     const email = profile.emails?.[0].value;

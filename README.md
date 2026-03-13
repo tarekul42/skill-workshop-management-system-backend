@@ -113,7 +113,7 @@ src/
 
 2. **Install dependencies**:
    ```bash
-   npm install
+   bun install
    ```
 
 3. **Environment Setup**:
@@ -123,13 +123,13 @@ src/
 
 **Development:**
 ```bash
-npm run dev
+bun run dev
 ```
 
 **Production:**
 ```bash
-npm run build
-npm start
+bun run build
+bun start
 ```
 
 ---
@@ -138,7 +138,8 @@ npm start
 
 The API is fully documented using **Swagger / OpenAPI 3.0**. You can explore the interactive documentation, test endpoints, and view data models at:
 
-**[http://localhost:5000/api-docs](http://localhost:5000/api-docs)**
+- **Local:** [http://localhost:5000/api-docs](http://localhost:5000/api-docs)
+- **Production:** [https://skill-workshop-management-system-backend.up.railway.app/api-docs](https://skill-workshop-management-system-backend.up.railway.app/api-docs)
 
 ---
 
@@ -228,6 +229,35 @@ The API is fully documented using **Swagger / OpenAPI 3.0**. You can explore the
 
 ---
 
+---
+
+## Security Features
+
+The system implements multiple layers of security to protect data and ensuring system integrity:
+
+- **CSRF Protection**: Prevents cross-site request forgery using `csrf-csrf` (Double CSRF pattern).
+- **Rate Limiting**: Protects against brute-force and DDoS attacks via `express-rate-limit` with Redis storage.
+    - **General Limiter**: 60 requests per minute.
+    - **Auth Limiter**: 10 attempts per 15 minutes for login/refresh.
+- **Role-Based Access Control (RBAC)**: Strict permission checks for `STUDENT`, `ADMIN`, and `SUPER_ADMIN`.
+- **Input Sanitization**: Uses `express-mongo-sanitize` to prevent NoSQL injection.
+- **Secure Headers**: Implemented via `helmet` to set various HTTP headers.
+
+---
+
+## Database & Redis
+
+This project requires both a document database and a key-value store:
+
+- **MongoDB**: Used for primary data persistence (Workshops, Users, Enrollments).
+- **Redis**: Used for high-speed operations:
+    - **Session Management**: Storing user sessions.
+    - **OTP Storage**: Temporary storage for verification codes.
+    - **Rate Limiting**: Tracking request counts across server instances.
+    - **Caching**: Performance optimization for workshop listings.
+
+---
+
 ## Database Models
 
 - **User**: id, name, email, password, role (STUDENT/ADMIN/SUPER_ADMIN), image, isVerified, createdAt, updatedAt
@@ -244,43 +274,69 @@ The API is fully documented using **Swagger / OpenAPI 3.0**. You can explore the
 Create a `.env` file with the following variables:
 
 ```env
-# Server
 PORT=5000
 NODE_ENV=development
+DATABASE_URL="mongodb+srv://<DB_USERNAME>:<DB_PASSWORD>@<DB_URL>/skill-workshop-management-system-backend?retryWrites=true&w=majority"
 
-# MongoDB
-MONGODB_URI=mongodb://localhost:27017/workshop_db
+# Security
+BCRYPT_SALT_ROUND=10
+JWT_ACCESS_SECRET=your_jwt_access_secret_here
+JWT_ACCESS_EXPIRES=1d
+JWT_REFRESH_SECRET=your_jwt_refresh_secret_here
+JWT_REFRESH_EXPIRES=365d
 
-# Redis
-REDIS_URI=redis://localhost:6379
-
-# JWT
-JWT_ACCESS_SECRET=your_access_secret
-JWT_ACCESS_EXPIRES_IN=7d
-JWT_REFRESH_SECRET=your_refresh_secret
-JWT_REFRESH_EXPIRES_IN=365d
+# Super Admin
+SUPER_ADMIN_EMAIL=<YOUR_SUPER_ADMIN_EMAIL>
+SUPER_ADMIN_PASSWORD=<YOUR_SUPER_ADMIN_PASSWORD>
 
 # Google OAuth
 GOOGLE_CLIENT_ID=your_google_client_id
 GOOGLE_CLIENT_SECRET=your_google_client_secret
-GOOGLE_CALLBACK_URL=http://localhost:5000/api/auth/google/callback
+GOOGLE_CALLBACK_URL=http://localhost:5000/api/v1/auth/google/callback
 
-# SSLCommerz
-SSLCOMMERZ_STORE_ID=your_store_id
-SSLCOMMERZ_STORE_PASSWORD=your_store_password
-SSLCOMMERZ_MODE=sandbox
+# Session
+EXPRESS_SESSION_SECRET=your_session_secret_here
+
+# Frontend URL
+FRONTEND_URL=http://localhost:5173
+
+# Backend URLs (for Swagger, callbacks)
+BACKEND_DEV_URL=http://localhost:5000
+BACKEND_PROD_URL=https://skill-workshop-management-system-backend.up.railway.app
+
+# Redis (for sessions, rate limiting, OTP)
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_USERNAME=
+REDIS_PASSWORD=
+
+# CSRF
+CSRF_SECRET=your_csrf_secret_here_min_32_chars
+
+# SSL Commerz Payment
+SSL_STORE_ID=your_ssl_store_id
+SSL_STORE_PASS=your_ssl_store_password
+SSL_PAYMENT_API=https://sandbox.sslcommerz.com/gwprocess/v4/api.php
+SSL_VALIDATION_API=https://sandbox.sslcommerz.com/validator/api/validationserverAPI.php
+SSL_IPN_URL=http://localhost:5000/api/v1/payment/ipn
+SSL_SUCCESS_BACKEND_URL=http://localhost:5000/api/v1/payment/success
+SSL_FAIL_BACKEND_URL=http://localhost:5000/api/v1/payment/fail
+SSL_CANCEL_BACKEND_URL=http://localhost:5000/api/v1/payment/cancel
+SSL_SUCCESS_FRONTEND_URL=http://localhost:5173/payment/success
+SSL_FAIL_FRONTEND_URL=http://localhost:5173/payment/fail
+SSL_CANCEL_FRONTEND_URL=http://localhost:5173/payment/cancel
 
 # Cloudinary
 CLOUDINARY_CLOUD_NAME=your_cloud_name
 CLOUDINARY_API_KEY=your_api_key
 CLOUDINARY_API_SECRET=your_api_secret
 
-# Email
-EMAIL_USER=your_email@gmail.com
-EMAIL_PASS=your_email_app_password
-
-# Frontend
-FRONTEND_URL=http://localhost:3000
+# Email (SMTP)
+SMTP_USER=your_email@gmail.com
+SMTP_PASS=your_email_app_password
+SMTP_PORT=587
+SMTP_HOST=smtp.gmail.com
+SMTP_FROM=Skill Workshop <your_email@gmail.com>
 ```
 
 ---

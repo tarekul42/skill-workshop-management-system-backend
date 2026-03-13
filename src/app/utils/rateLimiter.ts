@@ -18,6 +18,7 @@ const createLimiter = (prefix: string, windowMs: number, max: number, message: o
     windowMs,
     max,
     message,
+    skip: (req) => req.originalUrl.includes("/health"),
   });
 };
 
