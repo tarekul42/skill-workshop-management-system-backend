@@ -13,6 +13,10 @@ const generateOtp = (length = 6) => {
   return otp;
 };
 
+const hashOtp = (otp: string) => {
+  return crypto.createHash("sha256").update(otp).digest("hex");
+};
+
 const sendOtp = async (email: string, name: string) => {
   const user = await User.findOne({ email: { $eq: email } });
 
@@ -27,7 +31,9 @@ const sendOtp = async (email: string, name: string) => {
 
   const redisKey = `otp:${email}`;
 
-  await redisClient.set(redisKey, otp, {
+  const hashedOtp = hashOtp(otp);
+
+  await redisClient.set(redisKey, hashedOtp, {
     expiration: {
       type: "EX",
       value: OTP_EXPIRATION,
@@ -79,7 +85,7 @@ const verifyOtp = async (email: string, otp: string) => {
     );
   }
 
-  if (savedOtp !== otp) {
+  if (savedOtp !== hashOtp(otp)) {
     throw new AppError(StatusCodes.UNAUTHORIZED, "Invalid OTP");
   }
 

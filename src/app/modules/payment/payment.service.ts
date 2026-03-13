@@ -73,7 +73,7 @@ const initPayment = async (enrollmentId: string) => {
   };
 };
 
-const successPayment = async (query: Record<string, string>) => {
+const successPayment = async (query: Record<string, string>, body: Record<string, string>) => {
   const rawTransactionId = query.transactionId;
 
   if (typeof rawTransactionId !== "string" || !rawTransactionId.trim()) {
@@ -81,6 +81,14 @@ const successPayment = async (query: Record<string, string>) => {
   }
 
   const transactionId = rawTransactionId.trim();
+
+  const val_id = body.val_id;
+
+  if (typeof val_id !== "string" || !val_id.trim()) {
+    throw new AppError(StatusCodes.BAD_REQUEST, "Invalid val_id");
+  }
+
+  await SSLService.validatePayment({ val_id: val_id.trim(), tran_id: transactionId });
 
   const session = await Enrollment.startSession();
   session.startTransaction();
@@ -112,52 +120,56 @@ const successPayment = async (query: Record<string, string>) => {
     session.endSession();
 
     // Post-transaction processing: Invoice generation, Cloudinary upload, and Email notification
-    try {
-      const invoiceData: IInvoiceData = {
-        transactionId: updatedPayment.transactionId,
-        enrollmentDate: updatedEnrollment.createdAt as Date,
-        userName: (updatedEnrollment.user as unknown as IUser).name,
-        workshopTitle: (updatedEnrollment.workshop as unknown as IWorkshop)
-          .title,
-        studentCount: updatedEnrollment.studentCount,
-        totalAmount: updatedPayment.amount,
-      };
+    const processPostPayment = async () => {
+      try {
+        const invoiceData: IInvoiceData = {
+          transactionId: updatedPayment.transactionId,
+          enrollmentDate: updatedEnrollment.createdAt as Date,
+          userName: (updatedEnrollment.user as unknown as IUser).name,
+          workshopTitle: (updatedEnrollment.workshop as unknown as IWorkshop)
+            .title,
+          studentCount: updatedEnrollment.studentCount,
+          totalAmount: updatedPayment.amount,
+        };
 
-      const pdfBuffer = await generatePDF(invoiceData);
+        const pdfBuffer = await generatePDF(invoiceData);
 
-      const cloudinaryResult = await uploadBufferToCloudinary(
-        pdfBuffer,
-        "invoice",
-      );
-
-      if (cloudinaryResult) {
-        await Payment.findByIdAndUpdate(
-          updatedPayment._id,
-          { invoiceUrl: cloudinaryResult.secure_url },
-          { runValidators: true },
+        const cloudinaryResult = await uploadBufferToCloudinary(
+          pdfBuffer,
+          "invoice",
         );
-      }
 
-      await sendEmail({
-        to: (updatedEnrollment.user as unknown as IUser).email,
-        subject: "Your Enrollment Invoice",
-        templateName: "invoice",
-        templateData: invoiceData as unknown as Record<string, unknown>,
-        attachments: [
-          {
-            filename: "invoice.pdf",
-            content: pdfBuffer,
-            contentType: "application/pdf",
-          },
-        ],
-      });
-    } catch (postError) {
-      // Log error but don't fail the response since payment was successful
-      logger.error({
-        message: "Error in post-payment processing",
-        err: postError,
-      });
-    }
+        if (cloudinaryResult) {
+          await Payment.findByIdAndUpdate(
+            updatedPayment._id,
+            { invoiceUrl: cloudinaryResult.secure_url },
+            { runValidators: true },
+          );
+        }
+
+        await sendEmail({
+          to: (updatedEnrollment.user as unknown as IUser).email,
+          subject: "Your Enrollment Invoice",
+          templateName: "invoice",
+          templateData: invoiceData as unknown as Record<string, unknown>,
+          attachments: [
+            {
+              filename: "invoice.pdf",
+              content: pdfBuffer,
+              contentType: "application/pdf",
+            },
+          ],
+        });
+      } catch (postError) {
+        // Log error but don't fail the response since payment was successful
+        logger.error({
+          message: "Error in post-payment processing",
+          err: postError,
+        });
+      }
+    };
+
+    processPostPayment();
 
     return {
       success: true,

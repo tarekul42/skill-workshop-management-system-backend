@@ -21,9 +21,11 @@ const initPayment = catchAsync(async (req: Request, res: Response) => {
 
 const successPayment = catchAsync(async (req: Request, res: Response) => {
   const query = req.query;
+  const body = req.body;
 
   const result = await PaymentService.successPayment(
     query as Record<string, string>,
+    body as Record<string, string>
   );
 
   if (result.success) {

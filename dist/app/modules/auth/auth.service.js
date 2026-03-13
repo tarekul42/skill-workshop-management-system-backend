@@ -18,10 +18,8 @@ const getNewAccessToken = async (refreshToken) => {
     if (!refreshToken) {
         throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "No refresh token found");
     }
-    const newAccessToken = await (0, userTokens_1.createNewAccessToken)(refreshToken);
-    return {
-        accessToken: newAccessToken,
-    };
+    const tokens = await (0, userTokens_1.createNewAccessToken)(refreshToken);
+    return tokens;
 };
 const changePassword = async (oldPassword, newPassword, decodedToken) => {
     const user = await user_model_1.default.findById(decodedToken.userId);

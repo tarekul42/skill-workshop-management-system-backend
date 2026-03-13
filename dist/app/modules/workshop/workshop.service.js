@@ -10,6 +10,7 @@ const queryBuilder_1 = __importDefault(require("../../utils/queryBuilder"));
 const workshop_constant_1 = require("./workshop.constant");
 const workshop_model_1 = require("./workshop.model");
 const logger_1 = __importDefault(require("../../utils/logger"));
+const redis_config_1 = require("../../config/redis.config");
 const createLevel = async (payload) => {
     if (!payload || typeof payload.name !== "string") {
         throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Invalid level name");
@@ -100,6 +101,11 @@ const getSingleWorkshop = async (slug) => {
     };
 };
 const getAllWorkshops = async (query) => {
+    const cacheKey = `workshops:list:${JSON.stringify(query)}`;
+    const cachedData = await redis_config_1.redisClient.get(cacheKey);
+    if (cachedData) {
+        return JSON.parse(cachedData);
+    }
     const queryBuilder = new queryBuilder_1.default(workshop_model_1.WorkShop.find(), query);
     const workshops = queryBuilder
         .search(workshop_constant_1.workshopSearchableFields)
@@ -111,10 +117,17 @@ const getAllWorkshops = async (query) => {
         workshops.build(),
         queryBuilder.getMeta(),
     ]);
-    return {
+    const result = {
         data,
         meta,
     };
+    await redis_config_1.redisClient.set(cacheKey, JSON.stringify(result), {
+        expiration: {
+            type: "EX",
+            value: 60, // cache for 60 seconds
+        },
+    });
+    return result;
 };
 const updateWorkshop = async (id, payload) => {
     const existingWorkshop = await workshop_model_1.WorkShop.findById(id);

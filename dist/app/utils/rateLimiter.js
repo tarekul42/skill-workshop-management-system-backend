@@ -20,6 +20,7 @@ const createLimiter = (prefix, windowMs, max, message) => {
         windowMs,
         max,
         message,
+        skip: (req) => req.originalUrl.includes("/health"),
     });
 };
 // Rate limiters for production

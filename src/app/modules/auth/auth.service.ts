@@ -15,10 +15,8 @@ const getNewAccessToken = async (refreshToken: string) => {
     throw new AppError(StatusCodes.BAD_REQUEST, "No refresh token found");
   }
 
-  const newAccessToken = await createNewAccessToken(refreshToken);
-  return {
-    accessToken: newAccessToken,
-  };
+  const tokens = await createNewAccessToken(refreshToken);
+  return tokens;
 };
 
 const changePassword = async (

@@ -9,6 +9,7 @@ import {
 import { ILevel, IWorkshop } from "./workshop.interface";
 import { Level, WorkShop } from "./workshop.model";
 import logger from "../../utils/logger";
+import { redisClient } from "../../config/redis.config";
 
 const createLevel = async (payload: ILevel) => {
   if (!payload || typeof payload.name !== "string") {
@@ -137,6 +138,12 @@ const getSingleWorkshop = async (slug: string) => {
 };
 
 const getAllWorkshops = async (query: Record<string, string>) => {
+  const cacheKey = `workshops:list:${JSON.stringify(query)}`;
+  const cachedData = await redisClient.get(cacheKey);
+
+  if (cachedData) {
+    return JSON.parse(cachedData);
+  }
   const queryBuilder = new QueryBuilder(WorkShop.find(), query);
 
   const workshops = queryBuilder
@@ -151,10 +158,19 @@ const getAllWorkshops = async (query: Record<string, string>) => {
     queryBuilder.getMeta(),
   ]);
 
-  return {
+  const result = {
     data,
     meta,
   };
+
+  await redisClient.set(cacheKey, JSON.stringify(result), {
+    expiration: {
+      type: "EX",
+      value: 60, // cache for 60 seconds
+    },
+  });
+
+  return result;
 };
 
 const updateWorkshop = async (id: string, payload: Partial<IWorkshop>) => {

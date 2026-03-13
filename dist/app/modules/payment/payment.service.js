@@ -54,12 +54,17 @@ const initPayment = async (enrollmentId) => {
         paymentUrl: sslPayment.GatewayPageURL,
     };
 };
-const successPayment = async (query) => {
+const successPayment = async (query, body) => {
     const rawTransactionId = query.transactionId;
     if (typeof rawTransactionId !== "string" || !rawTransactionId.trim()) {
         throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Invalid transactionId");
     }
     const transactionId = rawTransactionId.trim();
+    const val_id = body.val_id;
+    if (typeof val_id !== "string" || !val_id.trim()) {
+        throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Invalid val_id");
+    }
+    await sslCommerz_service_1.default.validatePayment({ val_id: val_id.trim(), tran_id: transactionId });
     const session = await enrollment_model_1.default.startSession();
     session.startTransaction();
     try {
@@ -76,42 +81,45 @@ const successPayment = async (query) => {
         await session.commitTransaction();
         session.endSession();
         // Post-transaction processing: Invoice generation, Cloudinary upload, and Email notification
-        try {
-            const invoiceData = {
-                transactionId: updatedPayment.transactionId,
-                enrollmentDate: updatedEnrollment.createdAt,
-                userName: updatedEnrollment.user.name,
-                workshopTitle: updatedEnrollment.workshop
-                    .title,
-                studentCount: updatedEnrollment.studentCount,
-                totalAmount: updatedPayment.amount,
-            };
-            const pdfBuffer = await (0, invoice_1.generatePDF)(invoiceData);
-            const cloudinaryResult = await (0, cloudinary_config_1.uploadBufferToCloudinary)(pdfBuffer, "invoice");
-            if (cloudinaryResult) {
-                await payment_model_1.default.findByIdAndUpdate(updatedPayment._id, { invoiceUrl: cloudinaryResult.secure_url }, { runValidators: true });
+        const processPostPayment = async () => {
+            try {
+                const invoiceData = {
+                    transactionId: updatedPayment.transactionId,
+                    enrollmentDate: updatedEnrollment.createdAt,
+                    userName: updatedEnrollment.user.name,
+                    workshopTitle: updatedEnrollment.workshop
+                        .title,
+                    studentCount: updatedEnrollment.studentCount,
+                    totalAmount: updatedPayment.amount,
+                };
+                const pdfBuffer = await (0, invoice_1.generatePDF)(invoiceData);
+                const cloudinaryResult = await (0, cloudinary_config_1.uploadBufferToCloudinary)(pdfBuffer, "invoice");
+                if (cloudinaryResult) {
+                    await payment_model_1.default.findByIdAndUpdate(updatedPayment._id, { invoiceUrl: cloudinaryResult.secure_url }, { runValidators: true });
+                }
+                await (0, sendEmail_1.default)({
+                    to: updatedEnrollment.user.email,
+                    subject: "Your Enrollment Invoice",
+                    templateName: "invoice",
+                    templateData: invoiceData,
+                    attachments: [
+                        {
+                            filename: "invoice.pdf",
+                            content: pdfBuffer,
+                            contentType: "application/pdf",
+                        },
+                    ],
+                });
             }
-            await (0, sendEmail_1.default)({
-                to: updatedEnrollment.user.email,
-                subject: "Your Enrollment Invoice",
-                templateName: "invoice",
-                templateData: invoiceData,
-                attachments: [
-                    {
-                        filename: "invoice.pdf",
-                        content: pdfBuffer,
-                        contentType: "application/pdf",
-                    },
-                ],
-            });
-        }
-        catch (postError) {
-            // Log error but don't fail the response since payment was successful
-            logger_1.default.error({
-                message: "Error in post-payment processing",
-                err: postError,
-            });
-        }
+            catch (postError) {
+                // Log error but don't fail the response since payment was successful
+                logger_1.default.error({
+                    message: "Error in post-payment processing",
+                    err: postError,
+                });
+            }
+        };
+        processPostPayment();
         return {
             success: true,
             message: "Payment completed successfully",

@@ -86,6 +86,10 @@ const validatePayment = async (payload) => {
             message: "sslCommerz validate api response",
             data: response.data,
         });
+        if (response.data.status !== "VALID" &&
+            response.data.status !== "VALIDATED") {
+            throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Payment validation failed");
+        }
         await payment_model_1.default.updateOne({ transactionId: { $eq: payload.tran_id } }, { paymentGatewayData: response.data }, { runValidators: true });
     }
     catch (error) {

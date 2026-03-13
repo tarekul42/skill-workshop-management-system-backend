@@ -32,7 +32,14 @@ Thumbs.db
 # Testing
 coverage/
 .nyc_output/
+tests/
 
 # Temp
 tmp/
 temp/
+
+# Dev scripts & debug
+cookies.txt
+tsconfig.test.json
+verify-security-fixes.mjs
+swagger_debug.json

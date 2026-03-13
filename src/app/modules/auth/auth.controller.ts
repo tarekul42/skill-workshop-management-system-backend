@@ -42,7 +42,7 @@ const credentialsLogin = catchAsync(
           );
         }
 
-        const userTokens = createUserTokens(user);
+        const userTokens = await createUserTokens(user);
 
         setAuthCookie(res, userTokens);
 
@@ -195,7 +195,7 @@ const googleCallback = catchAsync(async (req: Request, res: Response) => {
     throw new AppError(StatusCodes.NOT_FOUND, "User Not Found");
   }
 
-  const tokenInfo = createUserTokens(user);
+  const tokenInfo = await createUserTokens(user);
 
   setAuthCookie(res, tokenInfo);
   res.redirect(`${envVariables.FRONTEND_URL}/${redirectTo}`);

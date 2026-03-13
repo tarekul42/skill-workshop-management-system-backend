@@ -1,9 +1,8 @@
 import { NextFunction, Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
-import { deleteImageFromCloudinary } from "../config/cloudinary.config";
-import envVariables from "../config/env";
 import mongoose from "mongoose";
 import { ZodError } from "zod";
+import envVariables from "../config/env";
 import AppError from "../errorHelpers/AppError";
 import handleCastError from "../helpers/handleCastError";
 import handleDuplicateError from "../helpers/handleDuplicateError";
@@ -12,7 +11,7 @@ import handleZodError from "../helpers/handleZodError";
 import { IErrorSources } from "../interfaces/error.types";
 import logger from "../utils/logger";
 
-const globalErrorHandler = async (
+const globalErrorHandler = (
   err: unknown,
   req: Request,
   res: Response,
@@ -23,33 +22,7 @@ const globalErrorHandler = async (
     logger.error({ message: "Global error caught", err });
   }
 
-  // Clean up uploaded images on error - failures should not prevent error response
-  try {
-    if (req.file) {
-      await deleteImageFromCloudinary(req.file.path);
-    }
-
-    if (req.files) {
-      let filesToDelete: Express.Multer.File[] = [];
-
-      if (Array.isArray(req.files)) {
-        filesToDelete = req.files;
-      } else {
-        // Handle object form from multer fields()
-        filesToDelete = Object.values(req.files).flat();
-      }
-
-      await Promise.all(
-        filesToDelete.map((file) => deleteImageFromCloudinary(file.path)),
-      );
-    }
-  } catch (cleanupError) {
-    // Log but don't throw - cleanup failure shouldn't prevent error response
-    logger.error({
-      message: "Failed to clean up uploaded images",
-      err: cleanupError,
-    });
-  }
+  // Note: Image cleanup on error is handled at the route/controller level.
 
   let statusCode = StatusCodes.INTERNAL_SERVER_ERROR;
   let message = "Something went wrong!!!";
@@ -61,49 +34,72 @@ const globalErrorHandler = async (
   if (err instanceof AppError) {
     statusCode = err.statusCode;
     message = err.message;
-  } else if (err instanceof Error) {
-    if ("code" in err && (err as { code?: number }).code === 11000) {
-      const simplifiedError = handleDuplicateError(err);
+  } else if (err && typeof err === "object") {
+    const errorObj = err as Record<string, unknown>;
+    const errName = (errorObj.name as string) || "";
+    const errMessage = (errorObj.message as string) || "";
 
+    // Multer or custom file type errors should be 400
+    if (
+      errName === "MulterError" ||
+      errMessage.includes("Invalid file type") ||
+      errMessage.includes("Unexpected field") ||
+      errMessage.includes("Invalid image file")
+    ) {
+      statusCode = StatusCodes.BAD_REQUEST;
+      message = errMessage;
+    } else if (errorObj.code === "EBADCSRFTOKEN") {
+      statusCode = StatusCodes.FORBIDDEN;
+      message = "Invalid CSRF token";
+    } else if (errorObj.code === 11000) {
+      const simplifiedError = handleDuplicateError(err as Error);
       statusCode = simplifiedError.statusCode;
       message = simplifiedError.message;
-    } else if (err.name === "CastError") {
+    } else if (errName === "CastError") {
       const simplifiedError = handleCastError(
         err as unknown as mongoose.Error.CastError,
       );
-
       statusCode = simplifiedError.statusCode;
       message = simplifiedError.message;
-    } else if (err.name === "ZodError") {
+    } else if (errName === "ZodError") {
       const simplifiedError = handleZodError(err as unknown as ZodError);
-
       statusCode = simplifiedError.statusCode;
       message = simplifiedError.message;
       errorSources = simplifiedError.errorSources as IErrorSources[];
-    } else if (err.name === "ValidationError") {
+    } else if (errName === "ValidationError") {
       const simplifiedError = handleValidationError(
         err as unknown as mongoose.Error.ValidationError,
       );
-
       statusCode = simplifiedError.statusCode;
       message = simplifiedError.message;
       errorSources = simplifiedError.errorSources as IErrorSources[];
     } else {
-      statusCode = 500;
-      message = err.message;
+      statusCode = StatusCodes.INTERNAL_SERVER_ERROR;
+      message = errMessage || "Something went wrong!!!";
     }
+  } else if (err instanceof Error) {
+    statusCode = StatusCodes.INTERNAL_SERVER_ERROR;
+    message = err.message;
   }
 
-  res.status(statusCode).json({
+  const responseBody: {
+    success: boolean;
+    message: string;
+    errorSources: IErrorSources[];
+    err?: { name: string; message: string } | { message: string };
+    stack?: string | null;
+  } = {
     success: false,
     message,
     errorSources,
-    err: envVariables.NODE_ENV === "development" ? err : null,
-    stack:
-      envVariables.NODE_ENV === "development" && err instanceof Error
-        ? err.stack
-        : null,
-  });
+  };
+
+  if (envVariables.NODE_ENV === "development") {
+    responseBody.err = (err instanceof Error) ? { name: err.name, message: err.message } : { message: String(err) };
+    responseBody.stack = (err instanceof Error) ? err.stack : null;
+  }
+
+  res.status(statusCode).json(responseBody);
 };
 
 export default globalErrorHandler;

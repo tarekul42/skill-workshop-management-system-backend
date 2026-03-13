@@ -97,6 +97,13 @@ const validatePayment = async (payload: {
       data: response.data,
     });
 
+    if (
+      response.data.status !== "VALID" &&
+      response.data.status !== "VALIDATED"
+    ) {
+      throw new AppError(StatusCodes.BAD_REQUEST, "Payment validation failed");
+    }
+
     await Payment.updateOne(
       { transactionId: { $eq: payload.tran_id } },
       { paymentGatewayData: response.data },

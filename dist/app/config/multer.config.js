@@ -28,5 +28,18 @@ const storage = new multer_storage_cloudinary_1.CloudinaryStorage({
         },
     },
 });
-const multerUpload = (0, multer_1.default)({ storage: storage });
+const fileFilter = (req, file, cb) => {
+    const allowedMimeTypes = ["image/jpeg", "image/png", "image/webp"];
+    if (allowedMimeTypes.includes(file.mimetype)) {
+        cb(null, true);
+    }
+    else {
+        cb(new Error("Invalid file type. Only JPEG, PNG, and WebP are allowed."));
+    }
+};
+const multerUpload = (0, multer_1.default)({
+    storage: storage,
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
+    fileFilter: fileFilter
+});
 exports.default = multerUpload;

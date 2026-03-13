@@ -8,6 +8,7 @@ const cloudinary_1 = require("cloudinary");
 const http_status_codes_1 = require("http-status-codes");
 const AppError_1 = __importDefault(require("../errorHelpers/AppError"));
 const env_1 = __importDefault(require("./env"));
+const logger_1 = __importDefault(require("../utils/logger"));
 cloudinary_1.v2.config({
     cloud_name: env_1.default.CLOUDINARY.CLOUDINARY_CLOUD_NAME,
     api_key: env_1.default.CLOUDINARY.CLOUDINARY_API_KEY,
@@ -44,7 +45,7 @@ const deleteImageFromCloudinary = async (url) => {
         }
     }
     catch (err) {
-        throw new AppError_1.default(http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR, "Cloudinary image deletion failed", err instanceof Error ? err.message : String(err));
+        logger_1.default.warn({ message: "Cloudinary cleanup failed", error: String(err) });
     }
 };
 exports.deleteImageFromCloudinary = deleteImageFromCloudinary;

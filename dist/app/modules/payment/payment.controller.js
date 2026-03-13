@@ -21,7 +21,8 @@ const initPayment = (0, catchAsync_1.default)(async (req, res) => {
 });
 const successPayment = (0, catchAsync_1.default)(async (req, res) => {
     const query = req.query;
-    const result = await payment_service_1.default.successPayment(query);
+    const body = req.body;
+    const result = await payment_service_1.default.successPayment(query, body);
     if (result.success) {
         const params = new URLSearchParams({
             transactionId: String(query.transactionId ?? ""),

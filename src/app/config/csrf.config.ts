@@ -15,7 +15,10 @@ const CSRF_EXEMPT_PATHS = [
   "/api/v1/auth/forgot-password",
   "/api/v1/otp/send",
   "/api/v1/otp/verify",
-  "/health-check",
+  "/api/v1/health/health-check",
+  "/api/v1/health/",
+  "/api/v1/health/ping",
+  "/api/v1/health/check-version",
 ];
 
 const isProduction = envVariables.NODE_ENV === "production";
