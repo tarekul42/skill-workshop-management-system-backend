@@ -1,18 +1,18 @@
 import { StatusCodes } from "http-status-codes";
 import { Types } from "mongoose";
+import { uploadBufferToCloudinary } from "../../config/cloudinary.config";
 import AppError from "../../errorHelpers/AppError";
+import { generatePDF, IInvoiceData } from "../../utils/invoice";
+import logger from "../../utils/logger";
+import sendEmail from "../../utils/sendEmail";
 import { ENROLLMENT_STATUS } from "../enrollment/enrollment.interface";
 import Enrollment from "../enrollment/enrollment.model";
 import { ISSLCommerz } from "../sslCommerz/sslCommerz.interface";
 import SSLService from "../sslCommerz/sslCommerz.service";
-import { PAYMENT_STATUS } from "./payment.interface";
-import Payment from "./payment.model";
-import { generatePDF, IInvoiceData } from "../../utils/invoice";
 import { IUser } from "../user/user.interface";
 import { IWorkshop } from "../workshop/workshop.interface";
-import { uploadBufferToCloudinary } from "../../config/cloudinary.config";
-import sendEmail from "../../utils/sendEmail";
-import logger from "../../utils/logger";
+import { PAYMENT_STATUS } from "./payment.interface";
+import Payment from "./payment.model";
 
 const initPayment = async (enrollmentId: string) => {
   if (!enrollmentId || !Types.ObjectId.isValid(enrollmentId)) {
@@ -73,7 +73,10 @@ const initPayment = async (enrollmentId: string) => {
   };
 };
 
-const successPayment = async (query: Record<string, string>, body: Record<string, string>) => {
+const successPayment = async (
+  query: Record<string, string>,
+  body: Record<string, string>,
+) => {
   const rawTransactionId = query.transactionId;
 
   if (typeof rawTransactionId !== "string" || !rawTransactionId.trim()) {
@@ -88,7 +91,10 @@ const successPayment = async (query: Record<string, string>, body: Record<string
     throw new AppError(StatusCodes.BAD_REQUEST, "Invalid val_id");
   }
 
-  await SSLService.validatePayment({ val_id: val_id.trim(), tran_id: transactionId });
+  await SSLService.validatePayment({
+    val_id: val_id.trim(),
+    tran_id: transactionId,
+  });
 
   const session = await Enrollment.startSession();
   session.startTransaction();

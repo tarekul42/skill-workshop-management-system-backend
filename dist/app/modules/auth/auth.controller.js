@@ -8,11 +8,11 @@ const passport_1 = __importDefault(require("passport"));
 const env_1 = __importDefault(require("../../config/env"));
 const AppError_1 = __importDefault(require("../../errorHelpers/AppError"));
 const catchAsync_1 = __importDefault(require("../../utils/catchAsync"));
+const logger_1 = __importDefault(require("../../utils/logger"));
 const sendResponse_1 = __importDefault(require("../../utils/sendResponse"));
 const setCookie_1 = __importDefault(require("../../utils/setCookie"));
 const userTokens_1 = require("../../utils/userTokens");
 const auth_service_1 = __importDefault(require("./auth.service"));
-const logger_1 = __importDefault(require("../../utils/logger"));
 const credentialsLogin = (0, catchAsync_1.default)(async (req, res, next) => {
     passport_1.default.authenticate("local", { session: false }, async (err, user, info) => {
         if (err) {

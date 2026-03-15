@@ -7,12 +7,12 @@ const express_1 = require("express");
 const auth_route_1 = __importDefault(require("../modules/auth/auth.route"));
 const category_route_1 = __importDefault(require("../modules/category/category.route"));
 const enrollment_route_1 = __importDefault(require("../modules/enrollment/enrollment.route"));
+const health_route_1 = require("../modules/health/health.route");
 const otp_route_1 = __importDefault(require("../modules/otp/otp.route"));
 const payment_route_1 = __importDefault(require("../modules/payment/payment.route"));
 const stats_route_1 = __importDefault(require("../modules/stats/stats.route"));
 const user_route_1 = __importDefault(require("../modules/user/user.route"));
 const workshop_route_1 = __importDefault(require("../modules/workshop/workshop.route"));
-const health_route_1 = require("../modules/health/health.route");
 const router = (0, express_1.Router)();
 const moduleRoutes = [
     {

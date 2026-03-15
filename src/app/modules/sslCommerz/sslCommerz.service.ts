@@ -2,9 +2,9 @@ import axios from "axios";
 import { StatusCodes } from "http-status-codes";
 import envVariables from "../../config/env";
 import AppError from "../../errorHelpers/AppError";
-import { ISSLCommerz } from "./sslCommerz.interface";
-import Payment from "../payment/payment.model";
 import logger from "../../utils/logger";
+import Payment from "../payment/payment.model";
+import { ISSLCommerz } from "./sslCommerz.interface";
 
 const sslPaymentInit = async (payload: ISSLCommerz) => {
   try {

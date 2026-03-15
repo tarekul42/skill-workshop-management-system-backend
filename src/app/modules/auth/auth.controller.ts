@@ -5,12 +5,12 @@ import passport from "passport";
 import envVariables from "../../config/env";
 import AppError from "../../errorHelpers/AppError";
 import catchAsync from "../../utils/catchAsync";
+import logger from "../../utils/logger";
 import sendResponse from "../../utils/sendResponse";
 import setAuthCookie from "../../utils/setCookie";
 import { createUserTokens } from "../../utils/userTokens";
 import { IUser } from "../user/user.interface";
 import AuthServices from "./auth.service";
-import logger from "../../utils/logger";
 
 type TPassportError = Error | null;
 

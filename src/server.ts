@@ -2,9 +2,9 @@ import type { Server } from "http";
 import mongoose from "mongoose";
 import app from "./app";
 import envVariables from "./app/config/env";
-import seedSuperAdmin from "./app/utils/seedSuperAdmin";
 import { connectRedis, redisClient } from "./app/config/redis.config";
 import logger from "./app/utils/logger";
+import seedSuperAdmin from "./app/utils/seedSuperAdmin";
 
 let server: Server;
 let isShuttingDown = false;

@@ -3,27 +3,27 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const connect_redis_1 = require("connect-redis");
 const cookie_parser_1 = __importDefault(require("cookie-parser"));
 const cors_1 = __importDefault(require("cors"));
 const express_1 = __importDefault(require("express"));
 const express_session_1 = __importDefault(require("express-session"));
 const helmet_1 = __importDefault(require("helmet"));
 const hpp_1 = __importDefault(require("hpp"));
-const mongoSanitize_1 = __importDefault(require("./app/middlewares/mongoSanitize"));
 const morgan_1 = __importDefault(require("morgan"));
 const passport_1 = __importDefault(require("passport"));
+const swagger_ui_express_1 = __importDefault(require("swagger-ui-express"));
+const csrf_config_1 = require("./app/config/csrf.config");
 const env_1 = __importDefault(require("./app/config/env"));
 require("./app/config/passport");
-const csrf_config_1 = require("./app/config/csrf.config");
-const globalErrorHandler_1 = __importDefault(require("./app/middlewares/globalErrorHandler"));
-const notFound_1 = __importDefault(require("./app/middlewares/notFound"));
-const route_1 = __importDefault(require("./app/route"));
-const rateLimiter_1 = require("./app/utils/rateLimiter");
-const logger_1 = __importDefault(require("./app/utils/logger"));
-const connect_redis_1 = require("connect-redis");
 const redis_config_1 = require("./app/config/redis.config");
 const swagger_config_1 = require("./app/config/swagger.config");
-const swagger_ui_express_1 = __importDefault(require("swagger-ui-express"));
+const globalErrorHandler_1 = __importDefault(require("./app/middlewares/globalErrorHandler"));
+const mongoSanitize_1 = __importDefault(require("./app/middlewares/mongoSanitize"));
+const notFound_1 = __importDefault(require("./app/middlewares/notFound"));
+const route_1 = __importDefault(require("./app/route"));
+const logger_1 = __importDefault(require("./app/utils/logger"));
+const rateLimiter_1 = require("./app/utils/rateLimiter");
 const app = (0, express_1.default)();
 // ──── Security Check ────
 if (env_1.default.EXPRESS_SESSION_SECRET.length < 32) {

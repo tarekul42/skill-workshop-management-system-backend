@@ -1,8 +1,8 @@
-import { describe, it, expect } from "bun:test";
+import { describe, expect, it } from "bun:test";
 import request from "supertest";
 import app from "../src/app";
-import { swaggerSpec as swaggerSpecUntyped } from "../src/app/config/swagger.config";
 import envVariables from "../src/app/config/env";
+import { swaggerSpec as swaggerSpecUntyped } from "../src/app/config/swagger.config";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const swaggerSpec = swaggerSpecUntyped as any;
@@ -106,18 +106,28 @@ describe("Root & Health Endpoints", () => {
     expect(swaggerSpec.paths["/enrollment"].post.tags).toContain("Enrollment");
     expect(swaggerSpec.paths).toHaveProperty("/enrollment/my-enrollments");
     expect(swaggerSpec.paths).toHaveProperty("/enrollment/{enrollmentId}");
-    expect(swaggerSpec.paths).toHaveProperty("/enrollment/{enrollmentId}/status");
+    expect(swaggerSpec.paths).toHaveProperty(
+      "/enrollment/{enrollmentId}/status",
+    );
 
     // Payment Routes
-    expect(swaggerSpec.paths).toHaveProperty("/payment/init-payment/{enrollmentId}");
-    expect(swaggerSpec.paths["/payment/init-payment/{enrollmentId}"].post.tags).toContain("Payment");
+    expect(swaggerSpec.paths).toHaveProperty(
+      "/payment/init-payment/{enrollmentId}",
+    );
+    expect(
+      swaggerSpec.paths["/payment/init-payment/{enrollmentId}"].post.tags,
+    ).toContain("Payment");
     expect(swaggerSpec.paths).toHaveProperty("/payment/success");
     expect(swaggerSpec.paths).toHaveProperty("/payment/fail");
     expect(swaggerSpec.paths).toHaveProperty("/payment/cancel");
     expect(swaggerSpec.paths).toHaveProperty("/payment/invoice/{paymentId}");
-    expect(swaggerSpec.paths["/payment/invoice/{paymentId}"].get.tags).toContain("Payment");
+    expect(
+      swaggerSpec.paths["/payment/invoice/{paymentId}"].get.tags,
+    ).toContain("Payment");
     expect(swaggerSpec.paths).toHaveProperty("/payment/validate-payment");
-    expect(swaggerSpec.paths["/payment/validate-payment"].post.tags).toContain("Payment");
+    expect(swaggerSpec.paths["/payment/validate-payment"].post.tags).toContain(
+      "Payment",
+    );
 
     // OTP Routes
     expect(swaggerSpec.paths).toHaveProperty("/otp/send");
@@ -166,7 +176,9 @@ describe("Payment Routes - Swagger Documentation", () => {
     const path = swaggerSpec.paths["/payment/validate-payment"];
     expect(path.post.security).toBeDefined();
     expect(path.post.requestBody).toBeDefined();
-    expect(path.post.requestBody.content["application/json"].schema.required).toContain("val_id");
+    expect(
+      path.post.requestBody.content["application/json"].schema.required,
+    ).toContain("val_id");
   });
 });
 

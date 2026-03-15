@@ -1,6 +1,6 @@
 import { StatusCodes } from "http-status-codes";
-import AppError from "../errorHelpers/AppError";
 import PDFDocument from "pdfkit";
+import AppError from "../errorHelpers/AppError";
 import logger from "./logger";
 
 interface IInvoiceData {
@@ -49,4 +49,4 @@ const generatePDF = async (invoiceData: IInvoiceData): Promise<Buffer> => {
   });
 };
 
-export { IInvoiceData, generatePDF };
+export { generatePDF, IInvoiceData };

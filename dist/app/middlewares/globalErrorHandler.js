@@ -81,8 +81,11 @@ next) => {
         errorSources,
     };
     if (env_1.default.NODE_ENV === "development") {
-        responseBody.err = (err instanceof Error) ? { name: err.name, message: err.message } : { message: String(err) };
-        responseBody.stack = (err instanceof Error) ? err.stack : null;
+        responseBody.err =
+            err instanceof Error
+                ? { name: err.name, message: err.message }
+                : { message: String(err) };
+        responseBody.stack = err instanceof Error ? err.stack : null;
     }
     res.status(statusCode).json(responseBody);
 };

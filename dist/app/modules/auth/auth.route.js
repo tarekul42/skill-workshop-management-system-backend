@@ -5,11 +5,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const passport_1 = __importDefault(require("passport"));
+const env_1 = __importDefault(require("../../config/env"));
 const checkAuth_1 = __importDefault(require("../../middlewares/checkAuth"));
 const rateLimiter_1 = require("../../utils/rateLimiter");
 const user_interface_1 = require("../user/user.interface");
 const auth_controller_1 = __importDefault(require("./auth.controller"));
-const env_1 = __importDefault(require("../../config/env"));
 const router = (0, express_1.Router)();
 /**
  * @openapi

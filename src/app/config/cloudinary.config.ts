@@ -1,8 +1,8 @@
 import { v2 as cloudinary, UploadApiResponse } from "cloudinary";
 import { StatusCodes } from "http-status-codes";
 import AppError from "../errorHelpers/AppError";
-import envVariables from "./env";
 import logger from "../utils/logger";
+import envVariables from "./env";
 
 cloudinary.config({
   cloud_name: envVariables.CLOUDINARY.CLOUDINARY_CLOUD_NAME,
@@ -66,6 +66,6 @@ const cloudinaryUpload = cloudinary;
 
 export {
   cloudinaryUpload,
-  uploadBufferToCloudinary,
   deleteImageFromCloudinary,
+  uploadBufferToCloudinary,
 };
