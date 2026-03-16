@@ -60,7 +60,12 @@ app.use(
         ],
         styleSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com"],
         imgSrc: ["'self'", "data:", "validator.swagger.io"],
-        connectSrc: ["'self'", "https://vercel.live"],
+        connectSrc: [
+          "'self'",
+          "https://vercel.live",
+          "https://cdnjs.cloudflare.com",
+        ],
+        frameSrc: ["'self'", "https://vercel.live"],
       },
     },
   }),
@@ -116,6 +121,7 @@ app.use(
   "/api-docs",
   swaggerUi.serve,
   swaggerUi.setup(swaggerSpec, {
+    customCss: ".swagger-ui .topbar { display: none }", // example refinement
     customCssUrl:
       "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.11.0/swagger-ui.min.css",
     customJs: [
