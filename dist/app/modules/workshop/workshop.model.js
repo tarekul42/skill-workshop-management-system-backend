@@ -48,7 +48,7 @@ exports.WorkShop = WorkShop;
 const generateUniqueSlug = async (baseSlug, excludeId) => {
     let slug = baseSlug;
     let counter = 0;
-    while (true) {
+    while (counter < 100) {
         const query = { slug };
         if (excludeId) {
             query._id = { $ne: new mongoose_1.Types.ObjectId(excludeId) };
@@ -57,6 +57,9 @@ const generateUniqueSlug = async (baseSlug, excludeId) => {
         if (!exists)
             break;
         slug = `${baseSlug}-${counter++}`;
+    }
+    if (counter >= 100) {
+        logger_1.default.warn({ message: "Slug generation limit reached", baseSlug });
     }
     return slug;
 };

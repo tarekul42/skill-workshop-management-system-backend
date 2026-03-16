@@ -56,7 +56,7 @@ const generateUniqueSlug = async (
   let slug = baseSlug;
   let counter = 0;
 
-  while (true) {
+  while (counter < 100) {
     const query: { slug: string; _id?: { $ne: Types.ObjectId } } = { slug };
     if (excludeId) {
       query._id = { $ne: new Types.ObjectId(excludeId) };
@@ -66,6 +66,10 @@ const generateUniqueSlug = async (
     if (!exists) break;
 
     slug = `${baseSlug}-${counter++}`;
+  }
+
+  if (counter >= 100) {
+    logger.warn({ message: "Slug generation limit reached", baseSlug });
   }
 
   return slug;
