@@ -6,11 +6,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.WorkShop = exports.Level = void 0;
 const mongoose_1 = require("mongoose");
 const logger_1 = __importDefault(require("../../utils/logger"));
+const softDeletePlugin_1 = __importDefault(require("../../utils/softDeletePlugin"));
 const levelSchema = new mongoose_1.Schema({
     name: { type: String, required: true, unique: true },
 }, {
     timestamps: true,
 });
+levelSchema.plugin(softDeletePlugin_1.default);
 const Level = (0, mongoose_1.model)("Level", levelSchema);
 exports.Level = Level;
 const workshopSchema = new mongoose_1.Schema({
@@ -43,6 +45,7 @@ const workshopSchema = new mongoose_1.Schema({
 }, {
     timestamps: true,
 });
+workshopSchema.plugin(softDeletePlugin_1.default);
 const WorkShop = (0, mongoose_1.model)("Workshop", workshopSchema);
 exports.WorkShop = WorkShop;
 const generateUniqueSlug = async (baseSlug, excludeId) => {

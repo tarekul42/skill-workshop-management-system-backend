@@ -13,6 +13,8 @@ interface IEnrollment {
   payment?: Types.ObjectId;
   studentCount: number;
   status: ENROLLMENT_STATUS;
+  isDeleted?: boolean;
+  deletedAt?: Date;
   createdAt?: Date;
 }
 

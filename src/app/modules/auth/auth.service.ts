@@ -5,7 +5,7 @@ import jwt, { JwtPayload } from "jsonwebtoken";
 import validator from "validator";
 import envVariables from "../../config/env";
 import AppError from "../../errorHelpers/AppError";
-import sendEmail from "../../utils/sendEmail";
+import { mailQueue } from "../../jobs/mail.queue";
 import { createNewAccessToken } from "../../utils/userTokens";
 import { IAuthProvider, IsActive } from "../user/user.interface";
 import User from "../user/user.model";
@@ -141,11 +141,10 @@ const forgotPassword = async (email: string) => {
 
   const resetUILink = `${envVariables.FRONTEND_URL}/reset-password?id=${isUserExists._id}&token=${resetToken}`;
 
-  await sendEmail({
-    to: isUserExists.email,
-    subject: "Password Reset",
-    templateName: "forgetPassword",
-    templateData: {
+  await mailQueue.add("forgot-password", {
+    type: "forgot-password",
+    payload: {
+      email: isUserExists.email,
       name: isUserExists.name,
       resetUILink,
     },

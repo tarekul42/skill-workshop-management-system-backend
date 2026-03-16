@@ -2,6 +2,8 @@ import { Types } from "mongoose";
 
 interface ILevel {
   name: string;
+  isDeleted?: boolean;
+  deletedAt?: Date;
 }
 
 interface IWorkshop {
@@ -22,6 +24,8 @@ interface IWorkshop {
   deleteImages?: string[];
   category: Types.ObjectId;
   level: Types.ObjectId;
+  isDeleted?: boolean;
+  deletedAt?: Date;
 }
 
 export { ILevel, IWorkshop };

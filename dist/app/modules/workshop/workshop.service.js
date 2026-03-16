@@ -76,7 +76,8 @@ const deleteLevel = async (id) => {
     if (!existingLevel) {
         throw new AppError_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "Level not found");
     }
-    return await workshop_model_1.Level.findByIdAndDelete(id);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return await existingLevel.softDelete();
 };
 const createWorkshop = async (payload) => {
     if (typeof payload.title !== "string") {
@@ -263,7 +264,8 @@ const deleteWorkshop = async (id) => {
     if (!existingWorkshop) {
         throw new AppError_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "Workshop not found");
     }
-    return await workshop_model_1.WorkShop.findByIdAndDelete(id);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return await existingWorkshop.softDelete();
 };
 const WorkshopService = {
     createLevel,

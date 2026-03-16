@@ -2,7 +2,7 @@ import crypto from "crypto";
 import { StatusCodes } from "http-status-codes";
 import { redisClient } from "../../config/redis.config";
 import AppError from "../../errorHelpers/AppError";
-import sendEmail from "../../utils/sendEmail";
+import { mailQueue } from "../../jobs/mail.queue";
 import User from "../user/user.model";
 
 const OTP_EXPIRATION = 2 * 60;
@@ -40,11 +40,10 @@ const sendOtp = async (email: string, name: string) => {
     },
   });
 
-  await sendEmail({
-    to: email,
-    subject: "OTP Verification",
-    templateName: "otp",
-    templateData: {
+  await mailQueue.add("otp", {
+    type: "otp",
+    payload: {
+      email,
       name,
       otp,
     },

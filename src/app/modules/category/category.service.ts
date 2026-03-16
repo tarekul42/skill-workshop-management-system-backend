@@ -153,7 +153,12 @@ const updateCategory = async (id: string, payload: Partial<ICategory>) => {
 };
 
 const deleteCategory = async (id: string) => {
-  await Category.findByIdAndDelete(id);
+  const existingCategory = await Category.findById(id);
+  if (!existingCategory) {
+    throw new AppError(StatusCodes.NOT_FOUND, "Category not found");
+  }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await (existingCategory as any).softDelete();
   return null;
 };
 

@@ -5,7 +5,6 @@ import express, { Request, Response } from "express";
 import expressSession from "express-session";
 import helmet from "helmet";
 import hpp from "hpp";
-import morgan from "morgan";
 import passport from "passport";
 import swaggerUi from "swagger-ui-express";
 import {
@@ -19,6 +18,7 @@ import { swaggerSpec } from "./app/config/swagger.config";
 import globalErrorHandler from "./app/middlewares/globalErrorHandler";
 import mongoSanitize from "./app/middlewares/mongoSanitize";
 import notFound from "./app/middlewares/notFound";
+import requestLogger from "./app/middlewares/requestLogger";
 import router from "./app/route";
 import logger from "./app/utils/logger";
 import { authLimiter, generalLimiter } from "./app/utils/rateLimiter";
@@ -34,15 +34,7 @@ if (envVariables.EXPRESS_SESSION_SECRET.length < 32) {
 }
 
 // ──── HTTP Request Logger ────
-app.use(morgan(envVariables.NODE_ENV === "production" ? "tiny" : "dev"));
-
-// ──── Request Debugger ────
-app.use((req, _res, next) => {
-  logger.info({
-    message: `Incoming Request: ${req.method} ${req.originalUrl}`,
-  });
-  next();
-});
+app.use(requestLogger);
 
 // ──── Security Headers ────
 // contentSecurityPolicy is configured to allow swagger-ui-express assets

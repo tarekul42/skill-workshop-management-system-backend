@@ -1,5 +1,6 @@
 import { model, Schema, Types } from "mongoose";
 import logger from "../../utils/logger";
+import softDeletePlugin from "../../utils/softDeletePlugin";
 import { ILevel, IWorkshop } from "./workshop.interface";
 
 const levelSchema = new Schema<ILevel>(
@@ -10,6 +11,8 @@ const levelSchema = new Schema<ILevel>(
     timestamps: true,
   },
 );
+
+levelSchema.plugin(softDeletePlugin);
 
 const Level = model<ILevel>("Level", levelSchema);
 
@@ -46,6 +49,8 @@ const workshopSchema = new Schema<IWorkshop>(
     timestamps: true,
   },
 );
+
+workshopSchema.plugin(softDeletePlugin);
 
 const WorkShop = model<IWorkshop>("Workshop", workshopSchema);
 

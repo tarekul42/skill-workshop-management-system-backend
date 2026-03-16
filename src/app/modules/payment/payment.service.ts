@@ -1,10 +1,7 @@
 import { StatusCodes } from "http-status-codes";
 import { Types } from "mongoose";
-import { uploadBufferToCloudinary } from "../../config/cloudinary.config";
 import AppError from "../../errorHelpers/AppError";
-import { generatePDF, IInvoiceData } from "../../utils/invoice";
-import logger from "../../utils/logger";
-import sendEmail from "../../utils/sendEmail";
+import { mailQueue } from "../../jobs/mail.queue";
 import { ENROLLMENT_STATUS } from "../enrollment/enrollment.interface";
 import Enrollment from "../enrollment/enrollment.model";
 import { ISSLCommerz } from "../sslCommerz/sslCommerz.interface";
@@ -126,56 +123,21 @@ const successPayment = async (
     session.endSession();
 
     // Post-transaction processing: Invoice generation, Cloudinary upload, and Email notification
-    const processPostPayment = async () => {
-      try {
-        const invoiceData: IInvoiceData = {
-          transactionId: updatedPayment.transactionId,
-          enrollmentDate: updatedEnrollment.createdAt as Date,
-          userName: (updatedEnrollment.user as unknown as IUser).name,
-          workshopTitle: (updatedEnrollment.workshop as unknown as IWorkshop)
-            .title,
-          studentCount: updatedEnrollment.studentCount,
-          totalAmount: updatedPayment.amount,
-        };
-
-        const pdfBuffer = await generatePDF(invoiceData);
-
-        const cloudinaryResult = await uploadBufferToCloudinary(
-          pdfBuffer,
-          "invoice",
-        );
-
-        if (cloudinaryResult) {
-          await Payment.findByIdAndUpdate(
-            updatedPayment._id,
-            { invoiceUrl: cloudinaryResult.secure_url },
-            { runValidators: true },
-          );
-        }
-
-        await sendEmail({
-          to: (updatedEnrollment.user as unknown as IUser).email,
-          subject: "Your Enrollment Invoice",
-          templateName: "invoice",
-          templateData: invoiceData as unknown as Record<string, unknown>,
-          attachments: [
-            {
-              filename: "invoice.pdf",
-              content: pdfBuffer,
-              contentType: "application/pdf",
-            },
-          ],
-        });
-      } catch (postError) {
-        // Log error but don't fail the response since payment was successful
-        logger.error({
-          message: "Error in post-payment processing",
-          err: postError,
-        });
-      }
-    };
-
-    processPostPayment();
+    // Offloaded to BullMQ for better resilience
+    await mailQueue.add("invoice", {
+      type: "invoice",
+      payload: {
+        to: (updatedEnrollment.user as unknown as IUser).email,
+        transactionId: updatedPayment.transactionId,
+        enrollmentDate: updatedEnrollment.createdAt as Date,
+        userName: (updatedEnrollment.user as unknown as IUser).name,
+        workshopTitle: (updatedEnrollment.workshop as unknown as IWorkshop)
+          .title,
+        studentCount: updatedEnrollment.studentCount,
+        totalAmount: updatedPayment.amount,
+        email: (updatedEnrollment.user as unknown as IUser).email,
+      },
+    });
 
     return {
       success: true,

@@ -28,6 +28,7 @@ interface IUser {
   age?: number;
   address?: string;
   isDeleted?: boolean;
+  deletedAt?: Date;
   isActive?: IsActive;
   isVerified?: boolean;
   role: UserRole;

@@ -23,6 +23,9 @@ In today's digital-first economy, the ability to manage educational resources, f
 - **Rate Limiting**: Integrated security middleware to prevent brute-force attacks and API abuse.
 - **Multi-Modal Authentication**: JWT, Google OAuth 2.0, and credentials-based login.
 - **Invoice Generation**: PDF invoice generation for payments.
+- **Structured Logging (Pino)**: High-performance, JSON-based logging for production-grade observability.
+- **Background Jobs (BullMQ)**: Asynchronous processing for emails, PDF generation, and time-consuming tasks.
+- **Soft Deletes**: Data recovery and audit-ready deletion mechanism for core models.
 
 ---
 
@@ -30,12 +33,14 @@ In today's digital-first economy, the ability to manage educational resources, f
 
 | Category       | Technology                              |
 | -------------- | --------------------------------------- |
-| Runtime        | Node.js v20+                            |
+| Runtime        | Bun (Optimized performance)             |
 | Framework      | Express.js                              |
 | Language       | TypeScript                              |
 | Database       | MongoDB (Mongoose)                      |
 | Cache          | Redis                                   |
+| Queue          | BullMQ (Redis-backed background jobs)   |
 | Authentication | JWT, Passport.js (Local + Google OAuth) |
+| Logging        | Pino & Pino-Pretty                      |
 | Validation     | Zod                                     |
 | File Storage   | Cloudinary                              |
 | Email          | Nodemailer                              |
@@ -101,7 +106,7 @@ src/
 - **Node.js**: v20 or higher
 - **MongoDB**: Local instance or MongoDB Atlas URI
 - **Redis**: Local instance or Redis Cloud URI
-- **Package Manager**: `npm` or `bun`
+- **Package Manager**: `bun` (Recommended)
 
 ### Installation
 
@@ -268,6 +273,7 @@ This project requires both a document database and a key-value store:
   - **OTP Storage**: Temporary storage for verification codes.
   - **Rate Limiting**: Tracking request counts across server instances.
   - **Caching**: Performance optimization for workshop listings.
+  - **Background Jobs**: Persistent storage and state management for BullMQ tasks.
 
 ---
 
@@ -364,6 +370,7 @@ SMTP_FROM=Skill Workshop <your_email@gmail.com>
 - **NoSQL Injection Prevention**: express-mongo-sanitize
 - **Helmet.js**: Security headers
 - **HPP Protection**: HTTP Parameter Pollution prevention
+- **Structured Logging**: Production-grade monitoring and audit trails via Pino
 
 ---
 

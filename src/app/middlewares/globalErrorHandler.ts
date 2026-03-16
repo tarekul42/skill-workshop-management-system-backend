@@ -12,15 +12,14 @@ import { IErrorSources } from "../interfaces/error.types";
 import logger from "../utils/logger";
 
 const globalErrorHandler = (
-  err: unknown,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  err: any,
   req: Request,
   res: Response,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   next: NextFunction,
 ) => {
-  if (envVariables.NODE_ENV === "development") {
-    logger.error({ message: "Global error caught", err });
-  }
+  logger.error(err, "Global error caught");
 
   // Note: Image cleanup on error is handled at the route/controller level.
 

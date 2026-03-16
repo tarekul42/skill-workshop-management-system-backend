@@ -10,7 +10,7 @@ const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const validator_1 = __importDefault(require("validator"));
 const env_1 = __importDefault(require("../../config/env"));
 const AppError_1 = __importDefault(require("../../errorHelpers/AppError"));
-const sendEmail_1 = __importDefault(require("../../utils/sendEmail"));
+const mail_queue_1 = require("../../jobs/mail.queue");
 const userTokens_1 = require("../../utils/userTokens");
 const user_interface_1 = require("../user/user.interface");
 const user_model_1 = __importDefault(require("../user/user.model"));
@@ -93,11 +93,10 @@ const forgotPassword = async (email) => {
         expiresIn: "10m",
     });
     const resetUILink = `${env_1.default.FRONTEND_URL}/reset-password?id=${isUserExists._id}&token=${resetToken}`;
-    await (0, sendEmail_1.default)({
-        to: isUserExists.email,
-        subject: "Password Reset",
-        templateName: "forgetPassword",
-        templateData: {
+    await mail_queue_1.mailQueue.add("forgot-password", {
+        type: "forgot-password",
+        payload: {
+            email: isUserExists.email,
             name: isUserExists.name,
             resetUILink,
         },

@@ -119,7 +119,12 @@ const updateCategory = async (id, payload) => {
     return updatedCategory;
 };
 const deleteCategory = async (id) => {
-    await category_model_1.Category.findByIdAndDelete(id);
+    const existingCategory = await category_model_1.Category.findById(id);
+    if (!existingCategory) {
+        throw new AppError_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "Category not found");
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await existingCategory.softDelete();
     return null;
 };
 const CategoryService = {

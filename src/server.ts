@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import app from "./app";
 import envVariables from "./app/config/env";
 import { connectRedis, redisClient } from "./app/config/redis.config";
+import { mailWorker } from "./app/jobs/mail.worker";
 import logger from "./app/utils/logger";
 import seedSuperAdmin from "./app/utils/seedSuperAdmin";
 
@@ -34,12 +35,15 @@ async function gracefulShutdown(exitCode: number) {
     // 2. Close Mongoose connection
     await mongoose.connection.close();
     logger.info({ message: "Mongoose connection closed" });
-
     // 3. Disconnect Redis
-    if (redisClient.isOpen) {
+    if (redisClient && redisClient.isOpen) {
       await redisClient.disconnect();
       logger.info({ message: "Redis connection closed" });
     }
+
+    // 4. Close BullMQ worker
+    await mailWorker.close();
+    logger.info({ message: "BullMQ worker closed" });
   } catch (err) {
     logger.error({ message: "Error during shutdown cleanup", err });
   }

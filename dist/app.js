@@ -10,7 +10,6 @@ const express_1 = __importDefault(require("express"));
 const express_session_1 = __importDefault(require("express-session"));
 const helmet_1 = __importDefault(require("helmet"));
 const hpp_1 = __importDefault(require("hpp"));
-const morgan_1 = __importDefault(require("morgan"));
 const passport_1 = __importDefault(require("passport"));
 const swagger_ui_express_1 = __importDefault(require("swagger-ui-express"));
 const csrf_config_1 = require("./app/config/csrf.config");
@@ -21,6 +20,7 @@ const swagger_config_1 = require("./app/config/swagger.config");
 const globalErrorHandler_1 = __importDefault(require("./app/middlewares/globalErrorHandler"));
 const mongoSanitize_1 = __importDefault(require("./app/middlewares/mongoSanitize"));
 const notFound_1 = __importDefault(require("./app/middlewares/notFound"));
+const requestLogger_1 = __importDefault(require("./app/middlewares/requestLogger"));
 const route_1 = __importDefault(require("./app/route"));
 const logger_1 = __importDefault(require("./app/utils/logger"));
 const rateLimiter_1 = require("./app/utils/rateLimiter");
@@ -32,14 +32,7 @@ if (env_1.default.EXPRESS_SESSION_SECRET.length < 32) {
     });
 }
 // ──── HTTP Request Logger ────
-app.use((0, morgan_1.default)(env_1.default.NODE_ENV === "production" ? "tiny" : "dev"));
-// ──── Request Debugger ────
-app.use((req, _res, next) => {
-    logger_1.default.info({
-        message: `Incoming Request: ${req.method} ${req.originalUrl}`,
-    });
-    next();
-});
+app.use(requestLogger_1.default);
 // ──── Security Headers ────
 // contentSecurityPolicy is configured to allow swagger-ui-express assets
 app.use((0, helmet_1.default)({
@@ -55,7 +48,12 @@ app.use((0, helmet_1.default)({
             ],
             styleSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com"],
             imgSrc: ["'self'", "data:", "validator.swagger.io"],
-            connectSrc: ["'self'", "https://vercel.live"],
+            connectSrc: [
+                "'self'",
+                "https://vercel.live",
+                "https://cdnjs.cloudflare.com",
+            ],
+            frameSrc: ["'self'", "https://vercel.live"],
         },
     },
 }));
@@ -94,6 +92,7 @@ app.get("/api-docs.json", (_req, res) => {
     res.json(swagger_config_1.swaggerSpec);
 });
 app.use("/api-docs", swagger_ui_express_1.default.serve, swagger_ui_express_1.default.setup(swagger_config_1.swaggerSpec, {
+    customCss: ".swagger-ui .topbar { display: none }", // example refinement
     customCssUrl: "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.11.0/swagger-ui.min.css",
     customJs: [
         "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.11.0/swagger-ui-bundle.js",

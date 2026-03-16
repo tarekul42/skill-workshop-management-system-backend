@@ -11,12 +11,12 @@ const handleDuplicateError_1 = __importDefault(require("../helpers/handleDuplica
 const handleValidationError_1 = __importDefault(require("../helpers/handleValidationError"));
 const handleZodError_1 = __importDefault(require("../helpers/handleZodError"));
 const logger_1 = __importDefault(require("../utils/logger"));
-const globalErrorHandler = (err, req, res, 
+const globalErrorHandler = (
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+err, req, res, 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 next) => {
-    if (env_1.default.NODE_ENV === "development") {
-        logger_1.default.error({ message: "Global error caught", err });
-    }
+    logger_1.default.error(err, "Global error caught");
     // Note: Image cleanup on error is handled at the route/controller level.
     let statusCode = http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR;
     let message = "Something went wrong!!!";

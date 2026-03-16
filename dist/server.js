@@ -7,6 +7,7 @@ const mongoose_1 = __importDefault(require("mongoose"));
 const app_1 = __importDefault(require("./app"));
 const env_1 = __importDefault(require("./app/config/env"));
 const redis_config_1 = require("./app/config/redis.config");
+const mail_worker_1 = require("./app/jobs/mail.worker");
 const logger_1 = __importDefault(require("./app/utils/logger"));
 const seedSuperAdmin_1 = __importDefault(require("./app/utils/seedSuperAdmin"));
 let server;
@@ -33,10 +34,13 @@ async function gracefulShutdown(exitCode) {
         await mongoose_1.default.connection.close();
         logger_1.default.info({ message: "Mongoose connection closed" });
         // 3. Disconnect Redis
-        if (redis_config_1.redisClient.isOpen) {
+        if (redis_config_1.redisClient && redis_config_1.redisClient.isOpen) {
             await redis_config_1.redisClient.disconnect();
             logger_1.default.info({ message: "Redis connection closed" });
         }
+        // 4. Close BullMQ worker
+        await mail_worker_1.mailWorker.close();
+        logger_1.default.info({ message: "BullMQ worker closed" });
     }
     catch (err) {
         logger_1.default.error({ message: "Error during shutdown cleanup", err });

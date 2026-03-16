@@ -3,6 +3,8 @@ interface ICategory {
   slug: string;
   thumbnail?: string;
   description?: string;
+  isDeleted?: boolean;
+  deletedAt?: Date;
 }
 
 export { ICategory };

@@ -101,7 +101,8 @@ const deleteLevel = async (id: string) => {
     throw new AppError(StatusCodes.NOT_FOUND, "Level not found");
   }
 
-  return await Level.findByIdAndDelete(id);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return await (existingLevel as any).softDelete();
 };
 
 const createWorkshop = async (payload: IWorkshop) => {
@@ -362,7 +363,8 @@ const deleteWorkshop = async (id: string) => {
   if (!existingWorkshop) {
     throw new AppError(StatusCodes.NOT_FOUND, "Workshop not found");
   }
-  return await WorkShop.findByIdAndDelete(id);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return await (existingWorkshop as any).softDelete();
 };
 
 const WorkshopService = {

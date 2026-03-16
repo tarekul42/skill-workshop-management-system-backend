@@ -1,4 +1,5 @@
 import { model, Schema } from "mongoose";
+import softDeletePlugin from "../../utils/softDeletePlugin";
 import { ICategory } from "./category.interface";
 
 const categorySchema = new Schema<ICategory>(
@@ -12,6 +13,8 @@ const categorySchema = new Schema<ICategory>(
     timestamps: true,
   },
 );
+
+categorySchema.plugin(softDeletePlugin);
 
 const Category = model<ICategory>("Category", categorySchema);
 
