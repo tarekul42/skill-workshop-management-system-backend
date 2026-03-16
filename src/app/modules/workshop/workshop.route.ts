@@ -1,4 +1,5 @@
 import express from "express";
+import multerUpload from "../../config/multer.config";
 import checkAuth from "../../middlewares/checkAuth";
 import validateRequest from "../../middlewares/validateRequest";
 import { adminCrudLimiter } from "../../utils/rateLimiter";
@@ -9,7 +10,6 @@ import {
   createWorkshopZodSchema,
   updateWorkshopZodSchema,
 } from "./workshop.validation";
-import multerUpload from "../../config/multer.config";
 
 const router = express.Router();
 

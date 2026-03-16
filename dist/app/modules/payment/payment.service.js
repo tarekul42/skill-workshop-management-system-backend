@@ -5,16 +5,16 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const http_status_codes_1 = require("http-status-codes");
 const mongoose_1 = require("mongoose");
+const cloudinary_config_1 = require("../../config/cloudinary.config");
 const AppError_1 = __importDefault(require("../../errorHelpers/AppError"));
+const invoice_1 = require("../../utils/invoice");
+const logger_1 = __importDefault(require("../../utils/logger"));
+const sendEmail_1 = __importDefault(require("../../utils/sendEmail"));
 const enrollment_interface_1 = require("../enrollment/enrollment.interface");
 const enrollment_model_1 = __importDefault(require("../enrollment/enrollment.model"));
 const sslCommerz_service_1 = __importDefault(require("../sslCommerz/sslCommerz.service"));
 const payment_interface_1 = require("./payment.interface");
 const payment_model_1 = __importDefault(require("./payment.model"));
-const invoice_1 = require("../../utils/invoice");
-const cloudinary_config_1 = require("../../config/cloudinary.config");
-const sendEmail_1 = __importDefault(require("../../utils/sendEmail"));
-const logger_1 = __importDefault(require("../../utils/logger"));
 const initPayment = async (enrollmentId) => {
     if (!enrollmentId || !mongoose_1.Types.ObjectId.isValid(enrollmentId)) {
         throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Invalid enrollment ID");
@@ -64,7 +64,10 @@ const successPayment = async (query, body) => {
     if (typeof val_id !== "string" || !val_id.trim()) {
         throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Invalid val_id");
     }
-    await sslCommerz_service_1.default.validatePayment({ val_id: val_id.trim(), tran_id: transactionId });
+    await sslCommerz_service_1.default.validatePayment({
+        val_id: val_id.trim(),
+        tran_id: transactionId,
+    });
     const session = await enrollment_model_1.default.startSession();
     session.startTransaction();
     try {

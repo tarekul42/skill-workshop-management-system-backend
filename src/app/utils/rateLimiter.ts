@@ -2,7 +2,12 @@ import { rateLimit } from "express-rate-limit";
 import { RedisStore } from "rate-limit-redis";
 import { redisClient } from "../config/redis.config";
 
-const createLimiter = (prefix: string, windowMs: number, max: number, message: object) => {
+const createLimiter = (
+  prefix: string,
+  windowMs: number,
+  max: number,
+  message: object,
+) => {
   return rateLimit({
     standardHeaders: true,
     legacyHeaders: false,
@@ -35,7 +40,8 @@ const authLimiter = createLimiter("rl:auth:", 15 * 60 * 1000, 10, {
 
 const strictLimiter = createLimiter("rl:strict:", 15 * 60 * 1000, 5, {
   status: 429,
-  message: "Too many attempts on this sensitive operation, please try again later.",
+  message:
+    "Too many attempts on this sensitive operation, please try again later.",
 });
 
 const adminCrudLimiter = createLimiter("rl:admin:", 15 * 60 * 1000, 30, {

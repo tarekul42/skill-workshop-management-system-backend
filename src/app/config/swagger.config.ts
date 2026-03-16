@@ -1,5 +1,5 @@
-import swaggerJsdoc from "swagger-jsdoc";
 import path from "path";
+import swaggerJsdoc from "swagger-jsdoc";
 import envVariables from "./env";
 
 // Use the runtime working directory as the project root.
@@ -75,7 +75,10 @@ export const swaggerOptions = {
               type: "string",
               enum: ["SUPER_ADMIN", "ADMIN", "INSTRUCTOR", "STUDENT"],
             },
-            isActive: { type: "string", enum: ["ACTIVE", "INACTIVE", "BLOCKED"] },
+            isActive: {
+              type: "string",
+              enum: ["ACTIVE", "INACTIVE", "BLOCKED"],
+            },
             isVerified: { type: "boolean" },
             createdAt: { type: "string", format: "date-time" },
           },

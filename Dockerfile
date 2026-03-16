@@ -12,7 +12,7 @@ WORKDIR /app
 
 # Set environment to production
 ENV NODE_ENV=production
-ENV NODE_OPTIONS=--max-old-space-size=384
+ENV NODE_OPTIONS=--max-old-space-size=1024
 
 COPY package.json bun.lock ./
 

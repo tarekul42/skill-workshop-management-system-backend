@@ -28,18 +28,18 @@ In today's digital-first economy, the ability to manage educational resources, f
 
 ## Technical Stack
 
-| Category | Technology |
-|----------|------------|
-| Runtime | Node.js v20+ |
-| Framework | Express.js |
-| Language | TypeScript |
-| Database | MongoDB (Mongoose) |
-| Cache | Redis |
+| Category       | Technology                              |
+| -------------- | --------------------------------------- |
+| Runtime        | Node.js v20+                            |
+| Framework      | Express.js                              |
+| Language       | TypeScript                              |
+| Database       | MongoDB (Mongoose)                      |
+| Cache          | Redis                                   |
 | Authentication | JWT, Passport.js (Local + Google OAuth) |
-| Validation | Zod |
-| File Storage | Cloudinary |
-| Email | Nodemailer |
-| Payment | SSLCommerz |
+| Validation     | Zod                                     |
+| File Storage   | Cloudinary                              |
+| Email          | Nodemailer                              |
+| Payment        | SSLCommerz                              |
 
 ### Architecture
 
@@ -106,12 +106,14 @@ src/
 ### Installation
 
 1. **Clone the repository**:
+
    ```bash
    git clone https://github.com/tarekul42/skill-workshop-management-system-backend
    cd skill-workshop-management-system-backend
    ```
 
 2. **Install dependencies**:
+
    ```bash
    bun install
    ```
@@ -122,11 +124,13 @@ src/
 ### Run
 
 **Development:**
+
 ```bash
 bun run dev
 ```
 
 **Production:**
+
 ```bash
 bun run build
 bun start
@@ -146,86 +150,95 @@ The API is fully documented using **Swagger / OpenAPI 3.0**. You can explore the
 ## API Endpoints
 
 ### Authentication (`/api/v1/auth`)
-| Method | Endpoint | Description | Access |
-|--------|----------|-------------|--------|
-| POST | `/auth/login` | Login with credentials | Public |
-| POST | `/auth/refresh-token` | Get new access token | Public |
-| POST | `/auth/logout` | Logout user | Public |
-| POST | `/auth/change-password` | Change password | Auth |
-| POST | `/auth/set-password` | Set new password | Auth |
-| POST | `/auth/forgot-password` | Request password reset | Public |
-| POST | `/auth/reset-password` | Reset password | Auth |
-| GET | `/auth/google` | Google OAuth login | Public |
-| GET | `/auth/google/callback` | Google OAuth callback | Public |
+
+| Method | Endpoint                | Description            | Access |
+| ------ | ----------------------- | ---------------------- | ------ |
+| POST   | `/auth/login`           | Login with credentials | Public |
+| POST   | `/auth/refresh-token`   | Get new access token   | Public |
+| POST   | `/auth/logout`          | Logout user            | Public |
+| POST   | `/auth/change-password` | Change password        | Auth   |
+| POST   | `/auth/set-password`    | Set new password       | Auth   |
+| POST   | `/auth/forgot-password` | Request password reset | Public |
+| POST   | `/auth/reset-password`  | Reset password         | Auth   |
+| GET    | `/auth/google`          | Google OAuth login     | Public |
+| GET    | `/auth/google/callback` | Google OAuth callback  | Public |
 
 ### Users (`/api/v1/user`)
-| Method | Endpoint | Description | Access |
-|--------|----------|-------------|--------|
-| POST | `/user/register` | Register new user | Public |
-| GET | `/user/me` | Get current user profile | Auth |
-| GET | `/user/all-users` | Get all users | Admin |
-| GET | `/user/:id` | Get single user | Admin |
-| PATCH | `/user/:id` | Update user | Auth |
+
+| Method | Endpoint          | Description              | Access |
+| ------ | ----------------- | ------------------------ | ------ |
+| POST   | `/user/register`  | Register new user        | Public |
+| GET    | `/user/me`        | Get current user profile | Auth   |
+| GET    | `/user/all-users` | Get all users            | Admin  |
+| GET    | `/user/:id`       | Get single user          | Admin  |
+| PATCH  | `/user/:id`       | Update user              | Auth   |
 
 ### Workshops (`/api/v1/workshop`)
-| Method | Endpoint | Description | Access |
-|--------|----------|-------------|--------|
-| GET | `/workshop` | Get all workshops | Public |
-| GET | `/workshop/:slug` | Get single workshop | Public |
-| POST | `/workshop/create` | Create workshop | Admin |
-| PATCH | `/workshop/:id` | Update workshop | Admin |
-| DELETE | `/workshop/:id` | Delete workshop | Admin |
-| GET | `/workshop/levels` | Get all levels | Public |
-| POST | `/workshop/create-level` | Create level | Admin |
+
+| Method | Endpoint                 | Description         | Access |
+| ------ | ------------------------ | ------------------- | ------ |
+| GET    | `/workshop`              | Get all workshops   | Public |
+| GET    | `/workshop/:slug`        | Get single workshop | Public |
+| POST   | `/workshop/create`       | Create workshop     | Admin  |
+| PATCH  | `/workshop/:id`          | Update workshop     | Admin  |
+| DELETE | `/workshop/:id`          | Delete workshop     | Admin  |
+| GET    | `/workshop/levels`       | Get all levels      | Public |
+| POST   | `/workshop/create-level` | Create level        | Admin  |
 
 ### Categories (`/api/v1/category`)
-| Method | Endpoint | Description | Access |
-|--------|----------|-------------|--------|
-| GET | `/category` | Get all categories | Public |
-| GET | `/category/:slug` | Get category by slug | Public |
-| POST | `/category/create` | Create category | Admin |
-| PATCH | `/category/:id` | Update category | Admin |
-| DELETE | `/category/:id` | Delete category | Admin |
+
+| Method | Endpoint           | Description          | Access |
+| ------ | ------------------ | -------------------- | ------ |
+| GET    | `/category`        | Get all categories   | Public |
+| GET    | `/category/:slug`  | Get category by slug | Public |
+| POST   | `/category/create` | Create category      | Admin  |
+| PATCH  | `/category/:id`    | Update category      | Admin  |
+| DELETE | `/category/:id`    | Delete category      | Admin  |
 
 ### Enrollments (`/api/v1/enrollment`)
-| Method | Endpoint | Description | Access |
-|--------|----------|-------------|--------|
-| GET | `/enrollment` | Get user enrollments | Auth |
-| GET | `/enrollment/:id` | Get enrollment details | Auth |
-| POST | `/enrollment/create` | Create enrollment | Auth |
-| DELETE | `/enrollment/:id` | Cancel enrollment | Auth |
+
+| Method | Endpoint             | Description            | Access |
+| ------ | -------------------- | ---------------------- | ------ |
+| GET    | `/enrollment`        | Get user enrollments   | Auth   |
+| GET    | `/enrollment/:id`    | Get enrollment details | Auth   |
+| POST   | `/enrollment/create` | Create enrollment      | Auth   |
+| DELETE | `/enrollment/:id`    | Cancel enrollment      | Auth   |
 
 ### Payments (`/api/v1/payment`)
-| Method | Endpoint | Description | Access |
-|--------|----------|-------------|--------|
-| POST | `/payment/init-payment/:enrollmentId` | Initialize payment | Auth |
-| POST | `/payment/success` | Payment success callback | Public |
-| POST | `/payment/fail` | Payment fail callback | Public |
-| POST | `/payment/cancel` | Payment cancel callback | Public |
-| GET | `/payment/invoice/:paymentId` | Download invoice | Auth |
-| POST | `/payment/validate-payment` | Validate payment | Auth |
+
+| Method | Endpoint                              | Description              | Access |
+| ------ | ------------------------------------- | ------------------------ | ------ |
+| POST   | `/payment/init-payment/:enrollmentId` | Initialize payment       | Auth   |
+| POST   | `/payment/success`                    | Payment success callback | Public |
+| POST   | `/payment/fail`                       | Payment fail callback    | Public |
+| POST   | `/payment/cancel`                     | Payment cancel callback  | Public |
+| GET    | `/payment/invoice/:paymentId`         | Download invoice         | Auth   |
+| POST   | `/payment/validate-payment`           | Validate payment         | Auth   |
 
 ### OTP (`/api/v1/otp`)
-| Method | Endpoint | Description | Access |
-|--------|----------|-------------|--------|
-| POST | `/otp/send` | Send OTP to email | Public |
-| POST | `/otp/verify` | Verify OTP | Public |
+
+| Method | Endpoint      | Description       | Access |
+| ------ | ------------- | ----------------- | ------ |
+| POST   | `/otp/send`   | Send OTP to email | Public |
+| POST   | `/otp/verify` | Verify OTP        | Public |
 
 ### Stats (`/api/v1/stats`)
-| Method | Endpoint | Description | Access |
-|--------|----------|-------------|--------|
-| GET | `/stats/enrollment` | Enrollment statistics | Admin |
-| GET | `/stats/payment` | Payment statistics | Admin |
-| GET | `/stats/users` | User statistics | Admin |
-| GET | `/stats/workshops` | Workshop statistics | Admin |
+
+| Method | Endpoint            | Description           | Access |
+| ------ | ------------------- | --------------------- | ------ |
+| GET    | `/stats/enrollment` | Enrollment statistics | Admin  |
+| GET    | `/stats/payment`    | Payment statistics    | Admin  |
+| GET    | `/stats/users`      | User statistics       | Admin  |
+| GET    | `/stats/workshops`  | Workshop statistics   | Admin  |
 
 ### Health (`/api/v1/health`)
-| Method | Endpoint | Description | Access |
-|--------|----------|-------------|--------|
-| GET | `/health/` | Root health endpoint | Public |
-| GET | `/health/ping` | Simple health ping | Public |
-| GET | `/health/check-version`| Get API version | Public |
-| GET | `/health/health-check` | Detailed health status | Public |
+
+| Method | Endpoint                | Description            | Access |
+| ------ | ----------------------- | ---------------------- | ------ |
+| GET    | `/health/`              | Root health endpoint   | Public |
+| GET    | `/health/ping`          | Simple health ping     | Public |
+| GET    | `/health/check-version` | Get API version        | Public |
+| GET    | `/health/health-check`  | Detailed health status | Public |
 
 ---
 
@@ -237,8 +250,8 @@ The system implements multiple layers of security to protect data and ensuring s
 
 - **CSRF Protection**: Prevents cross-site request forgery using `csrf-csrf` (Double CSRF pattern).
 - **Rate Limiting**: Protects against brute-force and DDoS attacks via `express-rate-limit` with Redis storage.
-    - **General Limiter**: 60 requests per minute.
-    - **Auth Limiter**: 10 attempts per 15 minutes for login/refresh.
+  - **General Limiter**: 60 requests per minute.
+  - **Auth Limiter**: 10 attempts per 15 minutes for login/refresh.
 - **Role-Based Access Control (RBAC)**: Strict permission checks for `STUDENT`, `ADMIN`, and `SUPER_ADMIN`.
 - **Input Sanitization**: Uses `express-mongo-sanitize` to prevent NoSQL injection.
 - **Secure Headers**: Implemented via `helmet` to set various HTTP headers.
@@ -251,10 +264,10 @@ This project requires both a document database and a key-value store:
 
 - **MongoDB**: Used for primary data persistence (Workshops, Users, Enrollments).
 - **Redis**: Used for high-speed operations:
-    - **Session Management**: Storing user sessions.
-    - **OTP Storage**: Temporary storage for verification codes.
-    - **Rate Limiting**: Tracking request counts across server instances.
-    - **Caching**: Performance optimization for workshop listings.
+  - **Session Management**: Storing user sessions.
+  - **OTP Storage**: Temporary storage for verification codes.
+  - **Rate Limiting**: Tracking request counts across server instances.
+  - **Caching**: Performance optimization for workshop listings.
 
 ---
 

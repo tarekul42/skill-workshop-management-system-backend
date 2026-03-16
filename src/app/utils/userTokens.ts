@@ -1,13 +1,14 @@
+import crypto from "crypto";
 import { StatusCodes } from "http-status-codes";
 import envVariables from "../config/env";
+import { redisClient } from "../config/redis.config";
 import AppError from "../errorHelpers/AppError";
 import { IsActive, IUser } from "../modules/user/user.interface";
 import User from "../modules/user/user.model";
 import { generateToken, verifyToken } from "./jwt";
-import { redisClient } from "../config/redis.config";
-import crypto from "crypto";
 
-const hashToken = (token: string) => crypto.createHash("sha256").update(token).digest("hex");
+const hashToken = (token: string) =>
+  crypto.createHash("sha256").update(token).digest("hex");
 
 const createUserTokens = async (user: Partial<IUser>) => {
   const jwtPayload = {
@@ -49,7 +50,10 @@ const createNewAccessToken = async (refreshToken: string) => {
   const storedHashedToken = await redisClient.get(`refresh_token:${userId}`);
 
   if (!storedHashedToken || storedHashedToken !== hashToken(refreshToken)) {
-    throw new AppError(StatusCodes.UNAUTHORIZED, "Invalid or expired refresh token");
+    throw new AppError(
+      StatusCodes.UNAUTHORIZED,
+      "Invalid or expired refresh token",
+    );
   }
 
   await redisClient.del(`refresh_token:${userId}`);

@@ -7,8 +7,8 @@ const axios_1 = __importDefault(require("axios"));
 const http_status_codes_1 = require("http-status-codes");
 const env_1 = __importDefault(require("../../config/env"));
 const AppError_1 = __importDefault(require("../../errorHelpers/AppError"));
-const payment_model_1 = __importDefault(require("../payment/payment.model"));
 const logger_1 = __importDefault(require("../../utils/logger"));
+const payment_model_1 = __importDefault(require("../payment/payment.model"));
 const sslPaymentInit = async (payload) => {
     try {
         const data = {

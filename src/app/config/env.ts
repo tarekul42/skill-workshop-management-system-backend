@@ -19,9 +19,9 @@ interface IEnvConfig {
   EXPRESS_SESSION_SECRET: string;
   FRONTEND_URL: string;
   BACKEND_URL: {
-    BACKEND_DEV_URL: string,
-    BACKEND_PROD_URL: string,
-  },
+    BACKEND_DEV_URL: string;
+    BACKEND_PROD_URL: string;
+  };
   SSL: {
     SSL_STORE_ID: string;
     SSL_STORE_PASS: string;

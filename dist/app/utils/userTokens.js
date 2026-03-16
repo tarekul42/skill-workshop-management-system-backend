@@ -4,14 +4,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.createUserTokens = exports.createNewAccessToken = void 0;
+const crypto_1 = __importDefault(require("crypto"));
 const http_status_codes_1 = require("http-status-codes");
 const env_1 = __importDefault(require("../config/env"));
+const redis_config_1 = require("../config/redis.config");
 const AppError_1 = __importDefault(require("../errorHelpers/AppError"));
 const user_interface_1 = require("../modules/user/user.interface");
 const user_model_1 = __importDefault(require("../modules/user/user.model"));
 const jwt_1 = require("./jwt");
-const redis_config_1 = require("../config/redis.config");
-const crypto_1 = __importDefault(require("crypto"));
 const hashToken = (token) => crypto_1.default.createHash("sha256").update(token).digest("hex");
 const createUserTokens = async (user) => {
     const jwtPayload = {

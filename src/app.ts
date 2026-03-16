@@ -1,27 +1,27 @@
+import { RedisStore } from "connect-redis";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import express, { Request, Response } from "express";
 import expressSession from "express-session";
 import helmet from "helmet";
 import hpp from "hpp";
-import mongoSanitize from "./app/middlewares/mongoSanitize";
 import morgan from "morgan";
 import passport from "passport";
-import envVariables from "./app/config/env";
-import "./app/config/passport";
+import swaggerUi from "swagger-ui-express";
 import {
   doubleCsrfProtection,
   generateCsrfToken,
 } from "./app/config/csrf.config";
-import globalErrorHandler from "./app/middlewares/globalErrorHandler";
-import notFound from "./app/middlewares/notFound";
-import router from "./app/route";
-import { authLimiter, generalLimiter } from "./app/utils/rateLimiter";
-import logger from "./app/utils/logger";
-import { RedisStore } from "connect-redis";
+import envVariables from "./app/config/env";
+import "./app/config/passport";
 import { redisClient } from "./app/config/redis.config";
 import { swaggerSpec } from "./app/config/swagger.config";
-import swaggerUi from "swagger-ui-express";
+import globalErrorHandler from "./app/middlewares/globalErrorHandler";
+import mongoSanitize from "./app/middlewares/mongoSanitize";
+import notFound from "./app/middlewares/notFound";
+import router from "./app/route";
+import logger from "./app/utils/logger";
+import { authLimiter, generalLimiter } from "./app/utils/rateLimiter";
 
 const app = express();
 
@@ -100,7 +100,6 @@ app.use(passport.initialize());
 
 // ──── CSRF Protection ────
 app.use(doubleCsrfProtection);
-
 
 // ──── Swagger Documentation ────
 app.get("/api-docs.json", (_req, res) => {

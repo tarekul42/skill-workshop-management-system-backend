@@ -3,8 +3,8 @@ import { StatusCodes } from "http-status-codes";
 import envVariables from "../../config/env";
 import catchAsync from "../../utils/catchAsync";
 import sendResponse from "../../utils/sendResponse";
-import PaymentService from "./payment.service";
 import SSLService from "../sslCommerz/sslCommerz.service";
+import PaymentService from "./payment.service";
 
 const initPayment = catchAsync(async (req: Request, res: Response) => {
   const enrollmentId = req.params.enrollmentId;
@@ -25,7 +25,7 @@ const successPayment = catchAsync(async (req: Request, res: Response) => {
 
   const result = await PaymentService.successPayment(
     query as Record<string, string>,
-    body as Record<string, string>
+    body as Record<string, string>,
   );
 
   if (result.success) {

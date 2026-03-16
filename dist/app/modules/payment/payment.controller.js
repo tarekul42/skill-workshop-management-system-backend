@@ -7,8 +7,8 @@ const http_status_codes_1 = require("http-status-codes");
 const env_1 = __importDefault(require("../../config/env"));
 const catchAsync_1 = __importDefault(require("../../utils/catchAsync"));
 const sendResponse_1 = __importDefault(require("../../utils/sendResponse"));
-const payment_service_1 = __importDefault(require("./payment.service"));
 const sslCommerz_service_1 = __importDefault(require("../sslCommerz/sslCommerz.service"));
+const payment_service_1 = __importDefault(require("./payment.service"));
 const initPayment = (0, catchAsync_1.default)(async (req, res) => {
     const enrollmentId = req.params.enrollmentId;
     const result = await payment_service_1.default.initPayment(enrollmentId);

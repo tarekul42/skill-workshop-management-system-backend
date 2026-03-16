@@ -1,10 +1,10 @@
 import { NextFunction, Request, Response, Router } from "express";
 import passport from "passport";
+import envVariables from "../../config/env";
 import checkAuth from "../../middlewares/checkAuth";
 import { authLimiter } from "../../utils/rateLimiter";
 import { UserRole } from "../user/user.interface";
 import AuthControllers from "./auth.controller";
-import envVariables from "../../config/env";
 
 const router = Router();
 
