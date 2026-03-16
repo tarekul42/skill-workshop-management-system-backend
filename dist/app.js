@@ -46,10 +46,16 @@ app.use((0, helmet_1.default)({
     contentSecurityPolicy: {
         directives: {
             defaultSrc: ["'self'"],
-            scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
-            styleSrc: ["'self'", "'unsafe-inline'"],
+            scriptSrc: [
+                "'self'",
+                "'unsafe-inline'",
+                "'unsafe-eval'",
+                "https://vercel.live",
+                "https://cdnjs.cloudflare.com",
+            ],
+            styleSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com"],
             imgSrc: ["'self'", "data:", "validator.swagger.io"],
-            connectSrc: ["'self'"],
+            connectSrc: ["'self'", "https://vercel.live"],
         },
     },
 }));
@@ -87,7 +93,13 @@ app.use(csrf_config_1.doubleCsrfProtection);
 app.get("/api-docs.json", (_req, res) => {
     res.json(swagger_config_1.swaggerSpec);
 });
-app.use("/api-docs", swagger_ui_express_1.default.serve, swagger_ui_express_1.default.setup(swagger_config_1.swaggerSpec));
+app.use("/api-docs", swagger_ui_express_1.default.serve, swagger_ui_express_1.default.setup(swagger_config_1.swaggerSpec, {
+    customCssUrl: "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.11.0/swagger-ui.min.css",
+    customJs: [
+        "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.11.0/swagger-ui-bundle.js",
+        "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.11.0/swagger-ui-standalone-preset.js",
+    ],
+}));
 // ──── CSRF Token Endpoint ────
 app.get("/api/v1/csrf-token", (req, res) => {
     const token = (0, csrf_config_1.generateCsrfToken)(req, res);
