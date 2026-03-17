@@ -1,5 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { Aggregate, Schema } from "mongoose";
+import { Aggregate, Query, Schema } from "mongoose";
 
 const softDeletePlugin = (schema: Schema) => {
   schema.add({
@@ -24,19 +23,23 @@ const softDeletePlugin = (schema: Schema) => {
     "countDocuments",
   ];
 
-  queryMethods.forEach((method: any) => {
-    schema.pre(method, function (this: any) {
+  queryMethods.forEach((method) => {
+    schema.pre(method as "find", function (this: Query<unknown, unknown>) {
       this.where({ isDeleted: { $ne: true } });
     });
   });
 
   // Handle Aggregate
-  schema.pre("aggregate" as any, function (this: Aggregate<any>) {
+  schema.pre("aggregate", function (this: Aggregate<unknown[]>) {
     this.pipeline().unshift({ $match: { isDeleted: { $ne: true } } });
   });
 
   // Add a softDelete method to the schema
-  schema.methods.softDelete = async function (this: any) {
+  schema.methods.softDelete = async function (
+    this: Record<string, unknown> & {
+      save: () => Promise<unknown>;
+    },
+  ) {
     this.isDeleted = true;
     this.deletedAt = new Date();
     return this.save();

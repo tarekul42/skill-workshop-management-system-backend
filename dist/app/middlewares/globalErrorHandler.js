@@ -4,6 +4,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const http_status_codes_1 = require("http-status-codes");
+const mongoose_1 = __importDefault(require("mongoose"));
+const zod_1 = require("zod");
 const env_1 = __importDefault(require("../config/env"));
 const AppError_1 = __importDefault(require("../errorHelpers/AppError"));
 const handleCastError_1 = __importDefault(require("../helpers/handleCastError"));
@@ -11,28 +13,38 @@ const handleDuplicateError_1 = __importDefault(require("../helpers/handleDuplica
 const handleValidationError_1 = __importDefault(require("../helpers/handleValidationError"));
 const handleZodError_1 = __importDefault(require("../helpers/handleZodError"));
 const logger_1 = __importDefault(require("../utils/logger"));
-const globalErrorHandler = (
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-err, req, res, 
+const globalErrorHandler = (err, req, res, 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 next) => {
     logger_1.default.error(err, "Global error caught");
-    // Note: Image cleanup on error is handled at the route/controller level.
     let statusCode = http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR;
     let message = "Something went wrong!!!";
-    if (err instanceof Error) {
-        message = `Something went wrong!!! ${err.message}`;
-    }
     let errorSources = [];
     if (err instanceof AppError_1.default) {
         statusCode = err.statusCode;
         message = err.message;
     }
-    else if (err && typeof err === "object") {
+    else if (err instanceof zod_1.ZodError) {
+        const simplifiedError = (0, handleZodError_1.default)(err);
+        statusCode = simplifiedError.statusCode;
+        message = simplifiedError.message;
+        errorSources = simplifiedError.errorSources;
+    }
+    else if (err instanceof mongoose_1.default.Error.CastError) {
+        const simplifiedError = (0, handleCastError_1.default)(err);
+        statusCode = simplifiedError.statusCode;
+        message = simplifiedError.message;
+    }
+    else if (err instanceof mongoose_1.default.Error.ValidationError) {
+        const simplifiedError = (0, handleValidationError_1.default)(err);
+        statusCode = simplifiedError.statusCode;
+        message = simplifiedError.message;
+        errorSources = simplifiedError.errorSources;
+    }
+    else if (err instanceof Error) {
         const errorObj = err;
         const errName = errorObj.name || "";
         const errMessage = errorObj.message || "";
-        // Multer or custom file type errors should be 400
         if (errName === "MulterError" ||
             errMessage.includes("Invalid file type") ||
             errMessage.includes("Unexpected field") ||
@@ -49,31 +61,9 @@ next) => {
             statusCode = simplifiedError.statusCode;
             message = simplifiedError.message;
         }
-        else if (errName === "CastError") {
-            const simplifiedError = (0, handleCastError_1.default)(err);
-            statusCode = simplifiedError.statusCode;
-            message = simplifiedError.message;
-        }
-        else if (errName === "ZodError") {
-            const simplifiedError = (0, handleZodError_1.default)(err);
-            statusCode = simplifiedError.statusCode;
-            message = simplifiedError.message;
-            errorSources = simplifiedError.errorSources;
-        }
-        else if (errName === "ValidationError") {
-            const simplifiedError = (0, handleValidationError_1.default)(err);
-            statusCode = simplifiedError.statusCode;
-            message = simplifiedError.message;
-            errorSources = simplifiedError.errorSources;
-        }
         else {
-            statusCode = http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR;
-            message = errMessage || "Something went wrong!!!";
+            message = err.message || "Something went wrong!!!";
         }
-    }
-    else if (err instanceof Error) {
-        statusCode = http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR;
-        message = err.message;
     }
     const responseBody = {
         success: false,

@@ -162,8 +162,9 @@ app.get("/metrics", async (_req, res) => {
   try {
     res.set("Content-Type", register.contentType);
     res.end(await register.metrics());
-  } catch (ex) {
-    res.status(500).end(ex);
+  } catch (ex: unknown) {
+    logger.error(ex, "Error while collecting metrics");
+    res.status(500).end("Internal server error");
   }
 });
 

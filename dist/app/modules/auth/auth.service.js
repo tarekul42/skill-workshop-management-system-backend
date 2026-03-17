@@ -102,17 +102,10 @@ const forgotPassword = async (email) => {
         },
     });
 };
-const resetPassword = async (oldPassword, newPassword, decodedToken) => {
+const resetPassword = async (newPassword, decodedToken) => {
     const user = await user_model_1.default.findById(decodedToken.userId);
     if (!user) {
         throw new AppError_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "User not found");
-    }
-    if (oldPassword === newPassword) {
-        throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "New password cannot be the same as the old password");
-    }
-    const isOldPasswordMatched = await bcryptjs_1.default.compare(oldPassword, user.password);
-    if (!isOldPasswordMatched) {
-        throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Old password does not match");
     }
     user.password = await bcryptjs_1.default.hash(newPassword, Number(env_1.default.BCRYPT_SALT_ROUND));
     await user.save();

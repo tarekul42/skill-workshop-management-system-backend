@@ -39,7 +39,9 @@ app.use((req, res, next) => {
     const start = process.hrtime();
     res.on("finish", () => {
         const durationInSeconds = process.hrtime(start)[0] + process.hrtime(start)[1] / 1e9;
-        const route = req.route ? req.route.path : req.path;
+        // Use req.route.path if available (matched express route)
+        // Otherwise use a generic label to prevent cardinality explosion DoS
+        const route = req.route ? req.route.path : "(unmatched)";
         metrics_1.httpRequestDurationMicroseconds.observe({
             method: req.method,
             route,
@@ -129,7 +131,8 @@ app.get("/metrics", async (_req, res) => {
         res.end(await metrics_1.register.metrics());
     }
     catch (ex) {
-        res.status(500).end(ex);
+        logger_1.default.error(ex, "Error while collecting metrics");
+        res.status(500).end("Internal server error");
     }
 });
 // ──── Root Route ────

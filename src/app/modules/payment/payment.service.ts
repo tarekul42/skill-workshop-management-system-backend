@@ -1,24 +1,21 @@
 import { StatusCodes } from "http-status-codes";
-import { Types } from "mongoose";
 import AppError from "../../errorHelpers/AppError";
 import { mailQueue } from "../../jobs/mail.queue";
 import { ENROLLMENT_STATUS } from "../enrollment/enrollment.interface";
-import Enrollment from "../enrollment/enrollment.model";
 import { ISSLCommerz } from "../sslCommerz/sslCommerz.interface";
 import SSLService from "../sslCommerz/sslCommerz.service";
 import { IUser } from "../user/user.interface";
 import { IWorkshop } from "../workshop/workshop.interface";
 import { PAYMENT_STATUS } from "./payment.interface";
-import Payment from "./payment.model";
+import PaymentRepository from "./payment.repository";
 
 const initPayment = async (enrollmentId: string) => {
-  if (!enrollmentId || !Types.ObjectId.isValid(enrollmentId)) {
+  if (!enrollmentId) {
     throw new AppError(StatusCodes.BAD_REQUEST, "Invalid enrollment ID");
   }
 
-  const payment = await Payment.findOne({
-    enrollment: { $eq: new Types.ObjectId(enrollmentId) },
-  });
+  const payment =
+    await PaymentRepository.findPaymentByEnrollmentId(enrollmentId);
 
   if (!payment) {
     throw new AppError(StatusCodes.NOT_FOUND, "Payment not found");
@@ -28,9 +25,8 @@ const initPayment = async (enrollmentId: string) => {
     throw new AppError(StatusCodes.BAD_REQUEST, "Payment already completed");
   }
 
-  const enrollment = await Enrollment.findOne({
-    _id: { $eq: new Types.ObjectId(String(payment.enrollment)) },
-  }).populate("user", "name email phone address");
+  const enrollment =
+    await PaymentRepository.findEnrollmentWithUser(enrollmentId);
 
   if (!enrollment) {
     throw new AppError(StatusCodes.NOT_FOUND, "Enrollment not found");
@@ -74,46 +70,41 @@ const successPayment = async (
   query: Record<string, string>,
   body: Record<string, string>,
 ) => {
-  const rawTransactionId = query.transactionId;
+  const transactionId = (query.transactionId || "").trim();
 
-  if (typeof rawTransactionId !== "string" || !rawTransactionId.trim()) {
+  if (!transactionId) {
     throw new AppError(StatusCodes.BAD_REQUEST, "Invalid transactionId");
   }
 
-  const transactionId = rawTransactionId.trim();
+  const val_id = (body.val_id || "").trim();
 
-  const val_id = body.val_id;
-
-  if (typeof val_id !== "string" || !val_id.trim()) {
+  if (!val_id) {
     throw new AppError(StatusCodes.BAD_REQUEST, "Invalid val_id");
   }
 
   await SSLService.validatePayment({
-    val_id: val_id.trim(),
+    val_id,
     tran_id: transactionId,
   });
 
-  const session = await Enrollment.startSession();
-  session.startTransaction();
+  const session = await PaymentRepository.startTransaction();
 
   try {
-    const updatedPayment = await Payment.findOneAndUpdate(
-      { transactionId: { $eq: transactionId } },
-      { status: PAYMENT_STATUS.PAID },
-      { new: true, runValidators: true, session },
+    const updatedPayment = await PaymentRepository.updatePaymentStatus(
+      transactionId,
+      PAYMENT_STATUS.PAID,
+      session,
     );
 
     if (!updatedPayment) {
       throw new AppError(StatusCodes.NOT_FOUND, "Payment not found");
     }
 
-    const updatedEnrollment = await Enrollment.findOneAndUpdate(
-      { _id: { $eq: new Types.ObjectId(String(updatedPayment.enrollment)) } },
-      { status: ENROLLMENT_STATUS.COMPLETE },
-      { new: true, runValidators: true, session },
-    )
-      .populate("workshop", "title")
-      .populate("user", "name email");
+    const updatedEnrollment = await PaymentRepository.updateEnrollmentStatus(
+      String(updatedPayment.enrollment),
+      ENROLLMENT_STATUS.COMPLETE,
+      session,
+    );
 
     if (!updatedEnrollment) {
       throw new AppError(StatusCodes.NOT_FOUND, "Enrollment not found");
@@ -122,8 +113,6 @@ const successPayment = async (
     await session.commitTransaction();
     session.endSession();
 
-    // Post-transaction processing: Invoice generation, Cloudinary upload, and Email notification
-    // Offloaded to BullMQ for better resilience
     await mailQueue.add("invoice", {
       type: "invoice",
       payload: {
@@ -153,32 +142,29 @@ const successPayment = async (
 };
 
 const failPayment = async (query: Record<string, string>) => {
-  const rawTransactionId = query.transactionId;
+  const transactionId = (query.transactionId || "").trim();
 
-  if (typeof rawTransactionId !== "string" || !rawTransactionId.trim()) {
+  if (!transactionId) {
     throw new AppError(StatusCodes.BAD_REQUEST, "Invalid transactionId");
   }
 
-  const transactionId = rawTransactionId.trim();
-
-  const session = await Enrollment.startSession();
-  session.startTransaction();
+  const session = await PaymentRepository.startTransaction();
 
   try {
-    const updatedPayment = await Payment.findOneAndUpdate(
-      { transactionId: { $eq: transactionId } },
-      { status: PAYMENT_STATUS.FAILED },
-      { new: true, runValidators: true, session },
+    const updatedPayment = await PaymentRepository.updatePaymentStatus(
+      transactionId,
+      PAYMENT_STATUS.FAILED,
+      session,
     );
 
     if (!updatedPayment) {
       throw new AppError(StatusCodes.NOT_FOUND, "Payment not found");
     }
 
-    await Enrollment.findByIdAndUpdate(
-      updatedPayment.enrollment,
-      { status: ENROLLMENT_STATUS.FAILED },
-      { runValidators: true, session },
+    await PaymentRepository.updateEnrollmentStatus(
+      String(updatedPayment.enrollment),
+      ENROLLMENT_STATUS.FAILED,
+      session,
     );
 
     await session.commitTransaction();
@@ -196,32 +182,29 @@ const failPayment = async (query: Record<string, string>) => {
 };
 
 const cancelPayment = async (query: Record<string, string>) => {
-  const rawTransactionId = query.transactionId;
+  const transactionId = (query.transactionId || "").trim();
 
-  if (typeof rawTransactionId !== "string" || !rawTransactionId.trim()) {
+  if (!transactionId) {
     throw new AppError(StatusCodes.BAD_REQUEST, "Invalid transactionId");
   }
 
-  const transactionId = rawTransactionId.trim();
-
-  const session = await Enrollment.startSession();
-  session.startTransaction();
+  const session = await PaymentRepository.startTransaction();
 
   try {
-    const updatedPayment = await Payment.findOneAndUpdate(
-      { transactionId: { $eq: transactionId } },
-      { status: PAYMENT_STATUS.CANCELLED },
-      { new: true, runValidators: true, session },
+    const updatedPayment = await PaymentRepository.updatePaymentStatus(
+      transactionId,
+      PAYMENT_STATUS.CANCELLED,
+      session,
     );
 
     if (!updatedPayment) {
       throw new AppError(StatusCodes.NOT_FOUND, "Payment not found");
     }
 
-    await Enrollment.findByIdAndUpdate(
-      updatedPayment.enrollment,
-      { status: ENROLLMENT_STATUS.CANCEL },
-      { runValidators: true, session },
+    await PaymentRepository.updateEnrollmentStatus(
+      String(updatedPayment.enrollment),
+      ENROLLMENT_STATUS.CANCEL,
+      session,
     );
 
     await session.commitTransaction();
@@ -239,11 +222,7 @@ const cancelPayment = async (query: Record<string, string>) => {
 };
 
 const getInvoiceDownloadUrl = async (paymentId: string) => {
-  if (!paymentId || !Types.ObjectId.isValid(paymentId)) {
-    throw new AppError(StatusCodes.BAD_REQUEST, "Invalid payment ID");
-  }
-
-  const payment = await Payment.findById(paymentId).select("invoiceUrl");
+  const payment = await PaymentRepository.findPaymentById(paymentId);
 
   if (!payment) {
     throw new AppError(StatusCodes.NOT_FOUND, "Payment not found");
