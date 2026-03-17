@@ -7,7 +7,6 @@ on:
 permissions:
   contents: read
 
-
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
@@ -26,18 +25,8 @@ jobs:
     - name: Run Linter
       run: bun lint
 
+    - name: Create .env file
+      run: echo "${{ secrets.ENV_FILE }}" > .env
+
     - name: Run Tests
       run: bun test
-      env:
-        NODE_ENV: test
-        PORT: 5000
-        DATABASE_URL: mongodb://localhost:27017/test
-        EXPRESS_SESSION_SECRET: some_very_long_random_secret_string_for_testing
-        FRONTEND_URL: http://localhost:3000
-        CLOUDINARY_CLOUD_NAME: dummy
-        CLOUDINARY_API_KEY: dummy
-        CLOUDINARY_API_SECRET: dummy
-        GOOGLE_CLIENT_ID: dummy
-        GOOGLE_CLIENT_SECRET: dummy
-        GOOGLE_CALLBACK_URL: http://localhost:5000/auth/google/callback
-        # Add other dummy env variables as needed for tests to run

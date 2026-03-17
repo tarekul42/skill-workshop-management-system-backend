@@ -6,8 +6,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.WorkShop = exports.Level = void 0;
 const mongoose_1 = require("mongoose");
 const logger_1 = __importDefault(require("../../utils/logger"));
-const softDeletePlugin_1 = __importDefault(require("../../utils/softDeletePlugin"));
 const slugify_1 = require("../../utils/slugify");
+const softDeletePlugin_1 = __importDefault(require("../../utils/softDeletePlugin"));
 const levelSchema = new mongoose_1.Schema({
     name: { type: String, required: true, unique: true },
 }, {
