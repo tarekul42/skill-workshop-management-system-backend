@@ -21,6 +21,7 @@ import notFound from "./app/middlewares/notFound";
 import requestLogger from "./app/middlewares/requestLogger";
 import router from "./app/route";
 import logger from "./app/utils/logger";
+import { httpRequestDurationMicroseconds, register } from "./app/utils/metrics";
 import { authLimiter, generalLimiter } from "./app/utils/rateLimiter";
 
 const app = express();
@@ -35,6 +36,24 @@ if (envVariables.EXPRESS_SESSION_SECRET.length < 32) {
 
 // ──── HTTP Request Logger ────
 app.use(requestLogger);
+
+// ──── Metrics Middleware ────
+app.use((req, res, next) => {
+  const start = process.hrtime();
+  res.on("finish", () => {
+    const durationInSeconds = process.hrtime(start)[0] + process.hrtime(start)[1] / 1e9;
+    const route = req.route ? req.route.path : req.path;
+    httpRequestDurationMicroseconds.observe(
+      {
+        method: req.method,
+        route,
+        status_code: res.statusCode,
+      },
+      durationInSeconds,
+    );
+  });
+  next();
+});
 
 // ──── Security Headers ────
 // contentSecurityPolicy is configured to allow swagger-ui-express assets
@@ -132,6 +151,16 @@ app.get("/api/v1/csrf-token", (req: Request, res: Response) => {
 // ──── API Routes ────
 app.use("/api/v1", generalLimiter, router);
 app.use("/auth", authLimiter);
+
+// ──── Metrics Endpoint ────
+app.get("/metrics", async (_req, res) => {
+  try {
+    res.set("Content-Type", register.contentType);
+    res.end(await register.metrics());
+  } catch (ex) {
+    res.status(500).end(ex);
+  }
+});
 
 // ──── Root Route ────
 app.get("/", (_req: Request, res: Response) => {
