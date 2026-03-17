@@ -1,6 +1,9 @@
 import { rateLimit } from "express-rate-limit";
+import type { NextFunction, Request, Response } from "express";
 import { RedisStore } from "rate-limit-redis";
 import { redisClient } from "../config/redis.config";
+
+import envVariables from "../config/env";
 
 const createLimiter = (
   prefix: string,
@@ -8,6 +11,10 @@ const createLimiter = (
   max: number,
   message: object,
 ) => {
+  if (envVariables.NODE_ENV === "test") {
+    return (req: Request, res: Response, next: NextFunction) => next();
+  }
+
   return rateLimit({
     standardHeaders: true,
     legacyHeaders: false,
