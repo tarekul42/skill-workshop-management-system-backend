@@ -158,11 +158,10 @@ const forgotPassword = catchAsync(async (req: Request, res: Response) => {
 });
 
 const resetPassword = catchAsync(async (req: Request, res: Response) => {
-  const oldPassword = req.body.oldPassword;
   const newPassword = req.body.newPassword;
   const decodedToken = req.user as JwtPayload;
 
-  await AuthServices.resetPassword(oldPassword, newPassword, decodedToken);
+  await AuthServices.resetPassword(newPassword, decodedToken);
 
   sendResponse(res, {
     statusCode: StatusCodes.OK,

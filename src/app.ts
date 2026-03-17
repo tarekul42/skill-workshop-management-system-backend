@@ -41,8 +41,13 @@ app.use(requestLogger);
 app.use((req, res, next) => {
   const start = process.hrtime();
   res.on("finish", () => {
-    const durationInSeconds = process.hrtime(start)[0] + process.hrtime(start)[1] / 1e9;
-    const route = req.route ? req.route.path : req.path;
+    const durationInSeconds =
+      process.hrtime(start)[0] + process.hrtime(start)[1] / 1e9;
+
+    // Use req.route.path if available (matched express route)
+    // Otherwise use a generic label to prevent cardinality explosion DoS
+    const route = req.route ? req.route.path : "(unmatched)";
+
     httpRequestDurationMicroseconds.observe(
       {
         method: req.method,

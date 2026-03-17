@@ -152,7 +152,6 @@ const forgotPassword = async (email: string) => {
 };
 
 const resetPassword = async (
-  oldPassword: string,
   newPassword: string,
   decodedToken: JwtPayload,
 ) => {
@@ -160,22 +159,6 @@ const resetPassword = async (
 
   if (!user) {
     throw new AppError(StatusCodes.NOT_FOUND, "User not found");
-  }
-
-  if (oldPassword === newPassword) {
-    throw new AppError(
-      StatusCodes.BAD_REQUEST,
-      "New password cannot be the same as the old password",
-    );
-  }
-
-  const isOldPasswordMatched = await bcrypt.compare(
-    oldPassword,
-    user.password as string,
-  );
-
-  if (!isOldPasswordMatched) {
-    throw new AppError(StatusCodes.BAD_REQUEST, "Old password does not match");
   }
 
   user.password = await bcrypt.hash(
