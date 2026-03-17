@@ -21,7 +21,11 @@ import notFound from "./app/middlewares/notFound";
 import requestLogger from "./app/middlewares/requestLogger";
 import router from "./app/route";
 import logger from "./app/utils/logger";
-import { httpRequestDurationMicroseconds, register } from "./app/utils/metrics";
+import {
+  httpRequestDurationMicroseconds,
+  register,
+  updateSystemMetrics,
+} from "./app/utils/metrics";
 import { authLimiter, generalLimiter } from "./app/utils/rateLimiter";
 
 const app = express();
@@ -160,6 +164,7 @@ app.use("/auth", authLimiter);
 // ──── Metrics Endpoint ────
 app.get("/metrics", async (_req, res) => {
   try {
+    await updateSystemMetrics();
     res.set("Content-Type", register.contentType);
     res.end(await register.metrics());
   } catch (ex: unknown) {

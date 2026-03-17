@@ -127,6 +127,7 @@ app.use("/auth", rateLimiter_1.authLimiter);
 // ──── Metrics Endpoint ────
 app.get("/metrics", async (_req, res) => {
     try {
+        await (0, metrics_1.updateSystemMetrics)();
         res.set("Content-Type", metrics_1.register.contentType);
         res.end(await metrics_1.register.metrics());
     }
