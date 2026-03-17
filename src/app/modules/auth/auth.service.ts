@@ -151,10 +151,7 @@ const forgotPassword = async (email: string) => {
   });
 };
 
-const resetPassword = async (
-  newPassword: string,
-  decodedToken: JwtPayload,
-) => {
+const resetPassword = async (newPassword: string, decodedToken: JwtPayload) => {
   const user = await User.findById(decodedToken.userId);
 
   if (!user) {

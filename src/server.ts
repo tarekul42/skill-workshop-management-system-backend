@@ -40,7 +40,7 @@ async function gracefulShutdown(exitCode: number) {
     // Close worker first to stop processing new jobs
     await mailWorker.close();
     logger.info({ message: "BullMQ worker closed" });
-    
+
     // Close queue to release redis connection
     await mailQueue.close();
     logger.info({ message: "BullMQ queue closed" });

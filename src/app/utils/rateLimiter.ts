@@ -1,5 +1,5 @@
-import { rateLimit } from "express-rate-limit";
 import type { NextFunction, Request, Response } from "express";
+import { rateLimit } from "express-rate-limit";
 import { RedisStore } from "rate-limit-redis";
 import { redisClient } from "../config/redis.config";
 
@@ -41,10 +41,16 @@ const generalLimiter = createLimiter("rl:general:", 1 * 60 * 1000, 60, {
   message: "Too many requests, please try again later.",
 });
 
-const healthLimiter = createLimiter("rl:health:", 1 * 60 * 1000, 20, {
-  status: 429,
-  message: "Too many health check requests, please try again later.",
-}, false);
+const healthLimiter = createLimiter(
+  "rl:health:",
+  1 * 60 * 1000,
+  20,
+  {
+    status: 429,
+    message: "Too many health check requests, please try again later.",
+  },
+  false,
+);
 
 const authLimiter = createLimiter("rl:auth:", 15 * 60 * 1000, 10, {
   status: 429,
@@ -62,4 +68,10 @@ const adminCrudLimiter = createLimiter("rl:admin:", 15 * 60 * 1000, 30, {
   message: "Too many requests, please try again later.",
 });
 
-export { adminCrudLimiter, authLimiter, generalLimiter, healthLimiter, strictLimiter };
+export {
+  adminCrudLimiter,
+  authLimiter,
+  generalLimiter,
+  healthLimiter,
+  strictLimiter,
+};
