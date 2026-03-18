@@ -128,7 +128,7 @@ const updateCategory = async (id: string, payload: Partial<ICategory>) => {
     id,
     { $set: updateData },
     {
-      new: true,
+      returnDocument: "after",
       runValidators: true,
     },
   );

@@ -19,7 +19,7 @@ import globalErrorHandler from "./app/middlewares/globalErrorHandler";
 import mongoSanitize from "./app/middlewares/mongoSanitize";
 import notFound from "./app/middlewares/notFound";
 import requestLogger from "./app/middlewares/requestLogger";
-import router from "./app/route";
+import apiRouter from "./app/route/api";
 import { auditContextMiddleware } from "./app/utils/auditContext";
 import logger from "./app/utils/logger";
 import {
@@ -161,8 +161,14 @@ app.get("/api/v1/csrf-token", (req: Request, res: Response) => {
   res.status(200).json({ csrfToken: token });
 });
 
+// Versioned CSRF token endpoint for newer clients (and to support header-based versioning)
+app.get("/api/csrf-token", (req: Request, res: Response) => {
+  const token = generateCsrfToken(req, res);
+  res.status(200).json({ csrfToken: token });
+});
+
 // ──── API Routes ────
-app.use("/api/v1", generalLimiter, router);
+app.use("/api", generalLimiter, apiRouter);
 app.use("/auth", authLimiter);
 
 // ──── Metrics Endpoint ────

@@ -24,7 +24,7 @@ const updatePaymentStatus = async (
   return await Payment.findOneAndUpdate(
     { transactionId: { $eq: transactionId } },
     { status },
-    { new: true, runValidators: true, session },
+    { returnDocument: "after", runValidators: true, session },
   );
 };
 
@@ -36,7 +36,7 @@ const updateEnrollmentStatus = async (
   return await Enrollment.findOneAndUpdate(
     { _id: { $eq: new Types.ObjectId(enrollmentId) } },
     { status },
-    { new: true, runValidators: true, session },
+    { returnDocument: "after", runValidators: true, session },
   )
     .populate("workshop", "title")
     .populate("user", "name email");

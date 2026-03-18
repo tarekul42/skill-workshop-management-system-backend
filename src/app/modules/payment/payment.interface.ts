@@ -1,4 +1,5 @@
 import { Types } from "mongoose";
+import { IEnrollment } from "../enrollment/enrollment.interface";
 
 enum PAYMENT_STATUS {
   PAID = "PAID",
@@ -9,6 +10,7 @@ enum PAYMENT_STATUS {
 }
 
 interface IPayment {
+  _id?: Types.ObjectId;
   enrollment: Types.ObjectId;
   transactionId: string;
   amount: number;
@@ -17,4 +19,8 @@ interface IPayment {
   status: PAYMENT_STATUS;
 }
 
-export { IPayment, PAYMENT_STATUS };
+interface IPaymentPopulated extends Omit<IPayment, "enrollment"> {
+  enrollment: IEnrollment;
+}
+
+export { IPayment, PAYMENT_STATUS, IPaymentPopulated };

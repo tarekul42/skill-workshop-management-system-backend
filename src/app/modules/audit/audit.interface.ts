@@ -16,3 +16,14 @@ export interface IAuditLog {
   userAgent: string | null;
   createdAt?: Date;
 }
+
+/** Input type for the logAudit helper (performedBy can be a string ID) */
+export interface ICreateAuditLog {
+  action: AuditAction;
+  collectionName: string;
+  documentId: Types.ObjectId | string;
+  performedBy?: Types.ObjectId | string | null;
+  changes?: Record<string, unknown>;
+  ipAddress?: string | null;
+  userAgent?: string | null;
+}

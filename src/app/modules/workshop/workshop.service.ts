@@ -2,8 +2,11 @@ import { StatusCodes } from "http-status-codes";
 import { deleteImageFromCloudinary } from "../../config/cloudinary.config";
 import { redisClient } from "../../config/redis.config";
 import AppError from "../../errorHelpers/AppError";
+import auditLogger from "../../utils/auditLogger";
 import logger from "../../utils/logger";
 import QueryBuilder from "../../utils/queryBuilder";
+import { ISoftDelete } from "../../utils/softDeletePlugin";
+import { AuditAction } from "../audit/audit.interface";
 import {
   levelSearchableFields,
   workshopSearchableFields,
@@ -23,6 +26,12 @@ const createLevel = async (payload: ILevel) => {
   }
 
   const level = await Level.create(payload);
+
+  await auditLogger({
+    action: AuditAction.CREATE,
+    collectionName: "Level",
+    documentId: level._id,
+  });
 
   return level;
 };
@@ -88,7 +97,14 @@ const updateLevel = async (id: string, payload: Partial<ILevel>) => {
   }
 
   const updatedLevel = await Level.findByIdAndUpdate(id, updateData, {
-    new: true,
+    returnDocument: "after",
+  });
+
+  await auditLogger({
+    action: AuditAction.UPDATE,
+    collectionName: "Level",
+    documentId: id,
+    changes: updateData,
   });
 
   return updatedLevel;
@@ -101,8 +117,13 @@ const deleteLevel = async (id: string) => {
     throw new AppError(StatusCodes.NOT_FOUND, "Level not found");
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return await (existingLevel as any).softDelete();
+  await auditLogger({
+    action: AuditAction.DELETE,
+    collectionName: "Level",
+    documentId: existingLevel._id,
+  });
+
+  return await (existingLevel as unknown as ISoftDelete).softDelete();
 };
 
 const createWorkshop = async (payload: IWorkshop) => {
@@ -122,6 +143,12 @@ const createWorkshop = async (payload: IWorkshop) => {
   }
 
   const workshop = await WorkShop.create(payload);
+
+  await auditLogger({
+    action: AuditAction.CREATE,
+    collectionName: "WorkShop",
+    documentId: workshop._id,
+  });
 
   return workshop;
 };
@@ -276,74 +303,31 @@ const updateWorkshop = async (id: string, payload: Partial<IWorkshop>) => {
     safePayload.level = payload.level;
   }
 
-  if (
-    payload.images &&
-    payload.images.length > 0 &&
-    existingWorkshop.images &&
-    existingWorkshop.images.length > 0
-  ) {
-    payload.images = [...payload.images, ...existingWorkshop.images];
-  }
+  // Handle image updates (merging, deleting, and validating)
+  const { finalImages, imagesToDelete } = processWorkshopImages(
+    existingWorkshop.images || [],
+    payload.images,
+    payload.deleteImages,
+  );
 
-  if (
-    payload.deleteImages &&
-    payload.deleteImages.length > 0 &&
-    existingWorkshop.images &&
-    existingWorkshop.images.length > 0
-  ) {
-    const restDBImages = existingWorkshop.images.filter(
-      (imageUrl) => !payload.deleteImages?.includes(imageUrl),
-    );
-
-    const updatedPayloadImages = (payload.images || [])
-      .filter((imageUrl) => !payload.deleteImages?.includes(imageUrl))
-      .filter((imageUrl) => !restDBImages.includes(imageUrl));
-
-    payload.images = [...restDBImages, ...updatedPayloadImages];
-  }
-
-  if (payload.images) {
-    const isValidUrl = (url: string) => {
-      try {
-        new URL(url);
-        return true;
-      } catch {
-        return false;
-      }
-    };
-
-    const validImages = payload.images
-      .filter((img): img is string => typeof img === "string")
-      .filter((img) => isValidUrl(img));
-
-    if (validImages.length === 0 && payload.images.length > 0) {
-      throw new AppError(
-        StatusCodes.BAD_REQUEST,
-        "Invalid images format",
-        "Images must be valid URLs",
-      );
-    }
-
-    safePayload.images = validImages;
+  if (payload.images || payload.deleteImages) {
+    safePayload.images = finalImages;
   }
 
   const updatedWorkshop = await WorkShop.findByIdAndUpdate(id, safePayload, {
-    new: true,
+    returnDocument: "after",
   });
 
-  if (
-    payload.deleteImages &&
-    payload.deleteImages.length > 0 &&
-    existingWorkshop.images &&
-    existingWorkshop.images.length > 0
-  ) {
-    // Only delete images that actually belonged to this workshop
-    const validDeletions = payload.deleteImages.filter((url) =>
-      existingWorkshop.images?.includes(url),
-    );
+  await auditLogger({
+    action: AuditAction.UPDATE,
+    collectionName: "WorkShop",
+    documentId: id,
+    changes: safePayload,
+  });
 
+  if (imagesToDelete.length > 0) {
     const results = await Promise.allSettled(
-      validDeletions.map((url) => deleteImageFromCloudinary(url)),
+      imagesToDelete.map((url) => deleteImageFromCloudinary(url)),
     );
 
     const failures = results.filter((r) => r.status === "rejected");
@@ -357,14 +341,67 @@ const updateWorkshop = async (id: string, payload: Partial<IWorkshop>) => {
   return updatedWorkshop;
 };
 
+/**
+ * Helper to process workshop image updates.
+ * Handles merging new images, filtering deletions, and URL validation.
+ */
+const processWorkshopImages = (
+  existingImages: string[],
+  newImages?: string[],
+  deleteImages?: string[],
+) => {
+  const imagesToDelete: string[] = [];
+  let currentImages = [...existingImages];
+
+  // 1. Identify images to delete (must exist in current list)
+  if (deleteImages && deleteImages.length > 0) {
+    deleteImages.forEach((url) => {
+      if (currentImages.includes(url)) {
+        imagesToDelete.push(url);
+      }
+    });
+    currentImages = currentImages.filter(
+      (img) => !imagesToDelete.includes(img),
+    );
+  }
+
+  // 2. Add new images (avoid duplicates and validate URLs)
+  if (newImages && newImages.length > 0) {
+    const isValidUrl = (url: string) => {
+      try {
+        new URL(url);
+        return true;
+      } catch {
+        return false;
+      }
+    };
+
+    const validNewImages = newImages
+      .filter((img) => typeof img === "string" && isValidUrl(img))
+      .filter((img) => !currentImages.includes(img));
+
+    currentImages = [...currentImages, ...validNewImages];
+  }
+
+  return {
+    finalImages: currentImages,
+    imagesToDelete,
+  };
+};
+
 const deleteWorkshop = async (id: string) => {
   const existingWorkshop = await WorkShop.findById(id);
 
   if (!existingWorkshop) {
     throw new AppError(StatusCodes.NOT_FOUND, "Workshop not found");
   }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return await (existingWorkshop as any).softDelete();
+  await auditLogger({
+    action: AuditAction.DELETE,
+    collectionName: "WorkShop",
+    documentId: existingWorkshop._id,
+  });
+
+  return await (existingWorkshop as unknown as ISoftDelete).softDelete();
 };
 
 const WorkshopService = {

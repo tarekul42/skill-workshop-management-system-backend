@@ -98,7 +98,7 @@ const updateCategory = async (id, payload) => {
     }
     // 4. Update & existence check in one go
     const updatedCategory = await category_model_1.Category.findByIdAndUpdate(id, { $set: updateData }, {
-        new: true,
+        returnDocument: "after",
         runValidators: true,
     });
     if (!updatedCategory) {

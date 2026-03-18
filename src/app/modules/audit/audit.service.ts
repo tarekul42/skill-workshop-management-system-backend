@@ -13,6 +13,19 @@ interface AuditQueryParams {
   endDate?: string;
 }
 
+const toEqFilter = (value: unknown): { $eq: string } | undefined => {
+  if (value === undefined || value === null) {
+    return undefined;
+  }
+  if (typeof value !== "string") {
+    throw new AppError(
+      StatusCodes.BAD_REQUEST,
+      "Invalid query parameter type"
+    );
+  }
+  return { $eq: value };
+};
+
 const getAuditLogs = async (params: AuditQueryParams) => {
   const {
     page = 1,
@@ -27,18 +40,53 @@ const getAuditLogs = async (params: AuditQueryParams) => {
 
   const filter: Record<string, unknown> = {};
 
-  if (collectionName) filter.collectionName = collectionName;
-  if (action) filter.action = action;
-  if (performedBy) filter.performedBy = performedBy;
-  if (documentId) filter.documentId = documentId;
+  const collectionNameFilter = toEqFilter(collectionName);
+  if (collectionNameFilter) filter.collectionName = collectionNameFilter;
+
+  const actionFilter = toEqFilter(action);
+  if (actionFilter) filter.action = actionFilter;
+
+  const performedByFilter = toEqFilter(performedBy);
+  if (performedByFilter) filter.performedBy = performedByFilter;
+
+  const documentIdFilter = toEqFilter(documentId);
+  if (documentIdFilter) filter.documentId = documentIdFilter;
+
 
   if (startDate || endDate) {
-    filter.createdAt = {};
+    if (
+      (startDate && typeof startDate !== "string") ||
+      (endDate && typeof endDate !== "string")
+    ) {
+      throw new AppError(
+        StatusCodes.BAD_REQUEST,
+        "Invalid date range query parameter type"
+      );
+    }
+
+    const createdAtFilter: Record<string, unknown> = {};
     if (startDate) {
-      (filter.createdAt as Record<string, unknown>).$gte = new Date(startDate);
+      const gteDate = new Date(startDate);
+      if (Number.isNaN(gteDate.getTime())) {
+        throw new AppError(
+          StatusCodes.BAD_REQUEST,
+          "Invalid startDate query parameter"
+        );
+      }
+      createdAtFilter.$gte = gteDate;
     }
     if (endDate) {
-      (filter.createdAt as Record<string, unknown>).$lte = new Date(endDate);
+      const lteDate = new Date(endDate);
+      if (Number.isNaN(lteDate.getTime())) {
+        throw new AppError(
+          StatusCodes.BAD_REQUEST,
+          "Invalid endDate query parameter"
+        );
+      }
+      createdAtFilter.$lte = lteDate;
+    }
+    if (Object.keys(createdAtFilter).length > 0) {
+      filter.createdAt = createdAtFilter;
     }
   }
 

@@ -134,9 +134,14 @@ const auditPlugin = (schema: Schema) => {
           Object.assign(changes, update);
         }
 
-        // Determine documentId
+        // Determine documentId safely (handle { $eq: id } cases)
         const query = this.getQuery();
-        const docId = query._id ?? (result as Record<string, unknown>)?._id;
+        let docId = query._id;
+        if (docId && typeof docId === "object" && !Types.ObjectId.isValid(docId as unknown as string)) {
+          if (docId.$eq) docId = docId.$eq;
+        }
+        
+        docId = docId ?? (result as Record<string, unknown>)?._id;
         if (!docId) return;
 
         await writeAuditLog(

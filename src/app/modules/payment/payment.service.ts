@@ -1,11 +1,12 @@
 import { StatusCodes } from "http-status-codes";
 import AppError from "../../errorHelpers/AppError";
 import { mailQueue } from "../../jobs/mail.queue";
-import { ENROLLMENT_STATUS } from "../enrollment/enrollment.interface";
+import {
+  ENROLLMENT_STATUS,
+  IEnrollmentPopulated,
+} from "../enrollment/enrollment.interface";
 import { ISSLCommerz } from "../sslCommerz/sslCommerz.interface";
 import SSLService from "../sslCommerz/sslCommerz.service";
-import { IUser } from "../user/user.interface";
-import { IWorkshop } from "../workshop/workshop.interface";
 import { PAYMENT_STATUS } from "./payment.interface";
 import PaymentRepository from "./payment.repository";
 
@@ -36,12 +37,8 @@ const initPayment = async (enrollmentId: string) => {
     throw new AppError(StatusCodes.BAD_REQUEST, "Enrollment is not pending");
   }
 
-  const user = enrollment.user as unknown as {
-    address: string;
-    email: string;
-    phone: string;
-    name: string;
-  };
+  const populatedEnrollment = enrollment as unknown as IEnrollmentPopulated;
+  const user = populatedEnrollment.user;
 
   if (!user?.address || !user?.phone) {
     throw new AppError(
@@ -110,21 +107,23 @@ const successPayment = async (
       throw new AppError(StatusCodes.NOT_FOUND, "Enrollment not found");
     }
 
+    const populatedEnrollment =
+      updatedEnrollment as unknown as IEnrollmentPopulated;
+
     await session.commitTransaction();
     session.endSession();
 
     await mailQueue.add("invoice", {
       type: "invoice",
       payload: {
-        to: (updatedEnrollment.user as unknown as IUser).email,
+        to: populatedEnrollment.user.email,
         transactionId: updatedPayment.transactionId,
-        enrollmentDate: updatedEnrollment.createdAt as Date,
-        userName: (updatedEnrollment.user as unknown as IUser).name,
-        workshopTitle: (updatedEnrollment.workshop as unknown as IWorkshop)
-          .title,
-        studentCount: updatedEnrollment.studentCount,
+        enrollmentDate: populatedEnrollment.createdAt as Date,
+        userName: populatedEnrollment.user.name,
+        workshopTitle: populatedEnrollment.workshop.title,
+        studentCount: populatedEnrollment.studentCount,
         totalAmount: updatedPayment.amount,
-        email: (updatedEnrollment.user as unknown as IUser).email,
+        email: populatedEnrollment.user.email,
       },
     });
 

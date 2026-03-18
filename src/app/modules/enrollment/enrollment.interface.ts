@@ -1,4 +1,7 @@
 import { Types } from "mongoose";
+import { IUser } from "../user/user.interface";
+import { IWorkshop } from "../workshop/workshop.interface";
+import { IPayment } from "../payment/payment.interface";
 
 enum ENROLLMENT_STATUS {
   PENDING = "PENDING",
@@ -8,6 +11,7 @@ enum ENROLLMENT_STATUS {
 }
 
 interface IEnrollment {
+  _id?: Types.ObjectId;
   user: Types.ObjectId;
   workshop: Types.ObjectId;
   payment?: Types.ObjectId;
@@ -18,4 +22,10 @@ interface IEnrollment {
   createdAt?: Date;
 }
 
-export { ENROLLMENT_STATUS, IEnrollment };
+interface IEnrollmentPopulated extends Omit<IEnrollment, "user" | "workshop" | "payment"> {
+  user: IUser;
+  workshop: IWorkshop;
+  payment: IPayment;
+}
+
+export { ENROLLMENT_STATUS, IEnrollment, IEnrollmentPopulated };

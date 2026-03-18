@@ -28,7 +28,8 @@ const initPayment = async (enrollmentId) => {
     if (enrollment.status !== enrollment_interface_1.ENROLLMENT_STATUS.PENDING) {
         throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Enrollment is not pending");
     }
-    const user = enrollment.user;
+    const populatedEnrollment = enrollment;
+    const user = populatedEnrollment.user;
     if (!user?.address || !user?.phone) {
         throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "User profile is incomplete. Please update address and phone number.");
     }
@@ -68,20 +69,20 @@ const successPayment = async (query, body) => {
         if (!updatedEnrollment) {
             throw new AppError_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "Enrollment not found");
         }
+        const populatedEnrollment = updatedEnrollment;
         await session.commitTransaction();
         session.endSession();
         await mail_queue_1.mailQueue.add("invoice", {
             type: "invoice",
             payload: {
-                to: updatedEnrollment.user.email,
+                to: populatedEnrollment.user.email,
                 transactionId: updatedPayment.transactionId,
-                enrollmentDate: updatedEnrollment.createdAt,
-                userName: updatedEnrollment.user.name,
-                workshopTitle: updatedEnrollment.workshop
-                    .title,
-                studentCount: updatedEnrollment.studentCount,
+                enrollmentDate: populatedEnrollment.createdAt,
+                userName: populatedEnrollment.user.name,
+                workshopTitle: populatedEnrollment.workshop.title,
+                studentCount: populatedEnrollment.studentCount,
                 totalAmount: updatedPayment.amount,
-                email: updatedEnrollment.user.email,
+                email: populatedEnrollment.user.email,
             },
         });
         return {

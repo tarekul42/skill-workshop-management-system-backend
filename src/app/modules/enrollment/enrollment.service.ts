@@ -1,135 +1,53 @@
 import { StatusCodes } from "http-status-codes";
 import { Types } from "mongoose";
 import AppError from "../../errorHelpers/AppError";
-import { getTransactionId } from "../../utils/getTransactionId";
-import { PAYMENT_STATUS } from "../payment/payment.interface";
-import Payment from "../payment/payment.model";
-import { ISSLCommerz } from "../sslCommerz/sslCommerz.interface";
-import SSLService from "../sslCommerz/sslCommerz.service";
-import User from "../user/user.model";
-import { WorkShop } from "../workshop/workshop.model";
-import { ENROLLMENT_STATUS, IEnrollment } from "./enrollment.interface";
+import auditLogger from "../../utils/auditLogger";
+import { AuditAction } from "../audit/audit.interface";
+import {
+  ENROLLMENT_STATUS,
+  IEnrollment,
+  IEnrollmentPopulated,
+} from "./enrollment.interface";
 import Enrollment from "./enrollment.model";
+import EnrollmentRepository from "./enrollment.repository";
 
 const createEnrollment = async (
   payload: Partial<IEnrollment>,
   userId: string,
 ) => {
-  const transactionId = getTransactionId();
-  const session = await Enrollment.startSession();
-  session.startTransaction();
+  if (!payload.workshop) {
+    throw new AppError(StatusCodes.BAD_REQUEST, "Workshop ID is required.");
+  }
+
+  if (typeof payload.workshop !== "string") {
+    throw new AppError(
+      StatusCodes.BAD_REQUEST,
+      "Workshop ID must be a string.",
+    );
+  }
+
+  const session = await EnrollmentRepository.startTransaction();
 
   try {
-    if (!payload.workshop) {
-      throw new AppError(StatusCodes.BAD_REQUEST, "Workshop ID is required.");
-    }
-
-    if (typeof payload.workshop !== "string") {
-      throw new AppError(
-        StatusCodes.BAD_REQUEST,
-        "Workshop ID must be a string.",
-      );
-    }
-    const workshopId = payload.workshop;
-
-    const user = await User.findById(userId).session(session);
-
-    if (!user?.phone || !user.address) {
-      throw new AppError(
-        StatusCodes.BAD_REQUEST,
-        "Please update your profile to Enroll in a Workshop.",
-      );
-    }
-
-    const workshop = await WorkShop.findById(workshopId)
-      .select("price")
-      .session(session);
-
-    if (!workshop) {
-      throw new AppError(StatusCodes.NOT_FOUND, "Workshop not found.");
-    }
-
-    if (workshop.price == null) {
-      throw new AppError(StatusCodes.BAD_REQUEST, "Workshop price is not set.");
-    }
-
-    if (!payload.studentCount || payload.studentCount <= 0) {
-      throw new AppError(
-        StatusCodes.BAD_REQUEST,
-        "Student count must be a positive number.",
-      );
-    }
-
-    const amount = Number(workshop.price) * Number(payload.studentCount);
-    if (isNaN(amount) || amount <= 0) {
-      throw new AppError(
-        StatusCodes.BAD_REQUEST,
-        "Invalid enrollment amount calculated.",
-      );
-    }
-
-    const enrollment = await Enrollment.create(
-      [
-        {
-          ...payload,
-          user: userId,
-          status: ENROLLMENT_STATUS.PENDING,
-        },
-      ],
-      { session },
+    const result = await EnrollmentRepository.createEnrollmentWithPayment(
+      payload,
+      userId,
+      session,
     );
-
-    const payment = await Payment.create(
-      [
-        {
-          enrollment: enrollment[0]._id,
-          status: PAYMENT_STATUS.UNPAID,
-          transactionId: transactionId,
-          amount: amount,
-        },
-      ],
-      { session },
-    );
-
-    const updatedEnrollment = await Enrollment.findByIdAndUpdate(
-      enrollment[0]._id,
-      {
-        payment: payment[0]._id,
-      },
-      { new: true, runValidators: true, session },
-    )
-      .populate("user", "name email phone address")
-      .populate("workshop", "title price")
-      .populate("payment");
-
-    const userObj = updatedEnrollment?.user as unknown as {
-      address: string;
-      email: string;
-      phone: string;
-      name: string;
-    };
-    const userAddress = userObj?.address;
-    const userEmail = userObj?.email;
-    const userPhoneNumber = userObj?.phone;
-    const userName = userObj?.name;
-
-    const sslPayload: ISSLCommerz = {
-      address: userAddress,
-      email: userEmail,
-      phoneNumber: userPhoneNumber,
-      name: userName,
-      amount: amount,
-      transactionId: transactionId,
-    };
-
-    const sslPayment = await SSLService.sslPaymentInit(sslPayload);
 
     await session.commitTransaction();
     session.endSession();
 
+    await auditLogger({
+      action: AuditAction.CREATE,
+      collectionName: "Enrollment",
+      documentId: result.enrollmentId,
+      performedBy: userId,
+    });
+
     return {
-      paymentUrl: sslPayment.GatewayPageURL,
-      enrollment: updatedEnrollment,
+      paymentUrl: result.paymentUrl,
+      enrollment: result.enrollment,
     };
   } catch (err) {
     await session.abortTransaction();
@@ -165,10 +83,10 @@ const getSingleEnrollment = async (
     throw new AppError(StatusCodes.NOT_FOUND, "Enrollment not found");
   }
 
+  const populatedEnrollment = enrollment as unknown as IEnrollmentPopulated;
+
   const isOwner =
-    enrollment.user &&
-    String((enrollment.user as unknown as { _id: Types.ObjectId })._id) ===
-      userId;
+    populatedEnrollment.user && String(populatedEnrollment.user._id) === userId;
   const isAdmin = userRole === "ADMIN" || userRole === "SUPER_ADMIN";
 
   if (!isOwner && !isAdmin) {
@@ -178,9 +96,7 @@ const getSingleEnrollment = async (
     );
   }
 
-  return {
-    data: enrollment,
-  };
+  return populatedEnrollment;
 };
 
 const getAllEnrollments = async (query: Record<string, string>) => {
@@ -191,9 +107,6 @@ const getAllEnrollments = async (query: Record<string, string>) => {
   if (typeof status === "string") {
     const allowedStatuses = Object.values(ENROLLMENT_STATUS) as string[];
     if (allowedStatuses.includes(status)) {
-      filter.status = status;
-    }
-    if (allowedStatuses.includes(status as ENROLLMENT_STATUS)) {
       filter.status = status;
     }
   }
@@ -249,11 +162,18 @@ const updateEnrollmentStatus = async (
   const updatedEnrollment = await Enrollment.findOneAndUpdate(
     { _id: { $eq: new Types.ObjectId(enrollmentId) } },
     { status },
-    { new: true, runValidators: true },
+    { returnDocument: "after", runValidators: true },
   )
     .populate("user", "name email phone")
     .populate("workshop", "title price")
     .populate("payment", "status amount transactionId");
+
+  await auditLogger({
+    action: AuditAction.UPDATE,
+    collectionName: "Enrollment",
+    documentId: enrollmentId,
+    changes: { status },
+  });
 
   return updatedEnrollment;
 };

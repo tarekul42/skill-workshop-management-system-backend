@@ -21,7 +21,7 @@ const globalErrorHandler_1 = __importDefault(require("./app/middlewares/globalEr
 const mongoSanitize_1 = __importDefault(require("./app/middlewares/mongoSanitize"));
 const notFound_1 = __importDefault(require("./app/middlewares/notFound"));
 const requestLogger_1 = __importDefault(require("./app/middlewares/requestLogger"));
-const route_1 = __importDefault(require("./app/route"));
+const api_1 = __importDefault(require("./app/route/api"));
 const auditContext_1 = require("./app/utils/auditContext");
 const logger_1 = __importDefault(require("./app/utils/logger"));
 const metrics_1 = require("./app/utils/metrics");
@@ -124,8 +124,13 @@ app.get("/api/v1/csrf-token", (req, res) => {
     const token = (0, csrf_config_1.generateCsrfToken)(req, res);
     res.status(200).json({ csrfToken: token });
 });
+// Versioned CSRF token endpoint for newer clients (and to support header-based versioning)
+app.get("/api/csrf-token", (req, res) => {
+    const token = (0, csrf_config_1.generateCsrfToken)(req, res);
+    res.status(200).json({ csrfToken: token });
+});
 // ──── API Routes ────
-app.use("/api/v1", rateLimiter_1.generalLimiter, route_1.default);
+app.use("/api", rateLimiter_1.generalLimiter, api_1.default);
 app.use("/auth", rateLimiter_1.authLimiter);
 // ──── Metrics Endpoint ────
 app.get("/metrics", async (_req, res) => {

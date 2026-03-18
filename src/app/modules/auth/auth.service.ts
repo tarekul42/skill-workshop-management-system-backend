@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import bcrypt from "bcryptjs";
 import { StatusCodes } from "http-status-codes";
 import jwt, { JwtPayload } from "jsonwebtoken";
@@ -50,12 +49,12 @@ const changePassword = async (
     throw new AppError(StatusCodes.UNAUTHORIZED, "Invalid old password");
   }
 
-  user!.password = await bcrypt.hash(
+  user.password = await bcrypt.hash(
     newPassword,
     Number(envVariables.BCRYPT_SALT_ROUND),
   );
 
-  await user!.save();
+  await user.save();
 };
 
 const setPassword = async (userId: string, plainPassword: string) => {

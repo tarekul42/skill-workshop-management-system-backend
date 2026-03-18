@@ -1,4 +1,11 @@
-import { Aggregate, Query, Schema } from "mongoose";
+import { Aggregate, Document, Query, Schema } from "mongoose";
+
+/** Interface for models that use the softDeletePlugin */
+export interface ISoftDelete extends Document {
+  isDeleted: boolean;
+  deletedAt: Date | null;
+  softDelete: () => Promise<this>;
+}
 
 const softDeletePlugin = (schema: Schema) => {
   schema.add({
