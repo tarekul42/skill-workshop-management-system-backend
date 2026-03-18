@@ -1,6 +1,10 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = require("mongoose");
+const auditPlugin_1 = __importDefault(require("../../utils/auditPlugin"));
 const payment_interface_1 = require("./payment.interface");
 const paymentSchema = new mongoose_1.Schema({
     enrollment: {
@@ -34,5 +38,6 @@ const paymentSchema = new mongoose_1.Schema({
 }, {
     timestamps: true,
 });
+paymentSchema.plugin(auditPlugin_1.default);
 const Payment = (0, mongoose_1.model)("Payment", paymentSchema);
 exports.default = Payment;

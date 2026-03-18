@@ -1,4 +1,5 @@
 import { model, Schema } from "mongoose";
+import auditPlugin from "../../utils/auditPlugin";
 import softDeletePlugin from "../../utils/softDeletePlugin";
 import { ENROLLMENT_STATUS, IEnrollment } from "./enrollment.interface";
 
@@ -37,6 +38,7 @@ const enrollmentSchema = new Schema<IEnrollment>(
 );
 
 enrollmentSchema.plugin(softDeletePlugin);
+enrollmentSchema.plugin(auditPlugin);
 
 enrollmentSchema.index({ user: 1, workshop: 1 });
 

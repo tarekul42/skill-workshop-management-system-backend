@@ -1,4 +1,5 @@
 import { model, Schema, Types } from "mongoose";
+import auditPlugin from "../../utils/auditPlugin";
 import logger from "../../utils/logger";
 import { generateUniqueSlug } from "../../utils/slugify";
 import softDeletePlugin from "../../utils/softDeletePlugin";
@@ -14,6 +15,7 @@ const levelSchema = new Schema<ILevel>(
 );
 
 levelSchema.plugin(softDeletePlugin);
+levelSchema.plugin(auditPlugin);
 
 const Level = model<ILevel>("Level", levelSchema);
 
@@ -52,6 +54,7 @@ const workshopSchema = new Schema<IWorkshop>(
 );
 
 workshopSchema.plugin(softDeletePlugin);
+workshopSchema.plugin(auditPlugin);
 
 const WorkShop = model<IWorkshop>("Workshop", workshopSchema);
 

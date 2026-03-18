@@ -1,0 +1,51 @@
+import { Request, Response } from "express";
+import { StatusCodes } from "http-status-codes";
+import AuditService from "./audit.service";
+
+const getAuditLogs = async (req: Request, res: Response) => {
+  const {
+    page,
+    limit,
+    collectionName,
+    action,
+    performedBy,
+    documentId,
+    startDate,
+    endDate,
+  } = req.query;
+
+  const result = await AuditService.getAuditLogs({
+    page: page ? Number(page) : undefined,
+    limit: limit ? Number(limit) : undefined,
+    collectionName: collectionName as string | undefined,
+    action: action as string | undefined,
+    performedBy: performedBy as string | undefined,
+    documentId: documentId as string | undefined,
+    startDate: startDate as string | undefined,
+    endDate: endDate as string | undefined,
+  });
+
+  res.status(StatusCodes.OK).json({
+    success: true,
+    message: "Audit logs retrieved successfully",
+    data: result,
+  });
+};
+
+const getAuditLogById = async (req: Request, res: Response) => {
+  const id = req.params.id as string;
+  const log = await AuditService.getAuditLogById(id);
+
+  res.status(StatusCodes.OK).json({
+    success: true,
+    message: "Audit log retrieved successfully",
+    data: log,
+  });
+};
+
+const AuditController = {
+  getAuditLogs,
+  getAuditLogById,
+};
+
+export default AuditController;

@@ -4,6 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = require("mongoose");
+const auditPlugin_1 = __importDefault(require("../../utils/auditPlugin"));
 const softDeletePlugin_1 = __importDefault(require("../../utils/softDeletePlugin"));
 const enrollment_interface_1 = require("./enrollment.interface");
 const enrollmentSchema = new mongoose_1.Schema({
@@ -37,6 +38,7 @@ const enrollmentSchema = new mongoose_1.Schema({
     timestamps: true,
 });
 enrollmentSchema.plugin(softDeletePlugin_1.default);
+enrollmentSchema.plugin(auditPlugin_1.default);
 enrollmentSchema.index({ user: 1, workshop: 1 });
 const Enrollment = (0, mongoose_1.model)("Enrollment", enrollmentSchema);
 exports.default = Enrollment;

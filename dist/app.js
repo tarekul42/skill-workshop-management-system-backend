@@ -22,6 +22,7 @@ const mongoSanitize_1 = __importDefault(require("./app/middlewares/mongoSanitize
 const notFound_1 = __importDefault(require("./app/middlewares/notFound"));
 const requestLogger_1 = __importDefault(require("./app/middlewares/requestLogger"));
 const route_1 = __importDefault(require("./app/route"));
+const auditContext_1 = require("./app/utils/auditContext");
 const logger_1 = __importDefault(require("./app/utils/logger"));
 const metrics_1 = require("./app/utils/metrics");
 const rateLimiter_1 = require("./app/utils/rateLimiter");
@@ -104,6 +105,8 @@ app.use((0, express_session_1.default)({
 app.use(passport_1.default.initialize());
 // ──── CSRF Protection ────
 app.use(csrf_config_1.doubleCsrfProtection);
+// ──── Audit Context ────
+app.use(auditContext_1.auditContextMiddleware);
 // ──── Swagger Documentation ────
 app.get("/api-docs.json", (_req, res) => {
     res.json(swagger_config_1.swaggerSpec);

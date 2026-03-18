@@ -4,6 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = require("mongoose");
+const auditPlugin_1 = __importDefault(require("../../utils/auditPlugin"));
 const softDeletePlugin_1 = __importDefault(require("../../utils/softDeletePlugin"));
 const user_interface_1 = require("./user.interface");
 const authProviderSchema = new mongoose_1.Schema({
@@ -44,6 +45,7 @@ const userSchema = new mongoose_1.Schema({
     },
 });
 userSchema.plugin(softDeletePlugin_1.default);
+userSchema.plugin(auditPlugin_1.default);
 userSchema.index({ isDeleted: 1, isActive: 1, role: 1 });
 userSchema.index({ isDeleted: 1, isVerified: 1 });
 userSchema.index({ name: "text", email: "text", address: "text" });

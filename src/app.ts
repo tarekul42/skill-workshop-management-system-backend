@@ -20,6 +20,7 @@ import mongoSanitize from "./app/middlewares/mongoSanitize";
 import notFound from "./app/middlewares/notFound";
 import requestLogger from "./app/middlewares/requestLogger";
 import router from "./app/route";
+import { auditContextMiddleware } from "./app/utils/auditContext";
 import logger from "./app/utils/logger";
 import {
   httpRequestDurationMicroseconds,
@@ -131,6 +132,9 @@ app.use(passport.initialize());
 
 // ──── CSRF Protection ────
 app.use(doubleCsrfProtection);
+
+// ──── Audit Context ────
+app.use(auditContextMiddleware);
 
 // ──── Swagger Documentation ────
 app.get("/api-docs.json", (_req, res) => {
