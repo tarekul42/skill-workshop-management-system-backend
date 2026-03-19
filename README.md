@@ -1,15 +1,17 @@
 # Skill Workshop Management System (Backend)
 
+> **Empowering experts and seekers with a secure, high-performance educational ecosystem.**
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node.js Version](https://img.shields.io/badge/Node.js-20.x-green.svg)](https://nodejs.org/)
 [![MongoDB](https://img.shields.io/badge/Database-MongoDB-47A048.svg)](https://www.mongodb.com/)
 [![Redis](https://img.shields.io/badge/Cache-Redis-DC382D.svg)](https://redis.io/)
 
-## Overview
+---
 
-The **Skill Workshop Management System** is a robust, secure, and highly performant backend infrastructure designed to bridge the gap between skill seekers and industry experts.
+### 🎯 Pro-Level Summary
 
-In today's digital-first economy, the ability to manage educational resources, facilitate secure financial transactions, and maintain high-speed user interactions is paramount. This project demonstrates a production-ready implementation of these critical business functions, emphasizing **security**, **scalability**, and **modular design**.
+This repository houses the backend infrastructure for the **Skill Workshop Management System**. It is architected for maximum performance and security, bridging the gap between industry experts and students through a feature-rich RESTful API. This system emphasizes production-ready execution, emphasizing **security**, **scalability**, and **modular design**.
 
 ---
 
@@ -26,6 +28,9 @@ In today's digital-first economy, the ability to manage educational resources, f
 - **Structured Logging (Pino)**: High-performance, JSON-based logging for production-grade observability.
 - **Background Jobs (BullMQ)**: Asynchronous processing for emails, PDF generation, and time-consuming tasks.
 - **Soft Deletes**: Data recovery and audit-ready deletion mechanism for core models.
+- **Audit Trail System**: Real-time logging of all write operations (Create, Update, Delete) with entity-level tracking for accountability.
+- **Observability & Metrics**: Integrated Prometheus metrics for real-time monitoring of HTTP traffic, database latency, and background job queues.
+- **CI/CD Pipeline**: Automated GitHub Actions workflows for continuous integration, linting, testing, and security scanning.
 
 ---
 
@@ -45,6 +50,8 @@ In today's digital-first economy, the ability to manage educational resources, f
 | File Storage   | Cloudinary                              |
 | Email          | Nodemailer                              |
 | Payment        | SSLCommerz                              |
+| Observability  | Prometheus (prom-client)                |
+| CI/CD          | GitHub Actions                          |
 
 ### Architecture
 
@@ -150,6 +157,23 @@ The API is fully documented using **Swagger / OpenAPI 3.0**. You can explore the
 - **Local:** [http://localhost:5000/api-docs](http://localhost:5000/api-docs)
 - **Production:** [https://skill-workshop-management-system-backend.up.railway.app/api-docs](https://skill-workshop-management-system-backend.up.railway.app/api-docs)
 
+### API Versioning
+
+The API supports multiple versions to ensure backward compatibility:
+
+- **v1 (Stable)**: The current stable version of the API. Accessible via `/api/v1/*`.
+- **v2 (Beta)**: Used for introducing breaking changes safely. Accessible via `/api/v2/*`.
+
+**Header-based versioning**: Clients can also specify the version using the `X-API-Version` header.
+
+### Observability & Metrics
+
+System metrics are exposed for Prometheus scraping at the `/metrics` endpoint. This includes:
+- HTTP request duration and status codes.
+- Database connection latency.
+- Redis memory usage.
+- Background job queue lengths.
+
 ---
 
 ## API Endpoints
@@ -245,6 +269,20 @@ The API is fully documented using **Swagger / OpenAPI 3.0**. You can explore the
 | GET    | `/health/check-version` | Get API version        | Public |
 | GET    | `/health/health-check`  | Detailed health status | Public |
 
+### Audit (`/api/v1/audit`)
+
+| Method | Endpoint      | Description              | Access |
+| ------ | ------------- | ------------------------ | ------ |
+| GET    | `/audit`      | List all audit logs      | Admin  |
+| GET    | `/audit/:id`  | Get single audit log     | Admin  |
+
+### Infrastructure & Misc
+
+| Method | Endpoint            | Description                  | Access |
+| ------ | ------------------- | ---------------------------- | ------ |
+| GET    | `/metrics`          | Prometheus metrics scraping  | Public |
+| GET    | `/api/v1/csrf-token`| Generate new CSRF token      | Public |
+
 ---
 
 ---
@@ -257,7 +295,9 @@ The system implements multiple layers of security to protect data and ensuring s
 - **Rate Limiting**: Protects against brute-force and DDoS attacks via `express-rate-limit` with Redis storage.
   - **General Limiter**: 60 requests per minute.
   - **Auth Limiter**: 10 attempts per 15 minutes for login/refresh.
+  - **Admin Admin Limiter**: applied to Audit and other sensitive admin routes.
 - **Role-Based Access Control (RBAC)**: Strict permission checks for `STUDENT`, `ADMIN`, and `SUPER_ADMIN`.
+- **Security Audit**: The codebase has undergone a comprehensive security audit to identify and mitigate vulnerabilities.
 - **Input Sanitization**: Uses `express-mongo-sanitize` to prevent NoSQL injection.
 - **Secure Headers**: Implemented via `helmet` to set various HTTP headers.
 

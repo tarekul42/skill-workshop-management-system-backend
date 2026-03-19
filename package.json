@@ -1,7 +1,7 @@
 {
   "name": "skill-workshop-management-system-backend",
   "version": "1.0.0",
-  "description": "A robust, secure, and highly performant backend infrastructure for the Skill Workshop Management System, designed to bridge the gap between skill seekers and industry experts.",
+  "description": "A production-ready, highly secure, and scalable Node.js/TypeScript backend. Featuring RBAC, automated OTP verification via Redis, SSLCommerz integration, BullMQ background jobs, Pino structured logging, real-time audit trails, and Prometheus-based observability.",
   "main": "./dist/server.js",
   "scripts": {
     "test": "bun test tests/",
