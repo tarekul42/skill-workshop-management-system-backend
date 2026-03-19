@@ -7,7 +7,9 @@ const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const http_status_codes_1 = require("http-status-codes");
 const env_1 = __importDefault(require("../../config/env"));
 const AppError_1 = __importDefault(require("../../errorHelpers/AppError"));
+const auditLogger_1 = __importDefault(require("../../utils/auditLogger"));
 const queryBuilder_1 = __importDefault(require("../../utils/queryBuilder"));
+const audit_interface_1 = require("../audit/audit.interface");
 const user_constant_1 = require("./user.constant");
 const user_interface_1 = require("./user.interface");
 const user_model_1 = __importDefault(require("./user.model"));
@@ -34,6 +36,11 @@ const createUser = async (payload) => {
         password: hashedPassword,
         auths: [authProvider],
         ...rest,
+    });
+    await (0, auditLogger_1.default)({
+        action: audit_interface_1.AuditAction.CREATE,
+        collectionName: "User",
+        documentId: user._id,
     });
     return user;
 };
@@ -112,8 +119,21 @@ const updateUser = async (userId, payload, decodedToken) => {
         }
     }
     const updatedUser = await user_model_1.default.findByIdAndUpdate(userId, { $set: sanitizedPayload }, {
-        new: true,
+        returnDocument: "after",
         runValidators: true,
+    });
+    // Log sensitive changes (role and status) explicitly
+    const auditChanges = {};
+    if (sanitizedPayload.role)
+        auditChanges.role = sanitizedPayload.role;
+    if (sanitizedPayload.isActive !== undefined)
+        auditChanges.isActive = sanitizedPayload.isActive;
+    await (0, auditLogger_1.default)({
+        action: audit_interface_1.AuditAction.UPDATE,
+        collectionName: "User",
+        documentId: userId,
+        performedBy: decodedToken.userId,
+        changes: auditChanges,
     });
     return updatedUser;
 };

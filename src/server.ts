@@ -3,6 +3,8 @@ import mongoose from "mongoose";
 import app from "./app";
 import envVariables from "./app/config/env";
 import { connectRedis, redisClient } from "./app/config/redis.config";
+import { mailQueue } from "./app/jobs/mail.queue";
+import { mailWorker } from "./app/jobs/mail.worker";
 import logger from "./app/utils/logger";
 import seedSuperAdmin from "./app/utils/seedSuperAdmin";
 
@@ -27,16 +29,28 @@ async function gracefulShutdown(exitCode: number) {
   try {
     // 1. Stop accepting new connections and drain existing ones
     if (server) {
+      if ("closeIdleConnections" in server) {
+        (server as { closeIdleConnections: () => void }).closeIdleConnections();
+      }
       await new Promise<void>((resolve) => server.close(() => resolve()));
       logger.info({ message: "HTTP server closed" });
     }
 
-    // 2. Close Mongoose connection
+    // 2. Close BullMQ worker and queue
+    // Close worker first to stop processing new jobs
+    await mailWorker.close();
+    logger.info({ message: "BullMQ worker closed" });
+
+    // Close queue to release redis connection
+    await mailQueue.close();
+    logger.info({ message: "BullMQ queue closed" });
+
+    // 3. Close Mongoose connection
     await mongoose.connection.close();
     logger.info({ message: "Mongoose connection closed" });
 
-    // 3. Disconnect Redis
-    if (redisClient.isOpen) {
+    // 4. Disconnect Redis client
+    if (redisClient && redisClient.isOpen) {
       await redisClient.disconnect();
       logger.info({ message: "Redis connection closed" });
     }

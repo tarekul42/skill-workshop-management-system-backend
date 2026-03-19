@@ -1,10 +1,17 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.strictLimiter = exports.generalLimiter = exports.authLimiter = exports.adminCrudLimiter = void 0;
+exports.strictLimiter = exports.healthLimiter = exports.generalLimiter = exports.authLimiter = exports.adminCrudLimiter = void 0;
 const express_rate_limit_1 = require("express-rate-limit");
 const rate_limit_redis_1 = require("rate-limit-redis");
 const redis_config_1 = require("../config/redis.config");
-const createLimiter = (prefix, windowMs, max, message) => {
+const env_1 = __importDefault(require("../config/env"));
+const createLimiter = (prefix, windowMs, max, message, skipHealth = true) => {
+    if (env_1.default.NODE_ENV === "test") {
+        return (req, res, next) => next();
+    }
     return (0, express_rate_limit_1.rateLimit)({
         standardHeaders: true,
         legacyHeaders: false,
@@ -20,7 +27,7 @@ const createLimiter = (prefix, windowMs, max, message) => {
         windowMs,
         max,
         message,
-        skip: (req) => req.originalUrl.includes("/health"),
+        skip: (req) => skipHealth && req.originalUrl.includes("/health"),
     });
 };
 // Rate limiters for production
@@ -29,6 +36,11 @@ const generalLimiter = createLimiter("rl:general:", 1 * 60 * 1000, 60, {
     message: "Too many requests, please try again later.",
 });
 exports.generalLimiter = generalLimiter;
+const healthLimiter = createLimiter("rl:health:", 1 * 60 * 1000, 20, {
+    status: 429,
+    message: "Too many health check requests, please try again later.",
+}, false);
+exports.healthLimiter = healthLimiter;
 const authLimiter = createLimiter("rl:auth:", 15 * 60 * 1000, 10, {
     status: 429,
     message: "Too many attempts, please try again later.",

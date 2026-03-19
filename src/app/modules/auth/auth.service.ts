@@ -1,11 +1,10 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import bcrypt from "bcryptjs";
 import { StatusCodes } from "http-status-codes";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import validator from "validator";
 import envVariables from "../../config/env";
 import AppError from "../../errorHelpers/AppError";
-import sendEmail from "../../utils/sendEmail";
+import { mailQueue } from "../../jobs/mail.queue";
 import { createNewAccessToken } from "../../utils/userTokens";
 import { IAuthProvider, IsActive } from "../user/user.interface";
 import User from "../user/user.model";
@@ -50,12 +49,12 @@ const changePassword = async (
     throw new AppError(StatusCodes.UNAUTHORIZED, "Invalid old password");
   }
 
-  user!.password = await bcrypt.hash(
+  user.password = await bcrypt.hash(
     newPassword,
     Number(envVariables.BCRYPT_SALT_ROUND),
   );
 
-  await user!.save();
+  await user.save();
 };
 
 const setPassword = async (userId: string, plainPassword: string) => {
@@ -141,42 +140,21 @@ const forgotPassword = async (email: string) => {
 
   const resetUILink = `${envVariables.FRONTEND_URL}/reset-password?id=${isUserExists._id}&token=${resetToken}`;
 
-  await sendEmail({
-    to: isUserExists.email,
-    subject: "Password Reset",
-    templateName: "forgetPassword",
-    templateData: {
+  await mailQueue.add("forgot-password", {
+    type: "forgot-password",
+    payload: {
+      email: isUserExists.email,
       name: isUserExists.name,
       resetUILink,
     },
   });
 };
 
-const resetPassword = async (
-  oldPassword: string,
-  newPassword: string,
-  decodedToken: JwtPayload,
-) => {
+const resetPassword = async (newPassword: string, decodedToken: JwtPayload) => {
   const user = await User.findById(decodedToken.userId);
 
   if (!user) {
     throw new AppError(StatusCodes.NOT_FOUND, "User not found");
-  }
-
-  if (oldPassword === newPassword) {
-    throw new AppError(
-      StatusCodes.BAD_REQUEST,
-      "New password cannot be the same as the old password",
-    );
-  }
-
-  const isOldPasswordMatched = await bcrypt.compare(
-    oldPassword,
-    user.password as string,
-  );
-
-  if (!isOldPasswordMatched) {
-    throw new AppError(StatusCodes.BAD_REQUEST, "Old password does not match");
   }
 
   user.password = await bcrypt.hash(

@@ -18,28 +18,34 @@ const globalErrorHandler = (
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   next: NextFunction,
 ) => {
-  if (envVariables.NODE_ENV === "development") {
-    logger.error({ message: "Global error caught", err });
-  }
-
-  // Note: Image cleanup on error is handled at the route/controller level.
+  logger.error(err, "Global error caught");
 
   let statusCode = StatusCodes.INTERNAL_SERVER_ERROR;
   let message = "Something went wrong!!!";
-  if (err instanceof Error) {
-    message = `Something went wrong!!! ${err.message}`;
-  }
   let errorSources: IErrorSources[] = [];
 
   if (err instanceof AppError) {
     statusCode = err.statusCode;
     message = err.message;
-  } else if (err && typeof err === "object") {
-    const errorObj = err as Record<string, unknown>;
-    const errName = (errorObj.name as string) || "";
-    const errMessage = (errorObj.message as string) || "";
+  } else if (err instanceof ZodError) {
+    const simplifiedError = handleZodError(err);
+    statusCode = simplifiedError.statusCode;
+    message = simplifiedError.message;
+    errorSources = simplifiedError.errorSources as IErrorSources[];
+  } else if (err instanceof mongoose.Error.CastError) {
+    const simplifiedError = handleCastError(err);
+    statusCode = simplifiedError.statusCode;
+    message = simplifiedError.message;
+  } else if (err instanceof mongoose.Error.ValidationError) {
+    const simplifiedError = handleValidationError(err);
+    statusCode = simplifiedError.statusCode;
+    message = simplifiedError.message;
+    errorSources = simplifiedError.errorSources as IErrorSources[];
+  } else if (err instanceof Error) {
+    const errorObj = err as Error & { code?: string | number };
+    const errName = errorObj.name || "";
+    const errMessage = errorObj.message || "";
 
-    // Multer or custom file type errors should be 400
     if (
       errName === "MulterError" ||
       errMessage.includes("Invalid file type") ||
@@ -52,34 +58,12 @@ const globalErrorHandler = (
       statusCode = StatusCodes.FORBIDDEN;
       message = "Invalid CSRF token";
     } else if (errorObj.code === 11000) {
-      const simplifiedError = handleDuplicateError(err as Error);
+      const simplifiedError = handleDuplicateError(err);
       statusCode = simplifiedError.statusCode;
       message = simplifiedError.message;
-    } else if (errName === "CastError") {
-      const simplifiedError = handleCastError(
-        err as unknown as mongoose.Error.CastError,
-      );
-      statusCode = simplifiedError.statusCode;
-      message = simplifiedError.message;
-    } else if (errName === "ZodError") {
-      const simplifiedError = handleZodError(err as unknown as ZodError);
-      statusCode = simplifiedError.statusCode;
-      message = simplifiedError.message;
-      errorSources = simplifiedError.errorSources as IErrorSources[];
-    } else if (errName === "ValidationError") {
-      const simplifiedError = handleValidationError(
-        err as unknown as mongoose.Error.ValidationError,
-      );
-      statusCode = simplifiedError.statusCode;
-      message = simplifiedError.message;
-      errorSources = simplifiedError.errorSources as IErrorSources[];
     } else {
-      statusCode = StatusCodes.INTERNAL_SERVER_ERROR;
-      message = errMessage || "Something went wrong!!!";
+      message = err.message || "Something went wrong!!!";
     }
-  } else if (err instanceof Error) {
-    statusCode = StatusCodes.INTERNAL_SERVER_ERROR;
-    message = err.message;
   }
 
   const responseBody: {

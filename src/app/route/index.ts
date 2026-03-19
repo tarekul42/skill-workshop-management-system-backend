@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { AuditRoutes } from "../modules/audit/audit.route";
 import AuthRoutes from "../modules/auth/auth.route";
 import CategoryRoutes from "../modules/category/category.route";
 import EnrollmentRoutes from "../modules/enrollment/enrollment.route";
@@ -47,6 +48,10 @@ const moduleRoutes = [
   {
     path: "/stats",
     route: StatsRoutes,
+  },
+  {
+    path: "/audit",
+    route: AuditRoutes,
   },
 ];
 

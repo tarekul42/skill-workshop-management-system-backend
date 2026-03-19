@@ -109,10 +109,9 @@ const forgotPassword = (0, catchAsync_1.default)(async (req, res) => {
     });
 });
 const resetPassword = (0, catchAsync_1.default)(async (req, res) => {
-    const oldPassword = req.body.oldPassword;
     const newPassword = req.body.newPassword;
     const decodedToken = req.user;
-    await auth_service_1.default.resetPassword(oldPassword, newPassword, decodedToken);
+    await auth_service_1.default.resetPassword(newPassword, decodedToken);
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_codes_1.StatusCodes.OK,
         success: true,

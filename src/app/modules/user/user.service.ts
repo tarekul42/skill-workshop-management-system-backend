@@ -3,7 +3,9 @@ import { StatusCodes } from "http-status-codes";
 import { JwtPayload } from "jsonwebtoken";
 import envVariables from "../../config/env";
 import AppError from "../../errorHelpers/AppError";
+import auditLogger from "../../utils/auditLogger";
 import QueryBuilder from "../../utils/queryBuilder";
+import { AuditAction } from "../audit/audit.interface";
 import { userSearchableFields } from "./user.constant";
 import { IAuthProvider, IUser, UserRole } from "./user.interface";
 import User from "./user.model";
@@ -41,6 +43,12 @@ const createUser = async (payload: Partial<IUser>) => {
     password: hashedPassword,
     auths: [authProvider],
     ...rest,
+  });
+
+  await auditLogger({
+    action: AuditAction.CREATE,
+    collectionName: "User",
+    documentId: user._id,
   });
 
   return user;
@@ -163,10 +171,23 @@ const updateUser = async (
     userId,
     { $set: sanitizedPayload },
     {
-      new: true,
+      returnDocument: "after",
       runValidators: true,
     },
   );
+
+  // Log sensitive changes (role and status) explicitly
+  const auditChanges: Record<string, unknown> = {};
+  if (sanitizedPayload.role) auditChanges.role = sanitizedPayload.role;
+  if (sanitizedPayload.isActive !== undefined) auditChanges.isActive = sanitizedPayload.isActive;
+
+  await auditLogger({
+    action: AuditAction.UPDATE,
+    collectionName: "User",
+    documentId: userId,
+    performedBy: decodedToken.userId as string,
+    changes: auditChanges,
+  });
 
   return updatedUser;
 };

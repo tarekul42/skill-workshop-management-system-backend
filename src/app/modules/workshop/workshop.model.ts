@@ -1,5 +1,8 @@
 import { model, Schema, Types } from "mongoose";
+import auditPlugin from "../../utils/auditPlugin";
 import logger from "../../utils/logger";
+import { generateUniqueSlug } from "../../utils/slugify";
+import softDeletePlugin from "../../utils/softDeletePlugin";
 import { ILevel, IWorkshop } from "./workshop.interface";
 
 const levelSchema = new Schema<ILevel>(
@@ -10,6 +13,9 @@ const levelSchema = new Schema<ILevel>(
     timestamps: true,
   },
 );
+
+levelSchema.plugin(softDeletePlugin);
+levelSchema.plugin(auditPlugin);
 
 const Level = model<ILevel>("Level", levelSchema);
 
@@ -47,39 +53,15 @@ const workshopSchema = new Schema<IWorkshop>(
   },
 );
 
+workshopSchema.plugin(softDeletePlugin);
+workshopSchema.plugin(auditPlugin);
+
 const WorkShop = model<IWorkshop>("Workshop", workshopSchema);
-
-const generateUniqueSlug = async (
-  baseSlug: string,
-  excludeId?: string,
-): Promise<string> => {
-  let slug = baseSlug;
-  let counter = 0;
-
-  while (counter < 100) {
-    const query: { slug: string; _id?: { $ne: Types.ObjectId } } = { slug };
-    if (excludeId) {
-      query._id = { $ne: new Types.ObjectId(excludeId) };
-    }
-
-    const exists = await WorkShop.findOne(query);
-    if (!exists) break;
-
-    slug = `${baseSlug}-${counter++}`;
-  }
-
-  if (counter >= 100) {
-    logger.warn({ message: "Slug generation limit reached", baseSlug });
-  }
-
-  return slug;
-};
 
 workshopSchema.pre("save", async function () {
   logger.info({ message: "Pre-save hook title", title: this.title });
   if (this.isModified("title") || !this.slug) {
-    const baseSlug = (this.title || "").toLowerCase().split(" ").join("-");
-    this.slug = await generateUniqueSlug(baseSlug);
+    this.slug = await generateUniqueSlug(WorkShop, this.title);
     logger.info({ message: "Generated slug", slug: this.slug });
   }
 });
@@ -91,9 +73,8 @@ workshopSchema.pre("findOneAndUpdate", async function () {
   const query = this.getQuery();
 
   if (update?.title) {
-    const baseSlug = update.title.toLowerCase().split(" ").join("-");
     const workshopId = query._id?.toString();
-    update.slug = await generateUniqueSlug(baseSlug, workshopId);
+    update.slug = await generateUniqueSlug(WorkShop, update.title, workshopId);
   }
   this.setUpdate(update);
 });

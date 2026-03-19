@@ -4,6 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
+const audit_route_1 = require("../modules/audit/audit.route");
 const auth_route_1 = __importDefault(require("../modules/auth/auth.route"));
 const category_route_1 = __importDefault(require("../modules/category/category.route"));
 const enrollment_route_1 = __importDefault(require("../modules/enrollment/enrollment.route"));
@@ -50,6 +51,10 @@ const moduleRoutes = [
     {
         path: "/stats",
         route: stats_route_1.default,
+    },
+    {
+        path: "/audit",
+        route: audit_route_1.AuditRoutes,
     },
 ];
 moduleRoutes.forEach((route) => {

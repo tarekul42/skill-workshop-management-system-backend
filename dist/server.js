@@ -7,6 +7,8 @@ const mongoose_1 = __importDefault(require("mongoose"));
 const app_1 = __importDefault(require("./app"));
 const env_1 = __importDefault(require("./app/config/env"));
 const redis_config_1 = require("./app/config/redis.config");
+const mail_queue_1 = require("./app/jobs/mail.queue");
+const mail_worker_1 = require("./app/jobs/mail.worker");
 const logger_1 = __importDefault(require("./app/utils/logger"));
 const seedSuperAdmin_1 = __importDefault(require("./app/utils/seedSuperAdmin"));
 let server;
@@ -26,14 +28,24 @@ async function gracefulShutdown(exitCode) {
     try {
         // 1. Stop accepting new connections and drain existing ones
         if (server) {
+            if ("closeIdleConnections" in server) {
+                server.closeIdleConnections();
+            }
             await new Promise((resolve) => server.close(() => resolve()));
             logger_1.default.info({ message: "HTTP server closed" });
         }
-        // 2. Close Mongoose connection
+        // 2. Close BullMQ worker and queue
+        // Close worker first to stop processing new jobs
+        await mail_worker_1.mailWorker.close();
+        logger_1.default.info({ message: "BullMQ worker closed" });
+        // Close queue to release redis connection
+        await mail_queue_1.mailQueue.close();
+        logger_1.default.info({ message: "BullMQ queue closed" });
+        // 3. Close Mongoose connection
         await mongoose_1.default.connection.close();
         logger_1.default.info({ message: "Mongoose connection closed" });
-        // 3. Disconnect Redis
-        if (redis_config_1.redisClient.isOpen) {
+        // 4. Disconnect Redis client
+        if (redis_config_1.redisClient && redis_config_1.redisClient.isOpen) {
             await redis_config_1.redisClient.disconnect();
             logger_1.default.info({ message: "Redis connection closed" });
         }

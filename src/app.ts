@@ -5,7 +5,6 @@ import express, { Request, Response } from "express";
 import expressSession from "express-session";
 import helmet from "helmet";
 import hpp from "hpp";
-import morgan from "morgan";
 import passport from "passport";
 import swaggerUi from "swagger-ui-express";
 import {
@@ -19,8 +18,15 @@ import { swaggerSpec } from "./app/config/swagger.config";
 import globalErrorHandler from "./app/middlewares/globalErrorHandler";
 import mongoSanitize from "./app/middlewares/mongoSanitize";
 import notFound from "./app/middlewares/notFound";
-import router from "./app/route";
+import requestLogger from "./app/middlewares/requestLogger";
+import apiRouter from "./app/route/api";
+import { auditContextMiddleware } from "./app/utils/auditContext";
 import logger from "./app/utils/logger";
+import {
+  httpRequestDurationMicroseconds,
+  register,
+  updateSystemMetrics,
+} from "./app/utils/metrics";
 import { authLimiter, generalLimiter } from "./app/utils/rateLimiter";
 
 const app = express();
@@ -34,12 +40,27 @@ if (envVariables.EXPRESS_SESSION_SECRET.length < 32) {
 }
 
 // ──── HTTP Request Logger ────
-app.use(morgan(envVariables.NODE_ENV === "production" ? "tiny" : "dev"));
+app.use(requestLogger);
 
-// ──── Request Debugger ────
-app.use((req, _res, next) => {
-  logger.info({
-    message: `Incoming Request: ${req.method} ${req.originalUrl}`,
+// ──── Metrics Middleware ────
+app.use((req, res, next) => {
+  const start = process.hrtime();
+  res.on("finish", () => {
+    const durationInSeconds =
+      process.hrtime(start)[0] + process.hrtime(start)[1] / 1e9;
+
+    // Use req.route.path if available (matched express route)
+    // Otherwise use a generic label to prevent cardinality explosion DoS
+    const route = req.route ? req.route.path : "(unmatched)";
+
+    httpRequestDurationMicroseconds.observe(
+      {
+        method: req.method,
+        route,
+        status_code: res.statusCode,
+      },
+      durationInSeconds,
+    );
   });
   next();
 });
@@ -112,6 +133,9 @@ app.use(passport.initialize());
 // ──── CSRF Protection ────
 app.use(doubleCsrfProtection);
 
+// ──── Audit Context ────
+app.use(auditContextMiddleware);
+
 // ──── Swagger Documentation ────
 app.get("/api-docs.json", (_req, res) => {
   res.json(swaggerSpec);
@@ -137,9 +161,27 @@ app.get("/api/v1/csrf-token", (req: Request, res: Response) => {
   res.status(200).json({ csrfToken: token });
 });
 
+// Versioned CSRF token endpoint for newer clients (and to support header-based versioning)
+app.get("/api/csrf-token", (req: Request, res: Response) => {
+  const token = generateCsrfToken(req, res);
+  res.status(200).json({ csrfToken: token });
+});
+
 // ──── API Routes ────
-app.use("/api/v1", generalLimiter, router);
+app.use("/api", generalLimiter, apiRouter);
 app.use("/auth", authLimiter);
+
+// ──── Metrics Endpoint ────
+app.get("/metrics", async (_req, res) => {
+  try {
+    await updateSystemMetrics();
+    res.set("Content-Type", register.contentType);
+    res.end(await register.metrics());
+  } catch (ex: unknown) {
+    logger.error(ex, "Error while collecting metrics");
+    res.status(500).end("Internal server error");
+  }
+});
 
 // ──── Root Route ────
 app.get("/", (_req: Request, res: Response) => {

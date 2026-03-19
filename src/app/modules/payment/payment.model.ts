@@ -1,4 +1,5 @@
 import { model, Schema } from "mongoose";
+import auditPlugin from "../../utils/auditPlugin";
 import { IPayment, PAYMENT_STATUS } from "./payment.interface";
 
 const paymentSchema = new Schema<IPayment>(
@@ -36,6 +37,8 @@ const paymentSchema = new Schema<IPayment>(
     timestamps: true,
   },
 );
+
+paymentSchema.plugin(auditPlugin);
 
 const Payment = model<IPayment>("Payment", paymentSchema);
 

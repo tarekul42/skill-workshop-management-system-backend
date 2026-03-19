@@ -1,4 +1,6 @@
 import { model, Schema } from "mongoose";
+import auditPlugin from "../../utils/auditPlugin";
+import softDeletePlugin from "../../utils/softDeletePlugin";
 import { IAuthProvider, IsActive, IUser, UserRole } from "./user.interface";
 
 const authProviderSchema = new Schema<IAuthProvider>(
@@ -21,7 +23,6 @@ const userSchema = new Schema<IUser>(
     picture: { type: String },
     age: { type: Number },
     address: { type: String },
-    isDeleted: { type: Boolean, default: false },
     isActive: {
       type: String,
       enum: Object.values(IsActive),
@@ -46,6 +47,9 @@ const userSchema = new Schema<IUser>(
     },
   },
 );
+
+userSchema.plugin(softDeletePlugin);
+userSchema.plugin(auditPlugin);
 
 userSchema.index({ isDeleted: 1, isActive: 1, role: 1 });
 userSchema.index({ isDeleted: 1, isVerified: 1 });
