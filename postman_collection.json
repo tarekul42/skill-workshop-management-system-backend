@@ -1,0 +1,305 @@
+{
+  "info": {
+    "name": "Skill Workshop Management System API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:5000/api/v1" },
+    { "key": "admin_email", "value": "superadmin@email.com" },
+    { "key": "admin_password", "value": "Super10@email" },
+    { "key": "user_email", "value": "onekportehobe24@gmail.com" },
+    { "key": "user_password", "value": "Onek24@porte" },
+    { "key": "admin_access_token", "value": "" },
+    { "key": "user_access_token", "value": "" },
+    { "key": "categoryId", "value": "" },
+    { "key": "workshopId", "value": "" },
+    { "key": "enrollmentId", "value": "" },
+    { "key": "userId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "1. Auth",
+      "item": [
+        {
+          "name": "Admin Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if(jsonData.data && jsonData.data.accessToken) {",
+                  "    pm.collectionVariables.set(\"admin_access_token\", jsonData.data.accessToken);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{admin_email}}\",\n  \"password\": \"{{admin_password}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "User Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if(jsonData.data && jsonData.data.accessToken) {",
+                  "    pm.collectionVariables.set(\"user_access_token\", jsonData.data.accessToken);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{user_email}}\",\n  \"password\": \"{{user_password}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Get Me (User)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "{{user_access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/me",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "me"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Categories",
+      "item": [
+        {
+          "name": "Get All Categories",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/categories",
+              "host": ["{{base_url}}"],
+              "path": ["categories"]
+            }
+          }
+        },
+        {
+          "name": "Create Category (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "{{admin_access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Web Development\",\n  \"description\": \"Learn web dev\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/categories",
+              "host": ["{{base_url}}"],
+              "path": ["categories"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Workshops",
+      "item": [
+        {
+          "name": "Get All Workshops",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/workshops",
+              "host": ["{{base_url}}"],
+              "path": ["workshops"]
+            }
+          }
+        },
+        {
+          "name": "Create Workshop (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "{{admin_access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Intro to React\",\n  \"description\": \"Learn the basics of React\",\n  \"categoryId\": \"{{categoryId}}\",\n  \"price\": 100,\n  \"capacity\": 50,\n  \"startDate\": \"2026-04-01T10:00:00Z\",\n  \"endDate\": \"2026-04-01T14:00:00Z\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/workshops",
+              "host": ["{{base_url}}"],
+              "path": ["workshops"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Enrollments",
+      "item": [
+        {
+          "name": "Get User Enrollments",
+          "request": {
+            "method": "GET",
+            "header": [
+               { "key": "Authorization", "value": "{{user_access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/enrollments/my-enrollments",
+              "host": ["{{base_url}}"],
+              "path": ["enrollments", "my-enrollments"]
+            }
+          }
+        },
+        {
+          "name": "Enroll in Workshop (User)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "{{user_access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"workshopId\": \"{{workshopId}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/enrollments",
+              "host": ["{{base_url}}"],
+              "path": ["enrollments"]
+            }
+          }
+        },
+        {
+          "name": "Cancel Enrollment (User)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "{{user_access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/enrollments/{{enrollmentId}}",
+              "host": ["{{base_url}}"],
+              "path": ["enrollments", "{{enrollmentId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Payments",
+      "item": [
+        {
+          "name": "Checkout/Init Payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "{{user_access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"enrollmentId\": \"{{enrollmentId}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/payments/checkout",
+              "host": ["{{base_url}}"],
+              "path": ["payments", "checkout"]
+            }
+          }
+        },
+        {
+          "name": "Refund Payment (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "{{admin_access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/payments/refund/transactionIdHere",
+              "host": ["{{base_url}}"],
+              "path": ["payments", "refund", "transactionIdHere"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Audit",
+      "item": [
+        {
+          "name": "Get Audit Logs (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "{{admin_access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/audit",
+              "host": ["{{base_url}}"],
+              "path": ["audit"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Health",
+      "item": [
+        {
+          "name": "Ping",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health/ping",
+              "host": ["{{base_url}}"],
+              "path": ["health", "ping"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
