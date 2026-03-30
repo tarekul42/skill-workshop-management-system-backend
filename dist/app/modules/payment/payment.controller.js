@@ -87,6 +87,26 @@ const validatePayment = (0, catchAsync_1.default)(async (req, res) => {
         data: null,
     });
 });
+const handleIPN = (0, catchAsync_1.default)(async (req, res) => {
+    const result = await payment_service_1.default.handleIPN(req.body);
+    (0, sendResponse_1.default)(res, {
+        success: true,
+        statusCode: http_status_codes_1.StatusCodes.OK,
+        message: "IPN processed",
+        data: result,
+    });
+});
+const refundPayment = (0, catchAsync_1.default)(async (req, res) => {
+    const decodeToken = req.user;
+    const { paymentId, reason } = req.body;
+    const result = await payment_service_1.default.refundPayment(paymentId, decodeToken.userId, reason);
+    (0, sendResponse_1.default)(res, {
+        success: true,
+        statusCode: http_status_codes_1.StatusCodes.OK,
+        message: result.message,
+        data: null,
+    });
+});
 const PaymentController = {
     initPayment,
     successPayment,
@@ -94,5 +114,7 @@ const PaymentController = {
     cancelPayment,
     getInvoiceDownloadUrl,
     validatePayment,
+    handleIPN,
+    refundPayment,
 };
 exports.default = PaymentController;

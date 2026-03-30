@@ -184,5 +184,34 @@ router.get("/:enrollmentId", rateLimiter_1.adminCrudLimiter, (0, checkAuth_1.def
  *         $ref: "#/components/responses/UnauthorizedError"
  */
 router.patch("/:enrollmentId/status", rateLimiter_1.adminCrudLimiter, (0, checkAuth_1.default)(...Object.values(user_interface_1.UserRole)), (0, validateRequest_1.default)(enrollment_validation_1.updateEnrollmentStatusZodSchema), enrollment_controller_1.default.updateEnrollmentStatus);
+/**
+ * @openapi
+ * /enrollment/{enrollmentId}:
+ *   delete:
+ *     summary: Cancel an enrollment
+ *     tags: [Enrollment]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: enrollmentId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Enrollment cancelled successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: "#/components/schemas/BaseResponse"
+ *       400:
+ *         $ref: "#/components/responses/BadRequestError"
+ *       401:
+ *         $ref: "#/components/responses/UnauthorizedError"
+ *       403:
+ *         $ref: "#/components/responses/ForbiddenError"
+ */
+router.delete("/:enrollmentId", rateLimiter_1.adminCrudLimiter, (0, checkAuth_1.default)(...Object.values(user_interface_1.UserRole)), enrollment_controller_1.default.cancelEnrollment);
 const EnrollmentRoutes = router;
 exports.default = EnrollmentRoutes;

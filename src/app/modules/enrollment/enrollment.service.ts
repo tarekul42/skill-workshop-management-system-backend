@@ -138,6 +138,7 @@ const getAllEnrollments = async (query: Record<string, string>) => {
 const updateEnrollmentStatus = async (
   enrollmentId: string,
   status: ENROLLMENT_STATUS,
+  userId: string,
   userRole: string,
 ) => {
   if (userRole !== "ADMIN" && userRole !== "SUPER_ADMIN") {
@@ -172,7 +173,52 @@ const updateEnrollmentStatus = async (
     action: AuditAction.UPDATE,
     collectionName: "Enrollment",
     documentId: enrollmentId,
+    performedBy: userId,
     changes: { status },
+  });
+
+  return updatedEnrollment;
+};
+
+const cancelEnrollment = async (enrollmentId: string, userId: string) => {
+  const enrollment = await Enrollment.findOne({
+    _id: { $eq: new Types.ObjectId(enrollmentId) },
+  })
+    .populate("user", "name email")
+    .populate("payment", "status");
+
+  if (!enrollment) {
+    throw new AppError(StatusCodes.NOT_FOUND, "Enrollment not found");
+  }
+
+  const populatedEnrollment = enrollment as unknown as IEnrollmentPopulated;
+
+  if (String(populatedEnrollment.user._id) !== userId) {
+    throw new AppError(
+      StatusCodes.FORBIDDEN,
+      "You can only cancel your own enrollments",
+    );
+  }
+
+  if (enrollment.status !== ENROLLMENT_STATUS.PENDING) {
+    throw new AppError(
+      StatusCodes.BAD_REQUEST,
+      "Only pending enrollments can be cancelled",
+    );
+  }
+
+  const updatedEnrollment = await Enrollment.findOneAndUpdate(
+    { _id: { $eq: new Types.ObjectId(enrollmentId) } },
+    { status: ENROLLMENT_STATUS.CANCEL },
+    { returnDocument: "after", runValidators: true },
+  );
+
+  await auditLogger({
+    action: AuditAction.UPDATE,
+    collectionName: "Enrollment",
+    documentId: enrollmentId,
+    performedBy: userId,
+    changes: { status: ENROLLMENT_STATUS.CANCEL },
   });
 
   return updatedEnrollment;
@@ -184,6 +230,7 @@ const EnrollmentService = {
   getSingleEnrollment,
   getAllEnrollments,
   updateEnrollmentStatus,
+  cancelEnrollment,
 };
 
 export default EnrollmentService;

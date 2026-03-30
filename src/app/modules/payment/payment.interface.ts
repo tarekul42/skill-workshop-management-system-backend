@@ -23,4 +23,4 @@ interface IPaymentPopulated extends Omit<IPayment, "enrollment"> {
   enrollment: IEnrollment;
 }
 
-export { IPayment, PAYMENT_STATUS, IPaymentPopulated };
+export { IPayment, IPaymentPopulated, PAYMENT_STATUS };

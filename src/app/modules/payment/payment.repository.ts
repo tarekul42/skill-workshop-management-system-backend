@@ -43,7 +43,23 @@ const updateEnrollmentStatus = async (
 };
 
 const findPaymentById = async (paymentId: string) => {
-  return await Payment.findById(paymentId).select("invoiceUrl");
+  if (!Types.ObjectId.isValid(paymentId)) {
+    return null;
+  }
+
+  return await Payment.findOne({
+    _id: { $eq: new Types.ObjectId(paymentId) },
+  }).select("invoiceUrl");
+};
+
+const findPaymentWithEnrollment = async (paymentId: string) => {
+  if (!Types.ObjectId.isValid(paymentId)) {
+    return null;
+  }
+
+  return await Payment.findOne({
+    _id: { $eq: new Types.ObjectId(paymentId) },
+  });
 };
 
 const startTransaction = async () => {
@@ -58,6 +74,7 @@ const PaymentRepository = {
   updatePaymentStatus,
   updateEnrollmentStatus,
   findPaymentById,
+  findPaymentWithEnrollment,
   startTransaction,
 };
 

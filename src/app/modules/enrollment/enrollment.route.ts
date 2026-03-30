@@ -217,6 +217,41 @@ router.patch(
   EnrollmentController.updateEnrollmentStatus,
 );
 
+/**
+ * @openapi
+ * /enrollment/{enrollmentId}:
+ *   delete:
+ *     summary: Cancel an enrollment
+ *     tags: [Enrollment]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: enrollmentId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Enrollment cancelled successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: "#/components/schemas/BaseResponse"
+ *       400:
+ *         $ref: "#/components/responses/BadRequestError"
+ *       401:
+ *         $ref: "#/components/responses/UnauthorizedError"
+ *       403:
+ *         $ref: "#/components/responses/ForbiddenError"
+ */
+router.delete(
+  "/:enrollmentId",
+  adminCrudLimiter,
+  checkAuth(...Object.values(UserRole)),
+  EnrollmentController.cancelEnrollment,
+);
+
 const EnrollmentRoutes = router;
 
 export default EnrollmentRoutes;

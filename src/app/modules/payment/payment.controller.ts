@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
+import { JwtPayload } from "jsonwebtoken";
 import envVariables from "../../config/env";
 import catchAsync from "../../utils/catchAsync";
 import sendResponse from "../../utils/sendResponse";
@@ -124,6 +125,37 @@ const validatePayment = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const handleIPN = catchAsync(async (req: Request, res: Response) => {
+  const result = await PaymentService.handleIPN(
+    req.body as Record<string, string>,
+  );
+
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: "IPN processed",
+    data: result,
+  });
+});
+
+const refundPayment = catchAsync(async (req: Request, res: Response) => {
+  const decodeToken = req.user as JwtPayload;
+  const { paymentId, reason } = req.body;
+
+  const result = await PaymentService.refundPayment(
+    paymentId as string,
+    decodeToken.userId,
+    reason as string | undefined,
+  );
+
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: result.message,
+    data: null,
+  });
+});
+
 const PaymentController = {
   initPayment,
   successPayment,
@@ -131,6 +163,8 @@ const PaymentController = {
   cancelPayment,
   getInvoiceDownloadUrl,
   validatePayment,
+  handleIPN,
+  refundPayment,
 };
 
 export default PaymentController;

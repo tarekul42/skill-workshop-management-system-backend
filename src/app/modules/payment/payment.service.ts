@@ -1,6 +1,9 @@
 import { StatusCodes } from "http-status-codes";
 import AppError from "../../errorHelpers/AppError";
 import { mailQueue } from "../../jobs/mail.queue";
+import auditLogger from "../../utils/auditLogger";
+import logger from "../../utils/logger";
+import { AuditAction } from "../audit/audit.interface";
 import {
   ENROLLMENT_STATUS,
   IEnrollmentPopulated,
@@ -234,12 +237,143 @@ const getInvoiceDownloadUrl = async (paymentId: string) => {
   return payment.invoiceUrl;
 };
 
+const handleIPN = async (body: Record<string, string>) => {
+  const transactionId = (body.tran_id || "").trim();
+  const status = (body.status || "").trim();
+  const valId = (body.val_id || "").trim();
+
+  if (!transactionId) {
+    throw new AppError(StatusCodes.BAD_REQUEST, "Missing tran_id in IPN");
+  }
+
+  logger.info({
+    message: "IPN received",
+    transactionId,
+    status,
+  });
+
+  if (status === "VALID" && valId) {
+    await SSLService.validatePayment({ val_id: valId, tran_id: transactionId });
+
+    const session = await PaymentRepository.startTransaction();
+    try {
+      const updatedPayment = await PaymentRepository.updatePaymentStatus(
+        transactionId,
+        PAYMENT_STATUS.PAID,
+        session,
+      );
+
+      if (updatedPayment) {
+        await PaymentRepository.updateEnrollmentStatus(
+          String(updatedPayment.enrollment),
+          ENROLLMENT_STATUS.COMPLETE,
+          session,
+        );
+      }
+
+      await session.commitTransaction();
+      session.endSession();
+    } catch (err) {
+      if (session.inTransaction()) {
+        await session.abortTransaction();
+      }
+      session.endSession();
+      throw err;
+    }
+  } else if (status === "FAILED") {
+    const session = await PaymentRepository.startTransaction();
+    try {
+      const updatedPayment = await PaymentRepository.updatePaymentStatus(
+        transactionId,
+        PAYMENT_STATUS.FAILED,
+        session,
+      );
+
+      if (updatedPayment) {
+        await PaymentRepository.updateEnrollmentStatus(
+          String(updatedPayment.enrollment),
+          ENROLLMENT_STATUS.FAILED,
+          session,
+        );
+      }
+
+      await session.commitTransaction();
+      session.endSession();
+    } catch (err) {
+      if (session.inTransaction()) {
+        await session.abortTransaction();
+      }
+      session.endSession();
+      throw err;
+    }
+  }
+
+  return { received: true };
+};
+
+const refundPayment = async (paymentId: string, userId: string, reason?: string) => {
+  const payment = await PaymentRepository.findPaymentWithEnrollment(paymentId);
+
+  if (!payment) {
+    throw new AppError(StatusCodes.NOT_FOUND, "Payment not found");
+  }
+
+  if (payment.status !== PAYMENT_STATUS.PAID) {
+    throw new AppError(
+      StatusCodes.BAD_REQUEST,
+      "Only paid payments can be refunded",
+    );
+  }
+
+  const session = await PaymentRepository.startTransaction();
+
+  try {
+    const updatedPayment = await PaymentRepository.updatePaymentStatus(
+      payment.transactionId,
+      PAYMENT_STATUS.REFUNDED,
+      session,
+    );
+
+    if (updatedPayment) {
+      await PaymentRepository.updateEnrollmentStatus(
+        String(updatedPayment.enrollment),
+        ENROLLMENT_STATUS.CANCEL,
+        session,
+      );
+    }
+
+    await session.commitTransaction();
+    session.endSession();
+
+    await auditLogger({
+      action: AuditAction.UPDATE,
+      collectionName: "Payment",
+      documentId: paymentId,
+      performedBy: userId,
+      changes: { status: PAYMENT_STATUS.REFUNDED, reason },
+    });
+
+    return {
+      success: true,
+      message: "Payment refunded successfully",
+    };
+  } catch (err) {
+    if (session.inTransaction()) {
+      await session.abortTransaction();
+    }
+    session.endSession();
+    throw err;
+  }
+};
+
 const PaymentService = {
   initPayment,
   successPayment,
   failPayment,
   cancelPayment,
   getInvoiceDownloadUrl,
+  handleIPN,
+  refundPayment,
 };
 
 export default PaymentService;

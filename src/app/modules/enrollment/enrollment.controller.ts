@@ -80,6 +80,7 @@ const updateEnrollmentStatus = catchAsync(
     const updatedEnrollment = await EnrollmentService.updateEnrollmentStatus(
       enrollmentId,
       status,
+      decodeToken.userId,
       decodeToken.role,
     );
 
@@ -92,12 +93,30 @@ const updateEnrollmentStatus = catchAsync(
   },
 );
 
+const cancelEnrollment = catchAsync(async (req: Request, res: Response) => {
+  const decodeToken = req.user as JwtPayload;
+  const enrollmentId = req.params.enrollmentId as string;
+
+  const result = await EnrollmentService.cancelEnrollment(
+    enrollmentId,
+    decodeToken.userId,
+  );
+
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: "Enrollment cancelled successfully",
+    data: result,
+  });
+});
+
 const EnrollmentController = {
   createEnrollment,
   getUserEnrollments,
   getSingleEnrollment,
   getAllEnrollments,
   updateEnrollmentStatus,
+  cancelEnrollment,
 };
 
 export default EnrollmentController;

@@ -137,11 +137,35 @@ const updateUser = async (userId, payload, decodedToken) => {
     });
     return updatedUser;
 };
+const deleteUser = async (userId, decodedToken) => {
+    const isAdmin = decodedToken.role === user_interface_1.UserRole.ADMIN ||
+        decodedToken.role === user_interface_1.UserRole.SUPER_ADMIN;
+    if (!isAdmin) {
+        throw new AppError_1.default(http_status_codes_1.StatusCodes.FORBIDDEN, "Only admins can delete users");
+    }
+    const user = await user_model_1.default.findById(userId);
+    if (!user) {
+        throw new AppError_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "User not found");
+    }
+    if (user.role === user_interface_1.UserRole.SUPER_ADMIN) {
+        throw new AppError_1.default(http_status_codes_1.StatusCodes.FORBIDDEN, "Cannot delete a SUPER_ADMIN account");
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await user.softDelete();
+    await (0, auditLogger_1.default)({
+        action: audit_interface_1.AuditAction.DELETE,
+        collectionName: "User",
+        documentId: userId,
+        performedBy: decodedToken.userId,
+    });
+    return null;
+};
 const UserServices = {
     createUser,
     getSingleUser,
     getMe,
     getAllUsers,
     updateUser,
+    deleteUser,
 };
 exports.default = UserServices;

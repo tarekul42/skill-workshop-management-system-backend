@@ -6,6 +6,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const http_status_codes_1 = require("http-status-codes");
 const AppError_1 = __importDefault(require("../../errorHelpers/AppError"));
 const mail_queue_1 = require("../../jobs/mail.queue");
+const auditLogger_1 = __importDefault(require("../../utils/auditLogger"));
+const logger_1 = __importDefault(require("../../utils/logger"));
+const audit_interface_1 = require("../audit/audit.interface");
 const enrollment_interface_1 = require("../enrollment/enrollment.interface");
 const sslCommerz_service_1 = __importDefault(require("../sslCommerz/sslCommerz.service"));
 const payment_interface_1 = require("./payment.interface");
@@ -158,11 +161,100 @@ const getInvoiceDownloadUrl = async (paymentId) => {
     }
     return payment.invoiceUrl;
 };
+const handleIPN = async (body) => {
+    const transactionId = (body.tran_id || "").trim();
+    const status = (body.status || "").trim();
+    const valId = (body.val_id || "").trim();
+    if (!transactionId) {
+        throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Missing tran_id in IPN");
+    }
+    logger_1.default.info({
+        message: "IPN received",
+        transactionId,
+        status,
+    });
+    if (status === "VALID" && valId) {
+        await sslCommerz_service_1.default.validatePayment({ val_id: valId, tran_id: transactionId });
+        const session = await payment_repository_1.default.startTransaction();
+        try {
+            const updatedPayment = await payment_repository_1.default.updatePaymentStatus(transactionId, payment_interface_1.PAYMENT_STATUS.PAID, session);
+            if (updatedPayment) {
+                await payment_repository_1.default.updateEnrollmentStatus(String(updatedPayment.enrollment), enrollment_interface_1.ENROLLMENT_STATUS.COMPLETE, session);
+            }
+            await session.commitTransaction();
+            session.endSession();
+        }
+        catch (err) {
+            if (session.inTransaction()) {
+                await session.abortTransaction();
+            }
+            session.endSession();
+            throw err;
+        }
+    }
+    else if (status === "FAILED") {
+        const session = await payment_repository_1.default.startTransaction();
+        try {
+            const updatedPayment = await payment_repository_1.default.updatePaymentStatus(transactionId, payment_interface_1.PAYMENT_STATUS.FAILED, session);
+            if (updatedPayment) {
+                await payment_repository_1.default.updateEnrollmentStatus(String(updatedPayment.enrollment), enrollment_interface_1.ENROLLMENT_STATUS.FAILED, session);
+            }
+            await session.commitTransaction();
+            session.endSession();
+        }
+        catch (err) {
+            if (session.inTransaction()) {
+                await session.abortTransaction();
+            }
+            session.endSession();
+            throw err;
+        }
+    }
+    return { received: true };
+};
+const refundPayment = async (paymentId, userId, reason) => {
+    const payment = await payment_repository_1.default.findPaymentWithEnrollment(paymentId);
+    if (!payment) {
+        throw new AppError_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "Payment not found");
+    }
+    if (payment.status !== payment_interface_1.PAYMENT_STATUS.PAID) {
+        throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Only paid payments can be refunded");
+    }
+    const session = await payment_repository_1.default.startTransaction();
+    try {
+        const updatedPayment = await payment_repository_1.default.updatePaymentStatus(payment.transactionId, payment_interface_1.PAYMENT_STATUS.REFUNDED, session);
+        if (updatedPayment) {
+            await payment_repository_1.default.updateEnrollmentStatus(String(updatedPayment.enrollment), enrollment_interface_1.ENROLLMENT_STATUS.CANCEL, session);
+        }
+        await session.commitTransaction();
+        session.endSession();
+        await (0, auditLogger_1.default)({
+            action: audit_interface_1.AuditAction.UPDATE,
+            collectionName: "Payment",
+            documentId: paymentId,
+            performedBy: userId,
+            changes: { status: payment_interface_1.PAYMENT_STATUS.REFUNDED, reason },
+        });
+        return {
+            success: true,
+            message: "Payment refunded successfully",
+        };
+    }
+    catch (err) {
+        if (session.inTransaction()) {
+            await session.abortTransaction();
+        }
+        session.endSession();
+        throw err;
+    }
+};
 const PaymentService = {
     initPayment,
     successPayment,
     failPayment,
     cancelPayment,
     getInvoiceDownloadUrl,
+    handleIPN,
+    refundPayment,
 };
 exports.default = PaymentService;

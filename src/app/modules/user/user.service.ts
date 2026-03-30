@@ -192,12 +192,51 @@ const updateUser = async (
   return updatedUser;
 };
 
+const deleteUser = async (userId: string, decodedToken: JwtPayload) => {
+  const isAdmin =
+    decodedToken.role === UserRole.ADMIN ||
+    decodedToken.role === UserRole.SUPER_ADMIN;
+
+  if (!isAdmin) {
+    throw new AppError(
+      StatusCodes.FORBIDDEN,
+      "Only admins can delete users",
+    );
+  }
+
+  const user = await User.findById(userId);
+
+  if (!user) {
+    throw new AppError(StatusCodes.NOT_FOUND, "User not found");
+  }
+
+  if (user.role === UserRole.SUPER_ADMIN) {
+    throw new AppError(
+      StatusCodes.FORBIDDEN,
+      "Cannot delete a SUPER_ADMIN account",
+    );
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await (user as any).softDelete();
+
+  await auditLogger({
+    action: AuditAction.DELETE,
+    collectionName: "User",
+    documentId: userId,
+    performedBy: decodedToken.userId as string,
+  });
+
+  return null;
+};
+
 const UserServices = {
   createUser,
   getSingleUser,
   getMe,
   getAllUsers,
   updateUser,
+  deleteUser,
 };
 
 export default UserServices;
