@@ -46,6 +46,10 @@ const findPaymentById = async (paymentId: string) => {
   return await Payment.findById(paymentId).select("invoiceUrl");
 };
 
+const findPaymentWithEnrollment = async (paymentId: string) => {
+  return await Payment.findById(paymentId);
+};
+
 const startTransaction = async () => {
   const session = await Enrollment.startSession();
   session.startTransaction();
@@ -58,6 +62,7 @@ const PaymentRepository = {
   updatePaymentStatus,
   updateEnrollmentStatus,
   findPaymentById,
+  findPaymentWithEnrollment,
   startTransaction,
 };
 

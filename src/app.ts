@@ -27,7 +27,7 @@ import {
   register,
   updateSystemMetrics,
 } from "./app/utils/metrics";
-import { authLimiter, generalLimiter } from "./app/utils/rateLimiter";
+import { generalLimiter } from "./app/utils/rateLimiter";
 
 const app = express();
 
@@ -169,7 +169,6 @@ app.get("/api/csrf-token", (req: Request, res: Response) => {
 
 // ──── API Routes ────
 app.use("/api", generalLimiter, apiRouter);
-app.use("/auth", authLimiter);
 
 // ──── Metrics Endpoint ────
 app.get("/metrics", async (_req, res) => {

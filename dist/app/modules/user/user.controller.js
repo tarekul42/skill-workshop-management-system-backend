@@ -59,11 +59,23 @@ const updateUser = (0, catchAsync_1.default)(async (req, res) => {
         data: user,
     });
 });
+const deleteUser = (0, catchAsync_1.default)(async (req, res) => {
+    const userId = req.params.id;
+    const verifiedToken = req.user;
+    await user_service_1.default.deleteUser(userId, verifiedToken);
+    (0, sendResponse_1.default)(res, {
+        statusCode: http_status_codes_1.default.OK,
+        success: true,
+        message: "User deleted successfully",
+        data: null,
+    });
+});
 const UserControllers = {
     createUser,
     getSingleUser,
     getMe,
     getAllUsers,
     updateUser,
+    deleteUser,
 };
 exports.default = UserControllers;

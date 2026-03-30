@@ -1,8 +1,13 @@
 import express from "express";
 import checkAuth from "../../middlewares/checkAuth";
-import { authLimiter } from "../../utils/rateLimiter";
+import validateRequest from "../../middlewares/validateRequest";
+import { adminCrudLimiter, authLimiter } from "../../utils/rateLimiter";
 import { UserRole } from "../user/user.interface";
 import PaymentController from "./payment.controller";
+import {
+  refundPaymentBodySchema,
+  validatePaymentBodySchema,
+} from "./payment.validation";
 
 const router = express.Router();
 
@@ -47,7 +52,7 @@ const router = express.Router();
 router.post(
   "/init-payment/:enrollmentId",
   authLimiter,
-  checkAuth(...Object.values(UserRole)),
+  checkAuth(UserRole.STUDENT),
   PaymentController.initPayment,
 );
 
@@ -165,7 +170,64 @@ router.post(
   "/validate-payment",
   authLimiter,
   checkAuth(...Object.values(UserRole)),
+  validateRequest(validatePaymentBodySchema),
   PaymentController.validatePayment,
+);
+
+/**
+ * @openapi
+ * /payment/ipn:
+ *   post:
+ *     summary: SSLCommerz IPN (Instant Payment Notification)
+ *     tags: [Payment]
+ *     description: Called asynchronously by SSLCommerz to notify payment status changes
+ *     responses:
+ *       200:
+ *         description: IPN processed successfully
+ */
+router.post("/ipn", PaymentController.handleIPN);
+
+/**
+ * @openapi
+ * /payment/refund:
+ *   post:
+ *     summary: Refund a payment
+ *     tags: [Payment]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - paymentId
+ *             properties:
+ *               paymentId:
+ *                 type: string
+ *               reason:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Payment refunded successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: "#/components/schemas/BaseResponse"
+ *       400:
+ *         $ref: "#/components/responses/BadRequestError"
+ *       401:
+ *         $ref: "#/components/responses/UnauthorizedError"
+ *       403:
+ *         $ref: "#/components/responses/ForbiddenError"
+ */
+router.post(
+  "/refund",
+  adminCrudLimiter,
+  checkAuth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
+  validateRequest(refundPaymentBodySchema),
+  PaymentController.refundPayment,
 );
 
 const PaymentRoutes = router;

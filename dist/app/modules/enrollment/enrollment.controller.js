@@ -57,12 +57,23 @@ const updateEnrollmentStatus = (0, catchAsync_1.default)(async (req, res) => {
     const decodeToken = req.user;
     const enrollmentId = req.params.enrollmentId;
     const status = req.body.status;
-    const updatedEnrollment = await enrollment_service_1.default.updateEnrollmentStatus(enrollmentId, status, decodeToken.role);
+    const updatedEnrollment = await enrollment_service_1.default.updateEnrollmentStatus(enrollmentId, status, decodeToken.userId, decodeToken.role);
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_codes_1.StatusCodes.OK,
         success: true,
         message: "Enrollment status updated successfully",
         data: updatedEnrollment,
+    });
+});
+const cancelEnrollment = (0, catchAsync_1.default)(async (req, res) => {
+    const decodeToken = req.user;
+    const enrollmentId = req.params.enrollmentId;
+    const result = await enrollment_service_1.default.cancelEnrollment(enrollmentId, decodeToken.userId);
+    (0, sendResponse_1.default)(res, {
+        statusCode: http_status_codes_1.StatusCodes.OK,
+        success: true,
+        message: "Enrollment cancelled successfully",
+        data: result,
     });
 });
 const EnrollmentController = {
@@ -71,5 +82,6 @@ const EnrollmentController = {
     getSingleEnrollment,
     getAllEnrollments,
     updateEnrollmentStatus,
+    cancelEnrollment,
 };
 exports.default = EnrollmentController;

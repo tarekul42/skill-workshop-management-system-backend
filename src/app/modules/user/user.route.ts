@@ -245,6 +245,41 @@ router.patch(
   UserControllers.updateUser,
 );
 
+/**
+ * @openapi
+ * /user/{id}:
+ *   delete:
+ *     summary: Soft-delete a user by ID
+ *     tags: [User]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: User deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: "#/components/schemas/BaseResponse"
+ *       401:
+ *         $ref: "#/components/responses/UnauthorizedError"
+ *       403:
+ *         $ref: "#/components/responses/ForbiddenError"
+ *       404:
+ *         $ref: "#/components/responses/NotFoundError"
+ */
+router.delete(
+  "/:id",
+  strictLimiter,
+  checkAuth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
+  UserControllers.deleteUser,
+);
+
 const UserRoutes = router;
 
 export default UserRoutes;

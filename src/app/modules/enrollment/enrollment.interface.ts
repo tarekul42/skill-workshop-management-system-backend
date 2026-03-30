@@ -1,7 +1,7 @@
 import { Types } from "mongoose";
+import { IPayment } from "../payment/payment.interface";
 import { IUser } from "../user/user.interface";
 import { IWorkshop } from "../workshop/workshop.interface";
-import { IPayment } from "../payment/payment.interface";
 
 enum ENROLLMENT_STATUS {
   PENDING = "PENDING",

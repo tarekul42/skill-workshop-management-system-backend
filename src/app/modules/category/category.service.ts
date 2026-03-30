@@ -157,6 +157,21 @@ const deleteCategory = async (id: string) => {
   if (!existingCategory) {
     throw new AppError(StatusCodes.NOT_FOUND, "Category not found");
   }
+
+  // Guard: Prevent deleting a category that has associated workshops
+  const { WorkShop } = await import("../workshop/workshop.model");
+  const workshopCount = await WorkShop.countDocuments({
+    category: { $eq: id },
+    isDeleted: { $ne: true },
+  });
+
+  if (workshopCount > 0) {
+    throw new AppError(
+      StatusCodes.BAD_REQUEST,
+      `Cannot delete category: ${workshopCount} workshop(s) are still using it. Reassign or delete them first.`,
+    );
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   await (existingCategory as any).softDelete();
   return null;

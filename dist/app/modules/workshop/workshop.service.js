@@ -184,13 +184,24 @@ const updateWorkshop = async (id, payload) => {
         safePayload.price = payload.price;
     }
     if (payload.startDate !== undefined) {
-        if (typeof payload.startDate !== "string") {
+        if (typeof payload.startDate === "string") {
+            safePayload.startDate = new Date(payload.startDate);
+        }
+        else if (payload.startDate instanceof Date) {
+            safePayload.startDate = payload.startDate;
+        }
+        else {
             throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Invalid startDate format");
         }
-        safePayload.startDate = payload.startDate;
     }
     if (payload.endDate !== undefined) {
-        if (typeof payload.endDate !== "string") {
+        if (typeof payload.endDate === "string") {
+            safePayload.endDate = new Date(payload.endDate);
+        }
+        else if (payload.endDate instanceof Date) {
+            safePayload.endDate = payload.endDate;
+        }
+        else {
             throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Invalid endDate format");
         }
     }

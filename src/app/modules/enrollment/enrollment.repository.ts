@@ -22,7 +22,7 @@ const findUserById = async (userId: string, session: ClientSession) => {
 };
 
 const findWorkshopById = async (workshopId: string, session: ClientSession) => {
-  return await WorkShop.findById(workshopId).select("price").session(session);
+  return await WorkShop.findById(workshopId).select("price maxSeats").session(session);
 };
 
 const createEnrollmentWithPayment = async (
@@ -47,6 +47,35 @@ const createEnrollmentWithPayment = async (
   }
   if (workshop.price == null) {
     throw new AppError(StatusCodes.BAD_REQUEST, "Workshop price is not set.");
+  }
+
+  // Guard: Prevent duplicate active enrollment for this user + workshop
+  const existingEnrollment = await Enrollment.findOne({
+    user: { $eq: userId },
+    workshop: { $eq: workshopId },
+    status: { $in: ["PENDING", "COMPLETE"] },
+  }).session(session);
+
+  if (existingEnrollment) {
+    throw new AppError(
+      StatusCodes.BAD_REQUEST,
+      "You already have an active enrollment for this workshop.",
+    );
+  }
+
+  // Guard: Enforce workshop capacity (maxSeats)
+  if (workshop.maxSeats != null) {
+    const currentEnrollmentCount = await Enrollment.countDocuments({
+      workshop: { $eq: workshopId },
+      status: { $in: ["PENDING", "COMPLETE"] },
+    }).session(session);
+
+    if (currentEnrollmentCount >= workshop.maxSeats) {
+      throw new AppError(
+        StatusCodes.BAD_REQUEST,
+        "This workshop is fully booked. No seats available.",
+      );
+    }
   }
 
   if (!payload.studentCount || payload.studentCount <= 0) {

@@ -131,7 +131,6 @@ app.get("/api/csrf-token", (req, res) => {
 });
 // ──── API Routes ────
 app.use("/api", rateLimiter_1.generalLimiter, api_1.default);
-app.use("/auth", rateLimiter_1.authLimiter);
 // ──── Metrics Endpoint ────
 app.get("/metrics", async (_req, res) => {
     try {

@@ -216,5 +216,34 @@ router.get("/:id", rateLimiter_1.strictLimiter, (0, checkAuth_1.default)(user_in
  *         $ref: "#/components/responses/UnauthorizedError"
  */
 router.patch("/:id", rateLimiter_1.strictLimiter, (0, validateRequest_1.default)(user_validation_1.updateUserZodSchema), (0, checkAuth_1.default)(...Object.values(user_interface_1.UserRole)), user_controller_1.default.updateUser);
+/**
+ * @openapi
+ * /user/{id}:
+ *   delete:
+ *     summary: Soft-delete a user by ID
+ *     tags: [User]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: User deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: "#/components/schemas/BaseResponse"
+ *       401:
+ *         $ref: "#/components/responses/UnauthorizedError"
+ *       403:
+ *         $ref: "#/components/responses/ForbiddenError"
+ *       404:
+ *         $ref: "#/components/responses/NotFoundError"
+ */
+router.delete("/:id", rateLimiter_1.strictLimiter, (0, checkAuth_1.default)(user_interface_1.UserRole.ADMIN, user_interface_1.UserRole.SUPER_ADMIN), user_controller_1.default.deleteUser);
 const UserRoutes = router;
 exports.default = UserRoutes;

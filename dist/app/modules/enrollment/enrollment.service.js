@@ -97,7 +97,7 @@ const getAllEnrollments = async (query) => {
         },
     };
 };
-const updateEnrollmentStatus = async (enrollmentId, status, userRole) => {
+const updateEnrollmentStatus = async (enrollmentId, status, userId, userRole) => {
     if (userRole !== "ADMIN" && userRole !== "SUPER_ADMIN") {
         throw new AppError_1.default(http_status_codes_1.StatusCodes.FORBIDDEN, "Only admins can update enrollment status");
     }
@@ -119,7 +119,34 @@ const updateEnrollmentStatus = async (enrollmentId, status, userRole) => {
         action: audit_interface_1.AuditAction.UPDATE,
         collectionName: "Enrollment",
         documentId: enrollmentId,
+        performedBy: userId,
         changes: { status },
+    });
+    return updatedEnrollment;
+};
+const cancelEnrollment = async (enrollmentId, userId) => {
+    const enrollment = await enrollment_model_1.default.findOne({
+        _id: { $eq: new mongoose_1.Types.ObjectId(enrollmentId) },
+    })
+        .populate("user", "name email")
+        .populate("payment", "status");
+    if (!enrollment) {
+        throw new AppError_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "Enrollment not found");
+    }
+    const populatedEnrollment = enrollment;
+    if (String(populatedEnrollment.user._id) !== userId) {
+        throw new AppError_1.default(http_status_codes_1.StatusCodes.FORBIDDEN, "You can only cancel your own enrollments");
+    }
+    if (enrollment.status !== enrollment_interface_1.ENROLLMENT_STATUS.PENDING) {
+        throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Only pending enrollments can be cancelled");
+    }
+    const updatedEnrollment = await enrollment_model_1.default.findOneAndUpdate({ _id: { $eq: new mongoose_1.Types.ObjectId(enrollmentId) } }, { status: enrollment_interface_1.ENROLLMENT_STATUS.CANCEL }, { returnDocument: "after", runValidators: true });
+    await (0, auditLogger_1.default)({
+        action: audit_interface_1.AuditAction.UPDATE,
+        collectionName: "Enrollment",
+        documentId: enrollmentId,
+        performedBy: userId,
+        changes: { status: enrollment_interface_1.ENROLLMENT_STATUS.CANCEL },
     });
     return updatedEnrollment;
 };
@@ -129,5 +156,6 @@ const EnrollmentService = {
     getSingleEnrollment,
     getAllEnrollments,
     updateEnrollmentStatus,
+    cancelEnrollment,
 };
 exports.default = EnrollmentService;

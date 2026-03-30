@@ -5,9 +5,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const checkAuth_1 = __importDefault(require("../../middlewares/checkAuth"));
+const validateRequest_1 = __importDefault(require("../../middlewares/validateRequest"));
 const rateLimiter_1 = require("../../utils/rateLimiter");
 const user_interface_1 = require("../user/user.interface");
 const payment_controller_1 = __importDefault(require("./payment.controller"));
+const payment_validation_1 = require("./payment.validation");
 const router = express_1.default.Router();
 /**
  * @openapi
@@ -46,7 +48,7 @@ const router = express_1.default.Router();
  *       401:
  *         $ref: "#/components/responses/UnauthorizedError"
  */
-router.post("/init-payment/:enrollmentId", rateLimiter_1.authLimiter, (0, checkAuth_1.default)(...Object.values(user_interface_1.UserRole)), payment_controller_1.default.initPayment);
+router.post("/init-payment/:enrollmentId", rateLimiter_1.authLimiter, (0, checkAuth_1.default)(user_interface_1.UserRole.STUDENT), payment_controller_1.default.initPayment);
 /**
  * @openapi
  * /payment/success:
@@ -148,6 +150,54 @@ router.get("/invoice/:paymentId", rateLimiter_1.authLimiter, (0, checkAuth_1.def
  *       401:
  *         $ref: "#/components/responses/UnauthorizedError"
  */
-router.post("/validate-payment", rateLimiter_1.authLimiter, (0, checkAuth_1.default)(...Object.values(user_interface_1.UserRole)), payment_controller_1.default.validatePayment);
+router.post("/validate-payment", rateLimiter_1.authLimiter, (0, checkAuth_1.default)(...Object.values(user_interface_1.UserRole)), (0, validateRequest_1.default)(payment_validation_1.validatePaymentBodySchema), payment_controller_1.default.validatePayment);
+/**
+ * @openapi
+ * /payment/ipn:
+ *   post:
+ *     summary: SSLCommerz IPN (Instant Payment Notification)
+ *     tags: [Payment]
+ *     description: Called asynchronously by SSLCommerz to notify payment status changes
+ *     responses:
+ *       200:
+ *         description: IPN processed successfully
+ */
+router.post("/ipn", payment_controller_1.default.handleIPN);
+/**
+ * @openapi
+ * /payment/refund:
+ *   post:
+ *     summary: Refund a payment
+ *     tags: [Payment]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - paymentId
+ *             properties:
+ *               paymentId:
+ *                 type: string
+ *               reason:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Payment refunded successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: "#/components/schemas/BaseResponse"
+ *       400:
+ *         $ref: "#/components/responses/BadRequestError"
+ *       401:
+ *         $ref: "#/components/responses/UnauthorizedError"
+ *       403:
+ *         $ref: "#/components/responses/ForbiddenError"
+ */
+router.post("/refund", rateLimiter_1.adminCrudLimiter, (0, checkAuth_1.default)(user_interface_1.UserRole.ADMIN, user_interface_1.UserRole.SUPER_ADMIN), (0, validateRequest_1.default)(payment_validation_1.refundPaymentBodySchema), payment_controller_1.default.refundPayment);
 const PaymentRoutes = router;
 exports.default = PaymentRoutes;
