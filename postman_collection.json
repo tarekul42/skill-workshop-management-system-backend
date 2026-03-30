@@ -1,27 +1,120 @@
 {
   "info": {
-    "name": "Skill Workshop Management System API",
+    "name": "Skill Workshop Management System API - V2 Complete",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
-    { "key": "base_url", "value": "http://localhost:5000/api/v1" },
-    { "key": "admin_email", "value": "superadmin@email.com" },
-    { "key": "admin_password", "value": "Super10@email" },
-    { "key": "user_email", "value": "onekportehobe24@gmail.com" },
-    { "key": "user_password", "value": "Onek24@porte" },
-    { "key": "admin_access_token", "value": "" },
-    { "key": "user_access_token", "value": "" },
-    { "key": "categoryId", "value": "" },
-    { "key": "workshopId", "value": "" },
-    { "key": "enrollmentId", "value": "" },
-    { "key": "userId", "value": "" }
+    {
+      "key": "base_url",
+      "value": "http://localhost:5000/api/v1"
+    },
+    {
+      "key": "admin_email",
+      "value": "superadmin@email.com"
+    },
+    {
+      "key": "admin_password",
+      "value": "Super10@email"
+    },
+    {
+      "key": "user_email",
+      "value": "onekportehobe24@gmail.com"
+    },
+    {
+      "key": "user_password",
+      "value": "Onek24@porte"
+    },
+    {
+      "key": "admin_access_token",
+      "value": ""
+    },
+    {
+      "key": "user_access_token",
+      "value": ""
+    }
   ],
   "item": [
     {
-      "name": "1. Auth",
+      "name": "Audit",
       "item": [
         {
-          "name": "Admin Login",
+          "name": "GET /",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/audit",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "audit"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /:id",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/audit/:id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "audit",
+                ":id"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "POST /login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{admin_email}}\",\n  \"password\": \"{{admin_password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
           "event": [
             {
               "listen": "test",
@@ -35,267 +128,1460 @@
                 "type": "text/javascript"
               }
             }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"{{admin_email}}\",\n  \"password\": \"{{admin_password}}\"\n}",
-              "options": { "raw": { "language": "json" } }
-            },
-            "url": {
-              "raw": "{{base_url}}/auth/login",
-              "host": ["{{base_url}}"],
-              "path": ["auth", "login"]
-            }
-          }
+          ]
         },
         {
-          "name": "User Login",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "var jsonData = pm.response.json();",
-                  "if(jsonData.data && jsonData.data.accessToken) {",
-                  "    pm.collectionVariables.set(\"user_access_token\", jsonData.data.accessToken);",
-                  "}"
-                ],
-                "type": "text/javascript"
+          "name": "POST /refresh-token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{admin_access_token}}"
               }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"{{user_email}}\",\n  \"password\": \"{{user_password}}\"\n}",
-              "options": { "raw": { "language": "json" } }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/refresh-token",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "refresh-token"
+              ]
             },
-            "url": {
-              "raw": "{{base_url}}/auth/login",
-              "host": ["{{base_url}}"],
-              "path": ["auth", "login"]
-            }
-          }
-        },
-        {
-          "name": "Get Me (User)",
-          "request": {
-            "method": "GET",
-            "header": [
-              { "key": "Authorization", "value": "{{user_access_token}}" }
-            ],
-            "url": {
-              "raw": "{{base_url}}/auth/me",
-              "host": ["{{base_url}}"],
-              "path": ["auth", "me"]
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "2. Categories",
-      "item": [
-        {
-          "name": "Get All Categories",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/categories",
-              "host": ["{{base_url}}"],
-              "path": ["categories"]
-            }
-          }
-        },
-        {
-          "name": "Create Category (Admin)",
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Authorization", "value": "{{admin_access_token}}" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Web Development\",\n  \"description\": \"Learn web dev\"\n}",
-              "options": { "raw": { "language": "json" } }
-            },
-            "url": {
-              "raw": "{{base_url}}/categories",
-              "host": ["{{base_url}}"],
-              "path": ["categories"]
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "3. Workshops",
-      "item": [
-        {
-          "name": "Get All Workshops",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/workshops",
-              "host": ["{{base_url}}"],
-              "path": ["workshops"]
-            }
-          }
-        },
-        {
-          "name": "Create Workshop (Admin)",
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Authorization", "value": "{{admin_access_token}}" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"title\": \"Intro to React\",\n  \"description\": \"Learn the basics of React\",\n  \"categoryId\": \"{{categoryId}}\",\n  \"price\": 100,\n  \"capacity\": 50,\n  \"startDate\": \"2026-04-01T10:00:00Z\",\n  \"endDate\": \"2026-04-01T14:00:00Z\"\n}",
-              "options": { "raw": { "language": "json" } }
-            },
-            "url": {
-              "raw": "{{base_url}}/workshops",
-              "host": ["{{base_url}}"],
-              "path": ["workshops"]
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "4. Enrollments",
-      "item": [
-        {
-          "name": "Get User Enrollments",
-          "request": {
-            "method": "GET",
-            "header": [
-               { "key": "Authorization", "value": "{{user_access_token}}" }
-            ],
-            "url": {
-              "raw": "{{base_url}}/enrollments/my-enrollments",
-              "host": ["{{base_url}}"],
-              "path": ["enrollments", "my-enrollments"]
-            }
-          }
-        },
-        {
-          "name": "Enroll in Workshop (User)",
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Authorization", "value": "{{user_access_token}}" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"workshopId\": \"{{workshopId}}\"\n}",
-              "options": { "raw": { "language": "json" } }
-            },
-            "url": {
-              "raw": "{{base_url}}/enrollments",
-              "host": ["{{base_url}}"],
-              "path": ["enrollments"]
-            }
-          }
-        },
-        {
-          "name": "Cancel Enrollment (User)",
-          "request": {
-            "method": "DELETE",
-            "header": [
-              { "key": "Authorization", "value": "{{user_access_token}}" }
-            ],
-            "url": {
-              "raw": "{{base_url}}/enrollments/{{enrollmentId}}",
-              "host": ["{{base_url}}"],
-              "path": ["enrollments", "{{enrollmentId}}"]
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "5. Payments",
-      "item": [
-        {
-          "name": "Checkout/Init Payment",
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Authorization", "value": "{{user_access_token}}" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"enrollmentId\": \"{{enrollmentId}}\"\n}",
-              "options": { "raw": { "language": "json" } }
-            },
-            "url": {
-              "raw": "{{base_url}}/payments/checkout",
-              "host": ["{{base_url}}"],
-              "path": ["payments", "checkout"]
-            }
-          }
-        },
-        {
-          "name": "Refund Payment (Admin)",
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Authorization", "value": "{{admin_access_token}}" }
-            ],
             "body": {
               "mode": "raw",
               "raw": "{}",
-              "options": { "raw": { "language": "json" } }
-            },
-            "url": {
-              "raw": "{{base_url}}/payments/refund/transactionIdHere",
-              "host": ["{{base_url}}"],
-              "path": ["payments", "refund", "transactionIdHere"]
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             }
           }
-        }
-      ]
-    },
-    {
-      "name": "6. Audit",
-      "item": [
+        },
         {
-          "name": "Get Audit Logs (Admin)",
+          "name": "POST /logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/logout",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "logout"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "POST /change-password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/change-password",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "change-password"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "POST /set-password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/set-password",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "set-password"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "POST /forgot-password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/forgot-password",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "forgot-password"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "POST /reset-password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/reset-password",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "reset-password"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "GET /google",
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "{{admin_access_token}}" }
+              {
+                "key": "Authorization",
+                "value": "{{admin_access_token}}"
+              }
             ],
             "url": {
-              "raw": "{{base_url}}/audit",
-              "host": ["{{base_url}}"],
-              "path": ["audit"]
+              "raw": "{{base_url}}/auth/google",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "google"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /google/callback",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/google/callback",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "google",
+                "callback"
+              ]
             }
           }
         }
       ]
     },
     {
-      "name": "7. Health",
+      "name": "Category",
       "item": [
         {
-          "name": "Ping",
+          "name": "POST /create",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/category/create",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "category",
+                "create"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "GET /",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/category",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "category"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /:slug",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/category/:slug",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "category",
+                ":slug"
+              ]
+            }
+          }
+        },
+        {
+          "name": "PATCH /:id",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/category/:id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "category",
+                ":id"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "DELETE /:id",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/category/:id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "category",
+                ":id"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Enrollment",
+      "item": [
+        {
+          "name": "POST /",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/enrollment",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "enrollment"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "GET /",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/enrollment",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "enrollment"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /my-enrollments",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/enrollment/my-enrollments",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "enrollment",
+                "my-enrollments"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /:enrollmentId",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/enrollment/:enrollmentId",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "enrollment",
+                ":enrollmentId"
+              ]
+            }
+          }
+        },
+        {
+          "name": "PATCH /:enrollmentId/status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/enrollment/:enrollmentId/status",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "enrollment",
+                ":enrollmentId",
+                "status"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "DELETE /:enrollmentId",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/enrollment/:enrollmentId",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "enrollment",
+                ":enrollmentId"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "GET /",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "health"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /ping",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{admin_access_token}}"
+              }
+            ],
             "url": {
               "raw": "{{base_url}}/health/ping",
-              "host": ["{{base_url}}"],
-              "path": ["health", "ping"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "health",
+                "ping"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /check-version",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/health/check-version",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "health",
+                "check-version"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /health-check",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/health/health-check",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "health",
+                "health-check"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /dashboard",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/health/dashboard",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "health",
+                "dashboard"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Otp",
+      "item": [
+        {
+          "name": "POST /send",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/otp/send",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "otp",
+                "send"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "POST /verify",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/otp/verify",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "otp",
+                "verify"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Payment",
+      "item": [
+        {
+          "name": "POST /init-payment/:enrollmentId",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/payment/init-payment/:enrollmentId",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "payment",
+                "init-payment",
+                ":enrollmentId"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "POST /success",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/payment/success",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "payment",
+                "success"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "POST /fail",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/payment/fail",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "payment",
+                "fail"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "POST /cancel",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/payment/cancel",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "payment",
+                "cancel"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "GET /invoice/:paymentId",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/payment/invoice/:paymentId",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "payment",
+                "invoice",
+                ":paymentId"
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST /validate-payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/payment/validate-payment",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "payment",
+                "validate-payment"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "POST /ipn",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/payment/ipn",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "payment",
+                "ipn"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "POST /refund",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/payment/refund",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "payment",
+                "refund"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Stats",
+      "item": [
+        {
+          "name": "GET /enrollment",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/stats/enrollment",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "stats",
+                "enrollment"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /payment",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/stats/payment",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "stats",
+                "payment"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /users",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/stats/users",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "stats",
+                "users"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /workshops",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/stats/workshops",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "stats",
+                "workshops"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "User",
+      "item": [
+        {
+          "name": "POST /register",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/user/register",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "user",
+                "register"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "GET /me",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/user/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "user",
+                "me"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /all-users",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/user/all-users",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "user",
+                "all-users"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /:id",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/user/:id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "user",
+                ":id"
+              ]
+            }
+          }
+        },
+        {
+          "name": "PATCH /:id",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/user/:id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "user",
+                ":id"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "DELETE /:id",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/user/:id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "user",
+                ":id"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Workshop",
+      "item": [
+        {
+          "name": "GET /levels",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/workshop/levels",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "workshop",
+                "levels"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /levels/:id",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/workshop/levels/:id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "workshop",
+                "levels",
+                ":id"
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST /create-level",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/workshop/create-level",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "workshop",
+                "create-level"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "PATCH /levels/:id",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/workshop/levels/:id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "workshop",
+                "levels",
+                ":id"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "DELETE /levels/:id",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/workshop/levels/:id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "workshop",
+                "levels",
+                ":id"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/workshop",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "workshop"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /:slug",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/workshop/:slug",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "workshop",
+                ":slug"
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST /create",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/workshop/create",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "workshop",
+                "create"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "PATCH /:id",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/workshop/:id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "workshop",
+                ":id"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "DELETE /:id",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/workshop/:id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "workshop",
+                ":id"
+              ]
             }
           }
         }
