@@ -3,7 +3,7 @@ services:
     image: mongo:7
     container_name: skill-workshop-mongodb
     ports:
-      - "27018:27017"
+      - "27019:27017"
     volumes:
       - mongodb_data:/data/db
     restart: unless-stopped
@@ -17,7 +17,7 @@ services:
     image: redis:7-alpine
     container_name: skill-workshop-redis
     ports:
-      - "6379:6379"
+      - "6380:6379"
     volumes:
       - redis_data:/data
     restart: unless-stopped
@@ -31,7 +31,7 @@ services:
     build: .
     container_name: skill-workshop-backend
     ports:
-      - "5000:5000"
+      - "5001:5000"
     env_file:
       - .env
     environment:

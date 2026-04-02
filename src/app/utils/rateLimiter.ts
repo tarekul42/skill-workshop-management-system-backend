@@ -12,13 +12,17 @@ const createLimiter = (
   message: object,
   skipHealth = true,
 ) => {
-  if (envVariables.NODE_ENV === "test") {
+  if (
+    envVariables.NODE_ENV === "test" ||
+    envVariables.NODE_ENV === "development"
+  ) {
     return (req: Request, res: Response, next: NextFunction) => next();
   }
 
   return rateLimit({
     standardHeaders: true,
     legacyHeaders: false,
+    keyGenerator: (req: Request) => `${req.ip}:${req.path}`,
     store: new RedisStore({
       sendCommand: async (...args: string[]) => {
         if (!redisClient.isOpen) {
@@ -36,7 +40,7 @@ const createLimiter = (
 };
 
 // Rate limiters for production
-const generalLimiter = createLimiter("rl:general:", 1 * 60 * 1000, 60, {
+const generalLimiter = createLimiter("rl:general:", 1 * 60 * 1000, 100, {
   status: 429,
   message: "Too many requests, please try again later.",
 });
@@ -52,18 +56,18 @@ const healthLimiter = createLimiter(
   false,
 );
 
-const authLimiter = createLimiter("rl:auth:", 15 * 60 * 1000, 10, {
+const authLimiter = createLimiter("rl:auth:", 15 * 60 * 1000, 15, {
   status: 429,
   message: "Too many attempts, please try again later.",
 });
 
-const strictLimiter = createLimiter("rl:strict:", 15 * 60 * 1000, 5, {
+const strictLimiter = createLimiter("rl:strict:", 15 * 60 * 1000, 10, {
   status: 429,
   message:
     "Too many attempts on this sensitive operation, please try again later.",
 });
 
-const adminCrudLimiter = createLimiter("rl:admin:", 15 * 60 * 1000, 30, {
+const adminCrudLimiter = createLimiter("rl:admin:", 15 * 60 * 1000, 100, {
   status: 429,
   message: "Too many requests, please try again later.",
 });

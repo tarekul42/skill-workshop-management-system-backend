@@ -5,7 +5,7 @@ import AppError from "../../errorHelpers/AppError";
 import { mailQueue } from "../../jobs/mail.queue";
 import User from "../user/user.model";
 
-const OTP_EXPIRATION = 2 * 60;
+const OTP_EXPIRATION = 5 * 60;
 
 const generateOtp = (length = 6) => {
   const otp = crypto.randomInt(10 ** (length - 1), 10 ** length).toString();
@@ -18,7 +18,8 @@ const hashOtp = (otp: string) => {
 };
 
 const sendOtp = async (email: string, name: string) => {
-  const user = await User.findOne({ email: { $eq: email } });
+  const normalizedEmail = email.toLowerCase();
+  const user = await User.findOne({ email: { $eq: normalizedEmail } });
 
   if (!user) {
     throw new AppError(StatusCodes.NOT_FOUND, "User not found");
@@ -29,21 +30,18 @@ const sendOtp = async (email: string, name: string) => {
 
   const otp = generateOtp();
 
-  const redisKey = `otp:${email}`;
+  const redisKey = `otp:${normalizedEmail}`;
 
   const hashedOtp = hashOtp(otp);
 
   await redisClient.set(redisKey, hashedOtp, {
-    expiration: {
-      type: "EX",
-      value: OTP_EXPIRATION,
-    },
+    EX: OTP_EXPIRATION,
   });
 
   await mailQueue.add("otp", {
     type: "otp",
     payload: {
-      email,
+      email: normalizedEmail,
       name,
       otp,
     },
@@ -51,7 +49,8 @@ const sendOtp = async (email: string, name: string) => {
 };
 
 const verifyOtp = async (email: string, otp: string) => {
-  const user = await User.findOne({ email: { $eq: email } });
+  const normalizedEmail = email.toLowerCase();
+  const user = await User.findOne({ email: { $eq: normalizedEmail } });
 
   if (!user) {
     throw new AppError(StatusCodes.NOT_FOUND, "User not found");
@@ -61,7 +60,7 @@ const verifyOtp = async (email: string, otp: string) => {
     throw new AppError(StatusCodes.BAD_REQUEST, "User already verified");
   }
 
-  const redisKey = `otp:${email}`;
+  const redisKey = `otp:${normalizedEmail}`;
 
   const savedOtp = await redisClient.get(redisKey);
 
@@ -69,7 +68,7 @@ const verifyOtp = async (email: string, otp: string) => {
     throw new AppError(StatusCodes.NOT_FOUND, "OTP not found");
   }
 
-  const attemptsKey = `otp_attempts:${email}`;
+  const attemptsKey = `otp_attempts:${normalizedEmail}`;
   const attempts = await redisClient.incr(attemptsKey);
 
   if (attempts === 1) {
@@ -90,7 +89,7 @@ const verifyOtp = async (email: string, otp: string) => {
 
   await Promise.all([
     User.updateOne(
-      { email: { $eq: email } },
+      { email: { $eq: normalizedEmail } },
       { isVerified: true },
       { runValidators: true },
     ),

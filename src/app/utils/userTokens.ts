@@ -31,10 +31,7 @@ const createUserTokens = async (user: Partial<IUser>) => {
 
   const hashedToken = hashToken(refreshToken);
   await redisClient.set(`refresh_token:${user._id}`, hashedToken, {
-    expiration: {
-      type: "EX",
-      value: 7 * 24 * 60 * 60, // 7 days in seconds
-    },
+    EX: 7 * 24 * 60 * 60, // 7 days in seconds
   });
 
   return { accessToken, refreshToken };
@@ -98,10 +95,7 @@ const createNewAccessToken = async (refreshToken: string) => {
 
   const hashedNewToken = hashToken(newRefreshToken);
   await redisClient.set(`refresh_token:${userId}`, hashedNewToken, {
-    expiration: {
-      type: "EX",
-      value: 7 * 24 * 60 * 60, // 7 days in seconds
-    },
+    EX: 7 * 24 * 60 * 60, // 7 days in seconds
   });
 
   return { accessToken, refreshToken: newRefreshToken };
