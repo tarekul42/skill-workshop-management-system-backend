@@ -28,6 +28,7 @@ import {
   updateSystemMetrics,
 } from "./app/utils/metrics";
 import { generalLimiter } from "./app/utils/rateLimiter";
+import { speedInsightsMiddleware } from "./app/middlewares/speedInsights";
 
 const app = express();
 
@@ -66,7 +67,7 @@ app.use((req, res, next) => {
 });
 
 // ──── Security Headers ────
-// contentSecurityPolicy is configured to allow swagger-ui-express assets
+// contentSecurityPolicy is configured to allow swagger-ui-express and Speed Insights assets
 app.use(
   helmet({
     contentSecurityPolicy: {
@@ -78,6 +79,7 @@ app.use(
           "'unsafe-eval'",
           "https://vercel.live",
           "https://cdnjs.cloudflare.com",
+          "https://vitals.vercel-analytics.com",
         ],
         styleSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com"],
         imgSrc: ["'self'", "data:", "validator.swagger.io"],
@@ -85,6 +87,7 @@ app.use(
           "'self'",
           "https://vercel.live",
           "https://cdnjs.cloudflare.com",
+          "https://vitals.vercel-analytics.com",
         ],
         frameSrc: ["'self'", "https://vercel.live"],
       },
@@ -135,6 +138,9 @@ app.use(doubleCsrfProtection);
 
 // ──── Audit Context ────
 app.use(auditContextMiddleware);
+
+// ──── Speed Insights ────
+app.use(speedInsightsMiddleware);
 
 // ──── Swagger Documentation ────
 app.get("/api-docs.json", (_req, res) => {
