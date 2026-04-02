@@ -3,3 +3,19 @@ npm-debug.log
 dist
 .git
 *.log
+.env
+.env.example
+tests
+docs
+postman_collection.json
+verify-security-fixes.mjs
+README.md
+LICENSE
+SECURITY.md
+.idea
+.qodo
+.github
+eslint.config.mjs
+# tsconfig files are needed for building
+# tsconfig.build.json
+# tsconfig.json

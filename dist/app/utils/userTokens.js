@@ -23,10 +23,7 @@ const createUserTokens = async (user) => {
     const refreshToken = (0, jwt_1.generateToken)(jwtPayload, env_1.default.JWT_REFRESH_SECRET, env_1.default.JWT_REFRESH_EXPIRES);
     const hashedToken = hashToken(refreshToken);
     await redis_config_1.redisClient.set(`refresh_token:${user._id}`, hashedToken, {
-        expiration: {
-            type: "EX",
-            value: 7 * 24 * 60 * 60, // 7 days in seconds
-        },
+        EX: 7 * 24 * 60 * 60, // 7 days in seconds
     });
     return { accessToken, refreshToken };
 };
@@ -59,10 +56,7 @@ const createNewAccessToken = async (refreshToken) => {
     const newRefreshToken = (0, jwt_1.generateToken)(jwtPayload, env_1.default.JWT_REFRESH_SECRET, env_1.default.JWT_REFRESH_EXPIRES);
     const hashedNewToken = hashToken(newRefreshToken);
     await redis_config_1.redisClient.set(`refresh_token:${userId}`, hashedNewToken, {
-        expiration: {
-            type: "EX",
-            value: 7 * 24 * 60 * 60, // 7 days in seconds
-        },
+        EX: 7 * 24 * 60 * 60, // 7 days in seconds
     });
     return { accessToken, refreshToken: newRefreshToken };
 };

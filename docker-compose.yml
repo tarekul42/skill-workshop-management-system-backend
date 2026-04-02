@@ -3,12 +3,12 @@ services:
     image: mongo:7
     container_name: skill-workshop-mongodb
     ports:
-      - "27019:27017"
+      - "27020:27017"
     volumes:
       - mongodb_data:/data/db
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      test: [ "CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')" ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -17,33 +17,63 @@ services:
     image: redis:7-alpine
     container_name: skill-workshop-redis
     ports:
-      - "6380:6379"
+      - "6381:6379"
     volumes:
       - redis_data:/data
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: [ "CMD", "redis-cli", "ping" ]
       interval: 30s
       timeout: 10s
       retries: 3
 
   backend:
     build: .
-    container_name: skill-workshop-backend
+    container_name: skill-workshop-management-system-backend-backend
     ports:
-      - "5001:5000"
+      - "5002:5000"
     env_file:
       - .env
     environment:
-      # Defaults for local Docker development.
-      # If you set these in `.env`, Docker Compose will use your values instead.
+      PORT: ${PORT:-5000}
+      NODE_ENV: ${NODE_ENV:-development}
       DATABASE_URL: ${DATABASE_URL:-mongodb://mongodb:27017/skill-workshop-management-system}
       REDIS_HOST: ${REDIS_HOST:-redis}
       REDIS_PORT: ${REDIS_PORT:-6379}
-      REDIS_USERNAME: ${REDIS_USERNAME:-}
-      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
-      BACKEND_DEV_URL: ${BACKEND_DEV_URL:-http://localhost:5000}
-      BACKEND_PROD_URL: ${BACKEND_PROD_URL:-http://localhost:5000}
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+      JWT_ACCESS_EXPIRES: ${JWT_ACCESS_EXPIRES}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      JWT_REFRESH_EXPIRES: ${JWT_REFRESH_EXPIRES}
+      BCRYPT_SALT_ROUND: ${BCRYPT_SALT_ROUND}
+      SUPER_ADMIN_EMAIL: ${SUPER_ADMIN_EMAIL}
+      SUPER_ADMIN_PASSWORD: ${SUPER_ADMIN_PASSWORD}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      GOOGLE_CALLBACK_URL: ${GOOGLE_CALLBACK_URL}
+      EXPRESS_SESSION_SECRET: ${EXPRESS_SESSION_SECRET}
+      FRONTEND_URL: ${FRONTEND_URL}
+      BACKEND_DEV_URL: ${BACKEND_DEV_URL:-http://localhost:5002}
+      BACKEND_PROD_URL: ${BACKEND_PROD_URL:-http://localhost:5002}
+      SSL_STORE_ID: ${SSL_STORE_ID}
+      SSL_STORE_PASS: ${SSL_STORE_PASS}
+      SSL_PAYMENT_API: ${SSL_PAYMENT_API}
+      SSL_VALIDATION_API: ${SSL_VALIDATION_API}
+      SSL_IPN_URL: ${SSL_IPN_URL}
+      SSL_SUCCESS_BACKEND_URL: ${SSL_SUCCESS_BACKEND_URL}
+      SSL_FAIL_BACKEND_URL: ${SSL_FAIL_BACKEND_URL}
+      SSL_CANCEL_BACKEND_URL: ${SSL_CANCEL_BACKEND_URL}
+      SSL_SUCCESS_FRONTEND_URL: ${SSL_SUCCESS_FRONTEND_URL}
+      SSL_FAIL_FRONTEND_URL: ${SSL_FAIL_FRONTEND_URL}
+      SSL_CANCEL_FRONTEND_URL: ${SSL_CANCEL_FRONTEND_URL}
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASS: ${SMTP_PASS}
+      SMTP_FROM: ${SMTP_FROM}
+      CSRF_SECRET: ${CSRF_SECRET}
     depends_on:
       mongodb:
         condition: service_healthy

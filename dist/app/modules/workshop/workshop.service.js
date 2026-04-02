@@ -145,10 +145,7 @@ const getAllWorkshops = async (query) => {
         meta,
     };
     await redis_config_1.redisClient.set(cacheKey, JSON.stringify(result), {
-        expiration: {
-            type: "EX",
-            value: 60, // cache for 60 seconds
-        },
+        EX: 60, // cache for 60 seconds
     });
     return result;
 };

@@ -14,13 +14,20 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV NODE_OPTIONS=--max-old-space-size=1024
 
-COPY package.json bun.lock ./
+# Switch to non-root user early
+# Ensure the app directory is owned by the bun user
+RUN chown -R bun:bun /app
+USER bun
 
-# Remove --frozen-lockfile to resolve potential sync issues during production install
+# Copy package files with correct ownership
+COPY --chown=bun:bun package.json bun.lock ./
+
+# Install production dependencies
 RUN bun install --prod
 
-COPY --from=build /app/dist ./dist
-# Copy ejs templates as they are not copied by tsc
-COPY --from=build /app/src/app/utils/templates ./dist/app/utils/templates
+# Copy built application and templates with correct ownership
+COPY --chown=bun:bun --from=build /app/dist ./dist
+COPY --chown=bun:bun --from=build /app/src/app/utils/templates ./dist/app/utils/templates
+
 EXPOSE 5000
 CMD ["bun", "dist/server.js"]
