@@ -10,4 +10,14 @@ router.get("/health", (_req: Request, res: Response) => {
   });
 });
 
+// V2 is under development — all other routes return 501 Not Implemented
+router.use((_req: Request, res: Response) => {
+  res.status(501).json({
+    success: false,
+    message:
+      "API v2 is not yet implemented. Please use /api/v1 or the default version.",
+    apiVersion: 2,
+  });
+});
+
 export default router;

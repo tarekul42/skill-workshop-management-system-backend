@@ -7,7 +7,7 @@ import auditLogger from "../../utils/auditLogger";
 import QueryBuilder from "../../utils/queryBuilder";
 import { AuditAction } from "../audit/audit.interface";
 import { userSearchableFields } from "./user.constant";
-import { IAuthProvider, IUser, UserRole } from "./user.interface";
+import { IAuthProvider, IUser, UserRole, isAdminRole, isSuperAdmin } from "./user.interface";
 import User from "./user.model";
 
 const createUser = async (payload: Partial<IUser>) => {
@@ -103,9 +103,7 @@ const updateUser = async (
     throw new AppError(StatusCodes.NOT_FOUND, "User not found");
   }
 
-  const isAdmin =
-    decodedToken.role === UserRole.ADMIN ||
-    decodedToken.role === UserRole.SUPER_ADMIN;
+  const isAdmin = isAdminRole(decodedToken.role);
   const isOwnProfile = decodedToken.userId === userId;
 
   if (!isAdmin && !isOwnProfile) {
@@ -118,10 +116,7 @@ const updateUser = async (
   const sanitizedPayload: Partial<IUser> = {};
 
   if (payload.role) {
-    if (
-      decodedToken.role === UserRole.STUDENT ||
-      decodedToken.role === UserRole.INSTRUCTOR
-    ) {
+    if (!isAdminRole(decodedToken.role)) {
       throw new AppError(
         StatusCodes.FORBIDDEN,
         "You are not authorized to change role",
@@ -129,7 +124,7 @@ const updateUser = async (
     }
     if (
       payload.role === UserRole.SUPER_ADMIN &&
-      decodedToken.role === UserRole.ADMIN
+      !isSuperAdmin(decodedToken.role)
     ) {
       throw new AppError(
         StatusCodes.FORBIDDEN,
@@ -152,8 +147,6 @@ const updateUser = async (
 
   if (isAdmin) {
     allowedFields.push(...sensitiveFields);
-  } else if (isOwnProfile) {
-    allowedFields.push("name", "phone", "age", "address");
   }
 
   for (const key of Object.keys(payload)) {
@@ -194,9 +187,7 @@ const updateUser = async (
 };
 
 const deleteUser = async (userId: string, decodedToken: JwtPayload) => {
-  const isAdmin =
-    decodedToken.role === UserRole.ADMIN ||
-    decodedToken.role === UserRole.SUPER_ADMIN;
+  const isAdmin = isAdminRole(decodedToken.role);
 
   if (!isAdmin) {
     throw new AppError(StatusCodes.FORBIDDEN, "Only admins can delete users");

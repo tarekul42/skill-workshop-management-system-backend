@@ -58,14 +58,6 @@ const writeAuditLog = async (
  */
 const auditPlugin = (schema: Schema) => {
   // ──── CREATE ────
-  schema.post("save", async function (doc) {
-    if (doc.isNew !== false && doc.$isNew !== false) {
-      // $isNew is already false post-save, so we track it via wasNew
-    }
-    // post-save receives the saved doc; for new docs we log CREATE
-    // We use a flag set in pre-save to distinguish create vs update-via-save
-  });
-
   schema.pre("save", function () {
     // Tag documents so post-save knows if this was a create
     (this as Record<string, unknown>).$wasNew = this.isNew;

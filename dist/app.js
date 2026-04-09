@@ -132,7 +132,11 @@ app.get("/api/csrf-token", (req, res) => {
 // ──── API Routes ────
 app.use("/api", rateLimiter_1.generalLimiter, api_1.default);
 // ──── Metrics Endpoint ────
-app.get("/metrics", async (_req, res) => {
+app.get("/metrics", async (req, res) => {
+    const apiKey = req.headers["x-metrics-key"];
+    if (apiKey !== env_1.default.METRICS_API_KEY) {
+        return res.status(403).end("Forbidden");
+    }
     try {
         await (0, metrics_1.updateSystemMetrics)();
         res.set("Content-Type", metrics_1.register.contentType);

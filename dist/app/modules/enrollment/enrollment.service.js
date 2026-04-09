@@ -11,6 +11,8 @@ const audit_interface_1 = require("../audit/audit.interface");
 const enrollment_interface_1 = require("./enrollment.interface");
 const enrollment_model_1 = __importDefault(require("./enrollment.model"));
 const enrollment_repository_1 = __importDefault(require("./enrollment.repository"));
+const queryBuilder_1 = __importDefault(require("../../utils/queryBuilder"));
+const user_interface_1 = require("../user/user.interface");
 const createEnrollment = async (payload, userId) => {
     if (!payload.workshop) {
         throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Workshop ID is required.");
@@ -61,44 +63,30 @@ const getSingleEnrollment = async (enrollmentId, userId, userRole) => {
     }
     const populatedEnrollment = enrollment;
     const isOwner = populatedEnrollment.user && String(populatedEnrollment.user._id) === userId;
-    const isAdmin = userRole === "ADMIN" || userRole === "SUPER_ADMIN";
+    const isAdmin = (0, user_interface_1.isAdminRole)(userRole);
     if (!isOwner && !isAdmin) {
         throw new AppError_1.default(http_status_codes_1.StatusCodes.FORBIDDEN, "You are not authorized to view this enrollment");
     }
     return populatedEnrollment;
 };
 const getAllEnrollments = async (query) => {
-    const { status, page = 1, limit = 10 } = query;
-    const filter = {};
-    if (typeof status === "string") {
-        const allowedStatuses = Object.values(enrollment_interface_1.ENROLLMENT_STATUS);
-        if (allowedStatuses.includes(status)) {
-            filter.status = status;
-        }
-    }
-    const skip = (Number(page) - 1) * Number(limit);
-    const [enrollments, total] = await Promise.all([
-        enrollment_model_1.default.find(filter)
+    const queryBuilder = new queryBuilder_1.default(enrollment_model_1.default.find(), query);
+    const enrollmentsData = queryBuilder.filter().sort().fields().paginate();
+    const [data, meta] = await Promise.all([
+        enrollmentsData
+            .build()
             .populate("user", "name email phone")
             .populate("workshop", "title price images location")
-            .populate("payment", "status amount transactionId")
-            .skip(skip)
-            .limit(Number(limit))
-            .sort({ createdAt: -1 }),
-        enrollment_model_1.default.countDocuments(filter),
+            .populate("payment", "status amount transactionId"),
+        queryBuilder.getMeta(),
     ]);
     return {
-        data: enrollments,
-        meta: {
-            total,
-            page: Number(page),
-            limit: Number(limit),
-            totalPage: Math.ceil(total / Number(limit)),
-        },
+        data,
+        meta,
     };
 };
 const updateEnrollmentStatus = async (enrollmentId, status, userId, userRole) => {
-    if (userRole !== "ADMIN" && userRole !== "SUPER_ADMIN") {
+    if (!(0, user_interface_1.isAdminRole)(userRole)) {
         throw new AppError_1.default(http_status_codes_1.StatusCodes.FORBIDDEN, "Only admins can update enrollment status");
     }
     const allowedStatuses = Object.values(enrollment_interface_1.ENROLLMENT_STATUS);

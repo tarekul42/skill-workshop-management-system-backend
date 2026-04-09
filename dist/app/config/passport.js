@@ -60,6 +60,14 @@ passport_1.default.use(new passport_google_oauth20_1.Strategy({
             // OPTIONAL: Update picture or name if they changed on Google
             existingUser.name = name;
             existingUser.picture = picture;
+            // Guard against duplicate google provider
+            const hasGoogleProvider = existingUser.auths.some((auth) => auth.provider === "google");
+            if (!hasGoogleProvider) {
+                existingUser.auths.push({
+                    provider: "google",
+                    providerId: profile.id,
+                });
+            }
             await existingUser.save();
             return done(null, existingUser);
         }

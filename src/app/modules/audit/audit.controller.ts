@@ -1,8 +1,9 @@
 import { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import AuditService from "./audit.service";
+import catchAsync from "../../utils/catchAsync";
 
-const getAuditLogs = async (req: Request, res: Response) => {
+const getAuditLogs = catchAsync(async (req: Request, res: Response) => {
   const {
     page,
     limit,
@@ -30,9 +31,9 @@ const getAuditLogs = async (req: Request, res: Response) => {
     message: "Audit logs retrieved successfully",
     data: result,
   });
-};
+});
 
-const getAuditLogById = async (req: Request, res: Response) => {
+const getAuditLogById = catchAsync(async (req: Request, res: Response) => {
   const id = req.params.id as string;
   const log = await AuditService.getAuditLogById(id);
 
@@ -41,7 +42,7 @@ const getAuditLogById = async (req: Request, res: Response) => {
     message: "Audit log retrieved successfully",
     data: log,
   });
-};
+});
 
 const AuditController = {
   getAuditLogs,

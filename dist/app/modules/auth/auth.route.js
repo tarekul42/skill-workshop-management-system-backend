@@ -7,6 +7,7 @@ const express_1 = require("express");
 const passport_1 = __importDefault(require("passport"));
 const env_1 = __importDefault(require("../../config/env"));
 const checkAuth_1 = __importDefault(require("../../middlewares/checkAuth"));
+const checkResetToken_1 = __importDefault(require("../../middlewares/checkResetToken"));
 const rateLimiter_1 = require("../../utils/rateLimiter");
 const user_interface_1 = require("../user/user.interface");
 const auth_controller_1 = __importDefault(require("./auth.controller"));
@@ -209,8 +210,7 @@ router.post("/forgot-password", rateLimiter_1.authLimiter, auth_controller_1.def
  *   post:
  *     summary: Reset password with token
  *     tags: [Auth]
- *     security:
- *       - bearerAuth: []
+ *     description: Reset a user's password using a valid reset token (supplied via the checkResetToken middleware).
  *     requestBody:
  *       required: true
  *       content:
@@ -218,13 +218,12 @@ router.post("/forgot-password", rateLimiter_1.authLimiter, auth_controller_1.def
  *           schema:
  *             type: object
  *             required:
- *               - oldPassword
  *               - newPassword
  *             properties:
- *               oldPassword:
- *                 type: string
  *               newPassword:
  *                 type: string
+ *                 description: "New password to set for the account."
+ *                 example: "NewSecurePass123!"
  *     responses:
  *       200:
  *         description: Password reset successful
@@ -235,7 +234,7 @@ router.post("/forgot-password", rateLimiter_1.authLimiter, auth_controller_1.def
  *       400:
  *         $ref: "#/components/responses/BadRequestError"
  */
-router.post("/reset-password", rateLimiter_1.authLimiter, (0, checkAuth_1.default)(...Object.values(user_interface_1.UserRole)), auth_controller_1.default.resetPassword);
+router.post("/reset-password", rateLimiter_1.authLimiter, checkResetToken_1.default, auth_controller_1.default.resetPassword);
 /**
  * @openapi
  * /auth/google:

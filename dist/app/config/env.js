@@ -47,6 +47,9 @@ const loadEnvVariables = () => {
         "REDIS_PORT",
         "CSRF_SECRET",
     ];
+    if (process.env.NODE_ENV !== "test") {
+        requiredEnvVariables.push("RESET_PASSWORD_SECRET", "METRICS_API_KEY");
+    }
     requiredEnvVariables.forEach((envVariables) => {
         if (!process.env[envVariables]) {
             throw new Error(`Required environment variable ${envVariables} is not defined`);
@@ -104,6 +107,10 @@ const loadEnvVariables = () => {
             REDIS_PASSWORD: process.env.REDIS_PASSWORD ?? "",
         },
         CSRF_SECRET: process.env.CSRF_SECRET,
+        RESET_PASSWORD_SECRET: process.env.RESET_PASSWORD_SECRET ||
+            (process.env.NODE_ENV === "test" ? "test-reset-secret" : ""),
+        METRICS_API_KEY: process.env.METRICS_API_KEY ||
+            (process.env.NODE_ENV === "test" ? "test-metrics-key" : ""),
     };
 };
 const envVariables = loadEnvVariables();

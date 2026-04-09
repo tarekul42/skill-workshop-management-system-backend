@@ -11,6 +11,7 @@ const catchAsync_1 = __importDefault(require("../../utils/catchAsync"));
 const logger_1 = __importDefault(require("../../utils/logger"));
 const sendResponse_1 = __importDefault(require("../../utils/sendResponse"));
 const setCookie_1 = __importDefault(require("../../utils/setCookie"));
+const tokenBlacklist_1 = require("../../utils/tokenBlacklist");
 const userTokens_1 = require("../../utils/userTokens");
 const auth_service_1 = __importDefault(require("./auth.service"));
 const credentialsLogin = (0, catchAsync_1.default)(async (req, res, next) => {
@@ -61,6 +62,16 @@ const logout = (0, catchAsync_1.default)(async (req, res) => {
         secure: isProduction,
         sameSite: isProduction ? "strict" : "lax",
     });
+    let accessToken = req.headers.authorization;
+    if (accessToken?.startsWith("Bearer ")) {
+        accessToken = accessToken.split(" ")[1];
+    }
+    else {
+        accessToken = req.cookies.accessToken;
+    }
+    if (accessToken) {
+        await (0, tokenBlacklist_1.invalidateToken)(accessToken, env_1.default.JWT_ACCESS_SECRET);
+    }
     if (req.session) {
         req.session.destroy((err) => {
             if (err) {
@@ -79,7 +90,14 @@ const changePassword = (0, catchAsync_1.default)(async (req, res) => {
     const newPassword = req.body.newPassword;
     const oldPassword = req.body.oldPassword;
     const decodedToken = req.user;
-    await auth_service_1.default.changePassword(oldPassword, newPassword, decodedToken);
+    let accessToken = req.headers.authorization;
+    if (accessToken?.startsWith("Bearer ")) {
+        accessToken = accessToken.split(" ")[1];
+    }
+    else {
+        accessToken = req.cookies.accessToken;
+    }
+    await auth_service_1.default.changePassword(oldPassword, newPassword, decodedToken, accessToken);
     (0, sendResponse_1.default)(res, {
         success: true,
         statusCode: http_status_codes_1.StatusCodes.OK,
@@ -111,7 +129,14 @@ const forgotPassword = (0, catchAsync_1.default)(async (req, res) => {
 const resetPassword = (0, catchAsync_1.default)(async (req, res) => {
     const newPassword = req.body.newPassword;
     const decodedToken = req.user;
-    await auth_service_1.default.resetPassword(newPassword, decodedToken);
+    let accessToken = req.headers.authorization;
+    if (accessToken?.startsWith("Bearer ")) {
+        accessToken = accessToken.split(" ")[1];
+    }
+    else {
+        accessToken = req.cookies.accessToken;
+    }
+    await auth_service_1.default.resetPassword(newPassword, decodedToken, accessToken);
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_codes_1.StatusCodes.OK,
         success: true,
@@ -128,7 +153,26 @@ const googleCallback = (0, catchAsync_1.default)(async (req, res) => {
         // Reject if it looks like an absolute URL (contains protocol)
         if (!sanitized.includes("://") &&
             !/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(sanitized)) {
-            redirectTo = sanitized;
+            let normalizedPath = sanitized.split("?")[0];
+            while (normalizedPath.length > 0 && normalizedPath.startsWith("/")) {
+                normalizedPath = normalizedPath.substring(1);
+            }
+            while (normalizedPath.length > 0 && normalizedPath.endsWith("/")) {
+                normalizedPath = normalizedPath.substring(0, normalizedPath.length - 1);
+            }
+            const ALLOWED_REDIRECT_PATHS = [
+                "dashboard",
+                "profile",
+                "settings",
+                "workshops",
+                "enrollments",
+                "payments",
+                "",
+            ];
+            const isAllowed = ALLOWED_REDIRECT_PATHS.some((p) => normalizedPath === p || normalizedPath.startsWith(p + "/"));
+            if (isAllowed) {
+                redirectTo = sanitized;
+            }
         }
     }
     const user = req.user;
