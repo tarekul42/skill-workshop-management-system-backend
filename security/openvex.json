@@ -1,0 +1,22 @@
+{
+  "@context": "https://openvex.dev/ns/v0.2.0",
+  "@id": "https://example.com/vex/skill-workshop-2026-001",
+  "author": "john.dioe@example.com",
+  "timestamp": "2026-04-02T07:11:00Z",
+  "version": 1,
+  "statements": [
+    {
+      "vulnerability": {
+        "@id": "CVE-2011-4116"
+      },
+      "products": [
+        {
+          "@id": "pkg:docker/skill-workshop-backend@latest"
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "The vulnerable code is not reachable in our containerized environment based on bun:slim base image. We have assessed the risk and determined it is not exploitable."
+    }
+  ]
+}

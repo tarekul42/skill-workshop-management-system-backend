@@ -80,7 +80,7 @@ const validatePayment = async (payload) => {
     try {
         const response = await (0, axios_1.default)({
             method: "GET",
-            url: `${env_1.default.SSL.SSL_VALIDATION_API}?val_id=${payload.val_id}&store_id=${env_1.default.SSL.SSL_STORE_ID}&store_password=${env_1.default.SSL.SSL_STORE_PASS}`,
+            url: `${env_1.default.SSL.SSL_VALIDATION_API}?val_id=${payload.val_id}&store_id=${env_1.default.SSL.SSL_STORE_ID}&store_passwd=${env_1.default.SSL.SSL_STORE_PASS}`,
         });
         logger_1.default.info({
             message: "sslCommerz validate api response",

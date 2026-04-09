@@ -54,7 +54,8 @@ next) => {
         }
         else if (errorObj.code === "EBADCSRFTOKEN") {
             statusCode = http_status_codes_1.StatusCodes.FORBIDDEN;
-            message = "Invalid CSRF token";
+            message =
+                "Invalid CSRF token. Please ensure you have fetched a new token and included it in the 'x-csrf-token' header.";
         }
         else if (errorObj.code === 11000) {
             const simplifiedError = (0, handleDuplicateError_1.default)(err);

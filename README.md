@@ -291,7 +291,7 @@ System metrics are exposed for Prometheus scraping at the `/metrics` endpoint. T
 
 The system implements multiple layers of security to protect data and ensuring system integrity:
 
-- **CSRF Protection**: Prevents cross-site request forgery using `csrf-csrf` (Double CSRF pattern).
+- **CSRF Protection**: Prevents cross-site request forgery using `csrf-csrf` (Double CSRF pattern). [Learn more about how to use CSRF tokens here](./docs/CSRF.md).
 - **Rate Limiting**: Protects against brute-force and DDoS attacks via `express-rate-limit` with Redis storage.
   - **General Limiter**: 60 requests per minute.
   - **Auth Limiter**: 10 attempts per 15 minutes for login/refresh.
