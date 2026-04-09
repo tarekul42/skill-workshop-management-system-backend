@@ -39,3 +39,15 @@ interface IUser {
 }
 
 export { IAuthProvider, IsActive, IUser, UserRole };
+
+export const isAdminRole = (role: string): boolean =>
+  role === UserRole.ADMIN || role === UserRole.SUPER_ADMIN;
+
+export const isSuperAdmin = (role: string): boolean =>
+  role === UserRole.SUPER_ADMIN;
+
+export const isOwnResourceOrAdmin = (
+  resourceUserId: string,
+  tokenUserId: string,
+  tokenRole: string,
+): boolean => resourceUserId === tokenUserId || isAdminRole(tokenRole);

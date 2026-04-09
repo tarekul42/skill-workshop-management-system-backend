@@ -33,7 +33,16 @@ const userSchema = new mongoose_1.Schema({
         enum: Object.values(user_interface_1.UserRole),
         default: user_interface_1.UserRole.STUDENT,
     },
-    auths: [authProviderSchema],
+    auths: {
+        type: [authProviderSchema],
+        validate: {
+            validator: function (auths) {
+                const providers = auths.map((a) => a.provider);
+                return new Set(providers).size === providers.length;
+            },
+            message: "Duplicate auth providers are not allowed.",
+        },
+    },
 }, {
     timestamps: true,
     versionKey: false,

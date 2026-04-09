@@ -10,6 +10,8 @@ import {
 } from "./enrollment.interface";
 import Enrollment from "./enrollment.model";
 import EnrollmentRepository from "./enrollment.repository";
+import QueryBuilder from "../../utils/queryBuilder";
+import { isAdminRole } from "../user/user.interface";
 
 const createEnrollment = async (
   payload: Partial<IEnrollment>,
@@ -87,7 +89,7 @@ const getSingleEnrollment = async (
 
   const isOwner =
     populatedEnrollment.user && String(populatedEnrollment.user._id) === userId;
-  const isAdmin = userRole === "ADMIN" || userRole === "SUPER_ADMIN";
+  const isAdmin = isAdminRole(userRole);
 
   if (!isOwner && !isAdmin) {
     throw new AppError(
@@ -100,38 +102,22 @@ const getSingleEnrollment = async (
 };
 
 const getAllEnrollments = async (query: Record<string, string>) => {
-  const { status, page = 1, limit = 10 } = query;
+  const queryBuilder = new QueryBuilder(Enrollment.find(), query);
 
-  const filter: Record<string, unknown> = {};
+  const enrollmentsData = queryBuilder.filter().sort().fields().paginate();
 
-  if (typeof status === "string") {
-    const allowedStatuses = Object.values(ENROLLMENT_STATUS) as string[];
-    if (allowedStatuses.includes(status)) {
-      filter.status = status;
-    }
-  }
-
-  const skip = (Number(page) - 1) * Number(limit);
-
-  const [enrollments, total] = await Promise.all([
-    Enrollment.find(filter)
+  const [data, meta] = await Promise.all([
+    enrollmentsData
+      .build()
       .populate("user", "name email phone")
       .populate("workshop", "title price images location")
-      .populate("payment", "status amount transactionId")
-      .skip(skip)
-      .limit(Number(limit))
-      .sort({ createdAt: -1 }),
-    Enrollment.countDocuments(filter),
+      .populate("payment", "status amount transactionId"),
+    queryBuilder.getMeta(),
   ]);
 
   return {
-    data: enrollments,
-    meta: {
-      total,
-      page: Number(page),
-      limit: Number(limit),
-      totalPage: Math.ceil(total / Number(limit)),
-    },
+    data,
+    meta,
   };
 };
 
@@ -141,7 +127,7 @@ const updateEnrollmentStatus = async (
   userId: string,
   userRole: string,
 ) => {
-  if (userRole !== "ADMIN" && userRole !== "SUPER_ADMIN") {
+  if (!isAdminRole(userRole)) {
     throw new AppError(
       StatusCodes.FORBIDDEN,
       "Only admins can update enrollment status",

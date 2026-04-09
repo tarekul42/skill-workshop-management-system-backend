@@ -79,20 +79,18 @@ const updateUser = async (userId, payload, decodedToken) => {
     if (!user) {
         throw new AppError_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "User not found");
     }
-    const isAdmin = decodedToken.role === user_interface_1.UserRole.ADMIN ||
-        decodedToken.role === user_interface_1.UserRole.SUPER_ADMIN;
+    const isAdmin = (0, user_interface_1.isAdminRole)(decodedToken.role);
     const isOwnProfile = decodedToken.userId === userId;
     if (!isAdmin && !isOwnProfile) {
         throw new AppError_1.default(http_status_codes_1.StatusCodes.FORBIDDEN, "You are not authorized to update this user");
     }
     const sanitizedPayload = {};
     if (payload.role) {
-        if (decodedToken.role === user_interface_1.UserRole.STUDENT ||
-            decodedToken.role === user_interface_1.UserRole.INSTRUCTOR) {
+        if (!(0, user_interface_1.isAdminRole)(decodedToken.role)) {
             throw new AppError_1.default(http_status_codes_1.StatusCodes.FORBIDDEN, "You are not authorized to change role");
         }
         if (payload.role === user_interface_1.UserRole.SUPER_ADMIN &&
-            decodedToken.role === user_interface_1.UserRole.ADMIN) {
+            !(0, user_interface_1.isSuperAdmin)(decodedToken.role)) {
             throw new AppError_1.default(http_status_codes_1.StatusCodes.FORBIDDEN, "You are not authorized to assign SUPER_ADMIN role");
         }
         sanitizedPayload.role = payload.role;
@@ -104,9 +102,6 @@ const updateUser = async (userId, payload, decodedToken) => {
     const allowedFields = ["name", "password", "phone", "age", "address"];
     if (isAdmin) {
         allowedFields.push(...sensitiveFields);
-    }
-    else if (isOwnProfile) {
-        allowedFields.push("name", "phone", "age", "address");
     }
     for (const key of Object.keys(payload)) {
         if (key === "role" || key === "password")
@@ -138,8 +133,7 @@ const updateUser = async (userId, payload, decodedToken) => {
     return updatedUser;
 };
 const deleteUser = async (userId, decodedToken) => {
-    const isAdmin = decodedToken.role === user_interface_1.UserRole.ADMIN ||
-        decodedToken.role === user_interface_1.UserRole.SUPER_ADMIN;
+    const isAdmin = (0, user_interface_1.isAdminRole)(decodedToken.role);
     if (!isAdmin) {
         throw new AppError_1.default(http_status_codes_1.StatusCodes.FORBIDDEN, "Only admins can delete users");
     }

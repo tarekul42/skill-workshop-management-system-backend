@@ -12,6 +12,7 @@ const AppError_1 = __importDefault(require("../errorHelpers/AppError"));
 const user_interface_1 = require("../modules/user/user.interface");
 const user_model_1 = __importDefault(require("../modules/user/user.model"));
 const jwt_1 = require("./jwt");
+const parseExpiry_1 = require("./parseExpiry");
 const hashToken = (token) => crypto_1.default.createHash("sha256").update(token).digest("hex");
 const createUserTokens = async (user) => {
     const jwtPayload = {
@@ -23,7 +24,7 @@ const createUserTokens = async (user) => {
     const refreshToken = (0, jwt_1.generateToken)(jwtPayload, env_1.default.JWT_REFRESH_SECRET, env_1.default.JWT_REFRESH_EXPIRES);
     const hashedToken = hashToken(refreshToken);
     await redis_config_1.redisClient.set(`refresh_token:${user._id}`, hashedToken, {
-        EX: 7 * 24 * 60 * 60, // 7 days in seconds
+        EX: (0, parseExpiry_1.parseExpiryToSeconds)(env_1.default.JWT_REFRESH_EXPIRES),
     });
     return { accessToken, refreshToken };
 };
@@ -56,7 +57,7 @@ const createNewAccessToken = async (refreshToken) => {
     const newRefreshToken = (0, jwt_1.generateToken)(jwtPayload, env_1.default.JWT_REFRESH_SECRET, env_1.default.JWT_REFRESH_EXPIRES);
     const hashedNewToken = hashToken(newRefreshToken);
     await redis_config_1.redisClient.set(`refresh_token:${userId}`, hashedNewToken, {
-        EX: 7 * 24 * 60 * 60, // 7 days in seconds
+        EX: (0, parseExpiry_1.parseExpiryToSeconds)(env_1.default.JWT_REFRESH_EXPIRES),
     });
     return { accessToken, refreshToken: newRefreshToken };
 };

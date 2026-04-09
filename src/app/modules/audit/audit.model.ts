@@ -51,6 +51,7 @@ auditLogSchema.index(
 
 // Compound index for common queries
 auditLogSchema.index({ collectionName: 1, documentId: 1 });
+auditLogSchema.index({ collectionName: 1, createdAt: -1 });
 auditLogSchema.index({ performedBy: 1, createdAt: -1 });
 
 const AuditLog = model<IAuditLog>("AuditLog", auditLogSchema);

@@ -9,6 +9,7 @@ const AppError_1 = __importDefault(require("../errorHelpers/AppError"));
 const user_interface_1 = require("../modules/user/user.interface");
 const user_model_1 = __importDefault(require("../modules/user/user.model"));
 const jwt_1 = require("../utils/jwt");
+const tokenBlacklist_1 = require("../utils/tokenBlacklist");
 const checkAuth = (...authRoles) => async (req, _res, next) => {
     try {
         let accessToken = req.headers.authorization;
@@ -21,6 +22,10 @@ const checkAuth = (...authRoles) => async (req, _res, next) => {
         const verifiedToken = (0, jwt_1.verifyToken)(accessToken, env_1.default.JWT_ACCESS_SECRET);
         if (!verifiedToken) {
             throw new AppError_1.default(http_status_codes_1.StatusCodes.FORBIDDEN, "Invalid access token");
+        }
+        const blacklisted = await (0, tokenBlacklist_1.isTokenBlacklisted)(accessToken);
+        if (blacklisted) {
+            throw new AppError_1.default(http_status_codes_1.StatusCodes.UNAUTHORIZED, "Token has been invalidated");
         }
         const isUserExists = await user_model_1.default.findOne({ email: verifiedToken.email });
         if (!isUserExists) {

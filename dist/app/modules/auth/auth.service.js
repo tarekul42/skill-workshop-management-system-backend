@@ -10,6 +10,7 @@ const validator_1 = __importDefault(require("validator"));
 const env_1 = __importDefault(require("../../config/env"));
 const AppError_1 = __importDefault(require("../../errorHelpers/AppError"));
 const mail_queue_1 = require("../../jobs/mail.queue");
+const tokenBlacklist_1 = require("../../utils/tokenBlacklist");
 const userTokens_1 = require("../../utils/userTokens");
 const user_interface_1 = require("../user/user.interface");
 const user_model_1 = __importDefault(require("../user/user.model"));
@@ -20,7 +21,7 @@ const getNewAccessToken = async (refreshToken) => {
     const tokens = await (0, userTokens_1.createNewAccessToken)(refreshToken);
     return tokens;
 };
-const changePassword = async (oldPassword, newPassword, decodedToken) => {
+const changePassword = async (oldPassword, newPassword, decodedToken, accessToken) => {
     const user = await user_model_1.default.findById(decodedToken.userId);
     if (!user) {
         throw new AppError_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "User not found");
@@ -37,6 +38,7 @@ const changePassword = async (oldPassword, newPassword, decodedToken) => {
     }
     user.password = await bcryptjs_1.default.hash(newPassword, Number(env_1.default.BCRYPT_SALT_ROUND));
     await user.save();
+    await (0, tokenBlacklist_1.invalidateToken)(accessToken, env_1.default.JWT_ACCESS_SECRET);
 };
 const setPassword = async (userId, plainPassword) => {
     const user = await user_model_1.default.findById(userId);
@@ -70,28 +72,23 @@ const forgotPassword = async (email) => {
         throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Invalid email format");
     }
     const isUserExists = await user_model_1.default.findOne({ email: { $eq: email } });
-    if (!isUserExists) {
-        throw new AppError_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "User not found");
-    }
-    if (!isUserExists.isVerified) {
-        throw new AppError_1.default(http_status_codes_1.StatusCodes.FORBIDDEN, "User is not verified");
-    }
-    if (isUserExists.isActive === user_interface_1.IsActive.BLOCKED ||
-        isUserExists.isActive === user_interface_1.IsActive.INACTIVE) {
-        throw new AppError_1.default(http_status_codes_1.StatusCodes.FORBIDDEN, "User is blocked or inactive");
-    }
-    if (isUserExists.isDeleted) {
-        throw new AppError_1.default(http_status_codes_1.StatusCodes.FORBIDDEN, "User is deleted");
+    // Generic success message to prevent user enumeration
+    if (!isUserExists ||
+        !isUserExists.isVerified ||
+        isUserExists.isActive === user_interface_1.IsActive.BLOCKED ||
+        isUserExists.isActive === user_interface_1.IsActive.INACTIVE ||
+        isUserExists.isDeleted) {
+        return;
     }
     const jwtPayload = {
         userId: isUserExists._id,
         email: isUserExists.email,
         role: isUserExists.role,
     };
-    const resetToken = jsonwebtoken_1.default.sign(jwtPayload, env_1.default.JWT_ACCESS_SECRET, {
+    const resetToken = jsonwebtoken_1.default.sign(jwtPayload, env_1.default.RESET_PASSWORD_SECRET, {
         expiresIn: "10m",
     });
-    const resetUILink = `${env_1.default.FRONTEND_URL}/reset-password?id=${isUserExists._id}&token=${resetToken}`;
+    const resetUILink = `${env_1.default.FRONTEND_URL}/reset-password?token=${resetToken}`;
     await mail_queue_1.mailQueue.add("forgot-password", {
         type: "forgot-password",
         payload: {
@@ -101,13 +98,14 @@ const forgotPassword = async (email) => {
         },
     });
 };
-const resetPassword = async (newPassword, decodedToken) => {
+const resetPassword = async (newPassword, decodedToken, accessToken) => {
     const user = await user_model_1.default.findById(decodedToken.userId);
     if (!user) {
         throw new AppError_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "User not found");
     }
     user.password = await bcryptjs_1.default.hash(newPassword, Number(env_1.default.BCRYPT_SALT_ROUND));
     await user.save();
+    await (0, tokenBlacklist_1.invalidateToken)(accessToken, env_1.default.RESET_PASSWORD_SECRET);
 };
 const AuthServices = {
     getNewAccessToken,

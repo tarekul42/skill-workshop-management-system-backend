@@ -222,8 +222,7 @@ router.post("/forgot-password", authLimiter, AuthControllers.forgotPassword);
  *   post:
  *     summary: Reset password with token
  *     tags: [Auth]
- *     security:
- *       - bearerAuth: []
+ *     description: Reset a user's password using a valid reset token (supplied via the checkResetToken middleware).
  *     requestBody:
  *       required: true
  *       content:
@@ -231,13 +230,12 @@ router.post("/forgot-password", authLimiter, AuthControllers.forgotPassword);
  *           schema:
  *             type: object
  *             required:
- *               - oldPassword
  *               - newPassword
  *             properties:
- *               oldPassword:
- *                 type: string
  *               newPassword:
  *                 type: string
+ *                 description: "New password to set for the account."
+ *                 example: "NewSecurePass123!"
  *     responses:
  *       200:
  *         description: Password reset successful

@@ -6,6 +6,7 @@ import QueryBuilder from "../../utils/queryBuilder";
 import { categorySearchableFields } from "./category.constant";
 import { ICategory } from "./category.interface";
 import { Category } from "./category.model";
+import { WorkShop } from "../workshop/workshop.model";
 
 const createCategory = async (payload: ICategory) => {
   if (typeof payload.name !== "string") {
@@ -159,7 +160,6 @@ const deleteCategory = async (id: string) => {
   }
 
   // Guard: Prevent deleting a category that has associated workshops
-  const { WorkShop } = await import("../workshop/workshop.model");
   const workshopCount = await WorkShop.countDocuments({
     category: { $eq: id },
     isDeleted: { $ne: true },
