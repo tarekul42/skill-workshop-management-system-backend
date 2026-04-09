@@ -1,16 +1,11 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const express_1 = __importDefault(require("express"));
-const checkAuth_1 = __importDefault(require("../../middlewares/checkAuth"));
-const validateRequest_1 = __importDefault(require("../../middlewares/validateRequest"));
-const rateLimiter_1 = require("../../utils/rateLimiter");
-const user_interface_1 = require("../user/user.interface");
-const payment_controller_1 = __importDefault(require("./payment.controller"));
-const payment_validation_1 = require("./payment.validation");
-const router = express_1.default.Router();
+import express from "express";
+import checkAuth from "../../middlewares/checkAuth";
+import validateRequest from "../../middlewares/validateRequest";
+import { adminCrudLimiter, authLimiter } from "../../utils/rateLimiter";
+import { UserRole } from "../user/user.interface";
+import PaymentController from "./payment.controller";
+import { refundPaymentBodySchema, validatePaymentBodySchema, } from "./payment.validation";
+const router = express.Router();
 /**
  * @openapi
  * tags:
@@ -48,7 +43,7 @@ const router = express_1.default.Router();
  *       401:
  *         $ref: "#/components/responses/UnauthorizedError"
  */
-router.post("/init-payment/:enrollmentId", rateLimiter_1.authLimiter, (0, checkAuth_1.default)(user_interface_1.UserRole.STUDENT), payment_controller_1.default.initPayment);
+router.post("/init-payment/:enrollmentId", authLimiter, checkAuth(UserRole.STUDENT), PaymentController.initPayment);
 /**
  * @openapi
  * /payment/success:
@@ -60,7 +55,7 @@ router.post("/init-payment/:enrollmentId", rateLimiter_1.authLimiter, (0, checkA
  *       302:
  *         description: Redirects to frontend success page
  */
-router.post("/success", payment_controller_1.default.successPayment);
+router.post("/success", PaymentController.successPayment);
 /**
  * @openapi
  * /payment/fail:
@@ -72,7 +67,7 @@ router.post("/success", payment_controller_1.default.successPayment);
  *       302:
  *         description: Redirects to frontend fail page
  */
-router.post("/fail", payment_controller_1.default.failPayment);
+router.post("/fail", PaymentController.failPayment);
 /**
  * @openapi
  * /payment/cancel:
@@ -84,7 +79,7 @@ router.post("/fail", payment_controller_1.default.failPayment);
  *       302:
  *         description: Redirects to frontend cancel page
  */
-router.post("/cancel", payment_controller_1.default.cancelPayment);
+router.post("/cancel", PaymentController.cancelPayment);
 /**
  * @openapi
  * /payment/invoice/{paymentId}:
@@ -118,7 +113,7 @@ router.post("/cancel", payment_controller_1.default.cancelPayment);
  *       404:
  *         $ref: "#/components/responses/NotFoundError"
  */
-router.get("/invoice/:paymentId", rateLimiter_1.authLimiter, (0, checkAuth_1.default)(...Object.values(user_interface_1.UserRole)), payment_controller_1.default.getInvoiceDownloadUrl);
+router.get("/invoice/:paymentId", authLimiter, checkAuth(...Object.values(UserRole)), PaymentController.getInvoiceDownloadUrl);
 /**
  * @openapi
  * /payment/validate-payment:
@@ -150,7 +145,7 @@ router.get("/invoice/:paymentId", rateLimiter_1.authLimiter, (0, checkAuth_1.def
  *       401:
  *         $ref: "#/components/responses/UnauthorizedError"
  */
-router.post("/validate-payment", rateLimiter_1.authLimiter, (0, checkAuth_1.default)(...Object.values(user_interface_1.UserRole)), (0, validateRequest_1.default)(payment_validation_1.validatePaymentBodySchema), payment_controller_1.default.validatePayment);
+router.post("/validate-payment", authLimiter, checkAuth(...Object.values(UserRole)), validateRequest(validatePaymentBodySchema), PaymentController.validatePayment);
 /**
  * @openapi
  * /payment/ipn:
@@ -162,7 +157,7 @@ router.post("/validate-payment", rateLimiter_1.authLimiter, (0, checkAuth_1.defa
  *       200:
  *         description: IPN processed successfully
  */
-router.post("/ipn", payment_controller_1.default.handleIPN);
+router.post("/ipn", PaymentController.handleIPN);
 /**
  * @openapi
  * /payment/refund:
@@ -198,6 +193,6 @@ router.post("/ipn", payment_controller_1.default.handleIPN);
  *       403:
  *         $ref: "#/components/responses/ForbiddenError"
  */
-router.post("/refund", rateLimiter_1.adminCrudLimiter, (0, checkAuth_1.default)(user_interface_1.UserRole.ADMIN, user_interface_1.UserRole.SUPER_ADMIN), (0, validateRequest_1.default)(payment_validation_1.refundPaymentBodySchema), payment_controller_1.default.refundPayment);
+router.post("/refund", adminCrudLimiter, checkAuth(UserRole.ADMIN, UserRole.SUPER_ADMIN), validateRequest(refundPaymentBodySchema), PaymentController.refundPayment);
 const PaymentRoutes = router;
-exports.default = PaymentRoutes;
+export default PaymentRoutes;

@@ -110,7 +110,7 @@ const logout = catchAsync(async (req: Request, res: Response) => {
   if (req.session) {
     req.session.destroy((err) => {
       if (err) {
-        logger.error({ message: "Session destroy error", err });
+        logger.error({ msg: "Session destroy error", err });
       }
     });
   }

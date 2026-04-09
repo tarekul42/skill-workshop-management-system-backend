@@ -1,16 +1,11 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const express_1 = require("express");
-const checkAuth_1 = __importDefault(require("../../middlewares/checkAuth"));
-const validateRequest_1 = __importDefault(require("../../middlewares/validateRequest"));
-const rateLimiter_1 = require("../../utils/rateLimiter");
-const user_controller_1 = __importDefault(require("./user.controller"));
-const user_interface_1 = require("./user.interface");
-const user_validation_1 = require("./user.validation");
-const router = (0, express_1.Router)();
+import { Router } from "express";
+import checkAuth from "../../middlewares/checkAuth";
+import validateRequest from "../../middlewares/validateRequest";
+import { authLimiter, strictLimiter } from "../../utils/rateLimiter";
+import UserControllers from "./user.controller";
+import { UserRole } from "./user.interface";
+import { createUserZodSchema, updateUserZodSchema } from "./user.validation";
+const router = Router();
 /**
  * @openapi
  * tags:
@@ -70,7 +65,7 @@ const router = (0, express_1.Router)();
  *       400:
  *         $ref: "#/components/responses/BadRequestError"
  */
-router.post("/register", rateLimiter_1.authLimiter, (0, validateRequest_1.default)(user_validation_1.createUserZodSchema), user_controller_1.default.createUser);
+router.post("/register", authLimiter, validateRequest(createUserZodSchema), UserControllers.createUser);
 /**
  * @openapi
  * /user/me:
@@ -93,7 +88,7 @@ router.post("/register", rateLimiter_1.authLimiter, (0, validateRequest_1.defaul
  *       401:
  *         $ref: "#/components/responses/UnauthorizedError"
  */
-router.get("/me", rateLimiter_1.strictLimiter, (0, checkAuth_1.default)(...Object.values(user_interface_1.UserRole)), user_controller_1.default.getMe);
+router.get("/me", strictLimiter, checkAuth(...Object.values(UserRole)), UserControllers.getMe);
 /**
  * @openapi
  * /user/all-users:
@@ -133,7 +128,7 @@ router.get("/me", rateLimiter_1.strictLimiter, (0, checkAuth_1.default)(...Objec
  *       403:
  *         $ref: "#/components/responses/ForbiddenError"
  */
-router.get("/all-users", rateLimiter_1.strictLimiter, (0, checkAuth_1.default)(user_interface_1.UserRole.ADMIN, user_interface_1.UserRole.SUPER_ADMIN), user_controller_1.default.getAllUsers);
+router.get("/all-users", strictLimiter, checkAuth(UserRole.ADMIN, UserRole.SUPER_ADMIN), UserControllers.getAllUsers);
 /**
  * @openapi
  * /user/{id}:
@@ -164,7 +159,7 @@ router.get("/all-users", rateLimiter_1.strictLimiter, (0, checkAuth_1.default)(u
  *       404:
  *         $ref: "#/components/responses/NotFoundError"
  */
-router.get("/:id", rateLimiter_1.strictLimiter, (0, checkAuth_1.default)(user_interface_1.UserRole.ADMIN, user_interface_1.UserRole.SUPER_ADMIN), user_controller_1.default.getSingleUser);
+router.get("/:id", strictLimiter, checkAuth(UserRole.ADMIN, UserRole.SUPER_ADMIN), UserControllers.getSingleUser);
 /**
  * @openapi
  * /user/{id}:
@@ -215,7 +210,7 @@ router.get("/:id", rateLimiter_1.strictLimiter, (0, checkAuth_1.default)(user_in
  *       401:
  *         $ref: "#/components/responses/UnauthorizedError"
  */
-router.patch("/:id", rateLimiter_1.strictLimiter, (0, validateRequest_1.default)(user_validation_1.updateUserZodSchema), (0, checkAuth_1.default)(...Object.values(user_interface_1.UserRole)), user_controller_1.default.updateUser);
+router.patch("/:id", strictLimiter, validateRequest(updateUserZodSchema), checkAuth(...Object.values(UserRole)), UserControllers.updateUser);
 /**
  * @openapi
  * /user/{id}:
@@ -244,6 +239,6 @@ router.patch("/:id", rateLimiter_1.strictLimiter, (0, validateRequest_1.default)
  *       404:
  *         $ref: "#/components/responses/NotFoundError"
  */
-router.delete("/:id", rateLimiter_1.strictLimiter, (0, checkAuth_1.default)(user_interface_1.UserRole.ADMIN, user_interface_1.UserRole.SUPER_ADMIN), user_controller_1.default.deleteUser);
+router.delete("/:id", strictLimiter, checkAuth(UserRole.ADMIN, UserRole.SUPER_ADMIN), UserControllers.deleteUser);
 const UserRoutes = router;
-exports.default = UserRoutes;
+export default UserRoutes;

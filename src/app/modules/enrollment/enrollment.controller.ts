@@ -89,7 +89,7 @@ const updateEnrollmentStatus = catchAsync(
       statusCode: StatusCodes.OK,
       success: true,
       message: "Enrollment status updated successfully",
-      data: updatedEnrollment,
+      data: null,
     });
   },
 );
@@ -107,7 +107,7 @@ const cancelEnrollment = catchAsync(async (req: Request, res: Response) => {
     statusCode: StatusCodes.OK,
     success: true,
     message: "Enrollment cancelled successfully",
-    data: result,
+    data: null,
   });
 });
 

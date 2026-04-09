@@ -1,32 +1,27 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const http_status_codes_1 = require("http-status-codes");
-const mongoose_1 = require("mongoose");
-const AppError_1 = __importDefault(require("../../errorHelpers/AppError"));
-const auditLogger_1 = __importDefault(require("../../utils/auditLogger"));
-const audit_interface_1 = require("../audit/audit.interface");
-const enrollment_interface_1 = require("./enrollment.interface");
-const enrollment_model_1 = __importDefault(require("./enrollment.model"));
-const enrollment_repository_1 = __importDefault(require("./enrollment.repository"));
-const queryBuilder_1 = __importDefault(require("../../utils/queryBuilder"));
-const user_interface_1 = require("../user/user.interface");
+import { StatusCodes } from "http-status-codes";
+import { Types } from "mongoose";
+import AppError from "../../errorHelpers/AppError";
+import auditLogger from "../../utils/auditLogger";
+import { AuditAction } from "../audit/audit.interface";
+import { ENROLLMENT_STATUS, } from "./enrollment.interface";
+import Enrollment from "./enrollment.model";
+import EnrollmentRepository from "./enrollment.repository";
+import QueryBuilder from "../../utils/queryBuilder";
+import { isAdminRole } from "../user/user.interface";
 const createEnrollment = async (payload, userId) => {
     if (!payload.workshop) {
-        throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Workshop ID is required.");
+        throw new AppError(StatusCodes.BAD_REQUEST, "Workshop ID is required.");
     }
     if (typeof payload.workshop !== "string") {
-        throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Workshop ID must be a string.");
+        throw new AppError(StatusCodes.BAD_REQUEST, "Workshop ID must be a string.");
     }
-    const session = await enrollment_repository_1.default.startTransaction();
+    const session = await EnrollmentRepository.startTransaction();
     try {
-        const result = await enrollment_repository_1.default.createEnrollmentWithPayment(payload, userId, session);
+        const result = await EnrollmentRepository.createEnrollmentWithPayment(payload, userId, session);
         await session.commitTransaction();
         session.endSession();
-        await (0, auditLogger_1.default)({
-            action: audit_interface_1.AuditAction.CREATE,
+        await auditLogger({
+            action: AuditAction.CREATE,
             collectionName: "Enrollment",
             documentId: result.enrollmentId,
             performedBy: userId,
@@ -43,7 +38,7 @@ const createEnrollment = async (payload, userId) => {
     }
 };
 const getUserEnrollments = async (userId) => {
-    const enrollment = await enrollment_model_1.default.find({ user: userId })
+    const enrollment = await Enrollment.find({ user: userId })
         .populate("user", "name email phone")
         .populate("workshop", "title price images location startDate")
         .populate("payment", "status amount transactionId");
@@ -52,25 +47,25 @@ const getUserEnrollments = async (userId) => {
     };
 };
 const getSingleEnrollment = async (enrollmentId, userId, userRole) => {
-    const enrollment = await enrollment_model_1.default.findOne({
-        _id: { $eq: new mongoose_1.Types.ObjectId(enrollmentId) },
+    const enrollment = await Enrollment.findOne({
+        _id: { $eq: new Types.ObjectId(enrollmentId) },
     })
         .populate("user", "name email phone address")
         .populate("workshop", "title price images location startDate endDate")
         .populate("payment", "status amount transactionId invoiceUrl");
     if (!enrollment) {
-        throw new AppError_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "Enrollment not found");
+        throw new AppError(StatusCodes.NOT_FOUND, "Enrollment not found");
     }
     const populatedEnrollment = enrollment;
     const isOwner = populatedEnrollment.user && String(populatedEnrollment.user._id) === userId;
-    const isAdmin = (0, user_interface_1.isAdminRole)(userRole);
+    const isAdmin = isAdminRole(userRole);
     if (!isOwner && !isAdmin) {
-        throw new AppError_1.default(http_status_codes_1.StatusCodes.FORBIDDEN, "You are not authorized to view this enrollment");
+        throw new AppError(StatusCodes.FORBIDDEN, "You are not authorized to view this enrollment");
     }
     return populatedEnrollment;
 };
 const getAllEnrollments = async (query) => {
-    const queryBuilder = new queryBuilder_1.default(enrollment_model_1.default.find(), query);
+    const queryBuilder = new QueryBuilder(Enrollment.find(), query);
     const enrollmentsData = queryBuilder.filter().sort().fields().paginate();
     const [data, meta] = await Promise.all([
         enrollmentsData
@@ -86,25 +81,25 @@ const getAllEnrollments = async (query) => {
     };
 };
 const updateEnrollmentStatus = async (enrollmentId, status, userId, userRole) => {
-    if (!(0, user_interface_1.isAdminRole)(userRole)) {
-        throw new AppError_1.default(http_status_codes_1.StatusCodes.FORBIDDEN, "Only admins can update enrollment status");
+    if (!isAdminRole(userRole)) {
+        throw new AppError(StatusCodes.FORBIDDEN, "Only admins can update enrollment status");
     }
-    const allowedStatuses = Object.values(enrollment_interface_1.ENROLLMENT_STATUS);
+    const allowedStatuses = Object.values(ENROLLMENT_STATUS);
     if (!allowedStatuses.includes(status)) {
-        throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Invalid enrollment status");
+        throw new AppError(StatusCodes.BAD_REQUEST, "Invalid enrollment status");
     }
-    const enrollment = await enrollment_model_1.default.findOne({
-        _id: { $eq: new mongoose_1.Types.ObjectId(enrollmentId) },
+    const enrollment = await Enrollment.findOne({
+        _id: { $eq: new Types.ObjectId(enrollmentId) },
     });
     if (!enrollment) {
-        throw new AppError_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "Enrollment not found");
+        throw new AppError(StatusCodes.NOT_FOUND, "Enrollment not found");
     }
-    const updatedEnrollment = await enrollment_model_1.default.findOneAndUpdate({ _id: { $eq: new mongoose_1.Types.ObjectId(enrollmentId) } }, { status }, { returnDocument: "after", runValidators: true })
+    const updatedEnrollment = await Enrollment.findOneAndUpdate({ _id: { $eq: new Types.ObjectId(enrollmentId) } }, { status }, { returnDocument: "after", runValidators: true })
         .populate("user", "name email phone")
         .populate("workshop", "title price")
         .populate("payment", "status amount transactionId");
-    await (0, auditLogger_1.default)({
-        action: audit_interface_1.AuditAction.UPDATE,
+    await auditLogger({
+        action: AuditAction.UPDATE,
         collectionName: "Enrollment",
         documentId: enrollmentId,
         performedBy: userId,
@@ -113,28 +108,28 @@ const updateEnrollmentStatus = async (enrollmentId, status, userId, userRole) =>
     return updatedEnrollment;
 };
 const cancelEnrollment = async (enrollmentId, userId) => {
-    const enrollment = await enrollment_model_1.default.findOne({
-        _id: { $eq: new mongoose_1.Types.ObjectId(enrollmentId) },
+    const enrollment = await Enrollment.findOne({
+        _id: { $eq: new Types.ObjectId(enrollmentId) },
     })
         .populate("user", "name email")
         .populate("payment", "status");
     if (!enrollment) {
-        throw new AppError_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "Enrollment not found");
+        throw new AppError(StatusCodes.NOT_FOUND, "Enrollment not found");
     }
     const populatedEnrollment = enrollment;
     if (String(populatedEnrollment.user._id) !== userId) {
-        throw new AppError_1.default(http_status_codes_1.StatusCodes.FORBIDDEN, "You can only cancel your own enrollments");
+        throw new AppError(StatusCodes.FORBIDDEN, "You can only cancel your own enrollments");
     }
-    if (enrollment.status !== enrollment_interface_1.ENROLLMENT_STATUS.PENDING) {
-        throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Only pending enrollments can be cancelled");
+    if (enrollment.status !== ENROLLMENT_STATUS.PENDING) {
+        throw new AppError(StatusCodes.BAD_REQUEST, "Only pending enrollments can be cancelled");
     }
-    const updatedEnrollment = await enrollment_model_1.default.findOneAndUpdate({ _id: { $eq: new mongoose_1.Types.ObjectId(enrollmentId) } }, { status: enrollment_interface_1.ENROLLMENT_STATUS.CANCEL }, { returnDocument: "after", runValidators: true });
-    await (0, auditLogger_1.default)({
-        action: audit_interface_1.AuditAction.UPDATE,
+    const updatedEnrollment = await Enrollment.findOneAndUpdate({ _id: { $eq: new Types.ObjectId(enrollmentId) } }, { status: ENROLLMENT_STATUS.CANCEL }, { returnDocument: "after", runValidators: true });
+    await auditLogger({
+        action: AuditAction.UPDATE,
         collectionName: "Enrollment",
         documentId: enrollmentId,
         performedBy: userId,
-        changes: { status: enrollment_interface_1.ENROLLMENT_STATUS.CANCEL },
+        changes: { status: ENROLLMENT_STATUS.CANCEL },
     });
     return updatedEnrollment;
 };
@@ -146,4 +141,4 @@ const EnrollmentService = {
     updateEnrollmentStatus,
     cancelEnrollment,
 };
-exports.default = EnrollmentService;
+export default EnrollmentService;

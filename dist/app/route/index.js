@@ -1,63 +1,58 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const express_1 = require("express");
-const audit_route_1 = require("../modules/audit/audit.route");
-const auth_route_1 = __importDefault(require("../modules/auth/auth.route"));
-const category_route_1 = __importDefault(require("../modules/category/category.route"));
-const enrollment_route_1 = __importDefault(require("../modules/enrollment/enrollment.route"));
-const health_route_1 = require("../modules/health/health.route");
-const otp_route_1 = __importDefault(require("../modules/otp/otp.route"));
-const payment_route_1 = __importDefault(require("../modules/payment/payment.route"));
-const stats_route_1 = __importDefault(require("../modules/stats/stats.route"));
-const user_route_1 = __importDefault(require("../modules/user/user.route"));
-const workshop_route_1 = __importDefault(require("../modules/workshop/workshop.route"));
-const router = (0, express_1.Router)();
+import { Router } from "express";
+import { AuditRoutes } from "../modules/audit/audit.route";
+import AuthRoutes from "../modules/auth/auth.route";
+import CategoryRoutes from "../modules/category/category.route";
+import EnrollmentRoutes from "../modules/enrollment/enrollment.route";
+import { HealthRoutes } from "../modules/health/health.route";
+import OTPRoutes from "../modules/otp/otp.route";
+import PaymentRoutes from "../modules/payment/payment.route";
+import StatsRoutes from "../modules/stats/stats.route";
+import UserRoutes from "../modules/user/user.route";
+import WorkshopRoutes from "../modules/workshop/workshop.route";
+const router = Router();
 const moduleRoutes = [
     {
         path: "/health",
-        route: health_route_1.HealthRoutes,
+        route: HealthRoutes,
     },
     {
         path: "/user",
-        route: user_route_1.default,
+        route: UserRoutes,
     },
     {
         path: "/auth",
-        route: auth_route_1.default,
+        route: AuthRoutes,
     },
     {
         path: "/workshop",
-        route: workshop_route_1.default,
+        route: WorkshopRoutes,
     },
     {
         path: "/category",
-        route: category_route_1.default,
+        route: CategoryRoutes,
     },
     {
         path: "/enrollment",
-        route: enrollment_route_1.default,
+        route: EnrollmentRoutes,
     },
     {
         path: "/payment",
-        route: payment_route_1.default,
+        route: PaymentRoutes,
     },
     {
         path: "/otp",
-        route: otp_route_1.default,
+        route: OTPRoutes,
     },
     {
         path: "/stats",
-        route: stats_route_1.default,
+        route: StatsRoutes,
     },
     {
         path: "/audit",
-        route: audit_route_1.AuditRoutes,
+        route: AuditRoutes,
     },
 ];
 moduleRoutes.forEach((route) => {
     router.use(route.path, route.route);
 });
-exports.default = router;
+export default router;

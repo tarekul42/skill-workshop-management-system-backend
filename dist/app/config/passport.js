@@ -1,25 +1,20 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const bcryptjs_1 = __importDefault(require("bcryptjs"));
-const passport_1 = __importDefault(require("passport"));
-const passport_google_oauth20_1 = require("passport-google-oauth20");
-const passport_local_1 = require("passport-local");
-const user_interface_1 = require("../modules/user/user.interface");
-const user_model_1 = __importDefault(require("../modules/user/user.model"));
-const env_1 = __importDefault(require("./env"));
+import bcrypt from "bcryptjs";
+import passport from "passport";
+import { Strategy as GoogleStrategy, } from "passport-google-oauth20";
+import { Strategy as LocalStrategy } from "passport-local";
+import { IsActive, UserRole } from "../modules/user/user.interface";
+import User from "../modules/user/user.model";
+import envVariables from "./env";
 // 1. SERIALIZATION
 // We store the MongoDB _id in the session
-passport_1.default.serializeUser((user, done) => {
+passport.serializeUser((user, done) => {
     done(null, user._id);
 });
 // 2. DESERIALIZATION
 // We retrieve the full user document using the _id from the session
-passport_1.default.deserializeUser(async (id, done) => {
+passport.deserializeUser(async (id, done) => {
     try {
-        const user = await user_model_1.default.findById(id);
+        const user = await User.findById(id);
         done(null, user);
     }
     catch (error) {
@@ -27,10 +22,10 @@ passport_1.default.deserializeUser(async (id, done) => {
     }
 });
 // 3. GOOGLE STRATEGY
-passport_1.default.use(new passport_google_oauth20_1.Strategy({
-    clientID: env_1.default.GOOGLE_CLIENT_ID,
-    clientSecret: env_1.default.GOOGLE_CLIENT_SECRET,
-    callbackURL: env_1.default.GOOGLE_CALLBACK_URL,
+passport.use(new GoogleStrategy({
+    clientID: envVariables.GOOGLE_CLIENT_ID,
+    clientSecret: envVariables.GOOGLE_CLIENT_SECRET,
+    callbackURL: envVariables.GOOGLE_CALLBACK_URL,
     state: true,
 }, async (accessToken, refreshToken, profile, done) => {
     // Extract data from Google Profile
@@ -42,7 +37,7 @@ passport_1.default.use(new passport_google_oauth20_1.Strategy({
     }
     try {
         // CHECK IF USER EXISTS
-        const existingUser = await user_model_1.default.findOne({ email });
+        const existingUser = await User.findOne({ email });
         if (existingUser) {
             // Security checks
             if (existingUser.isDeleted) {
@@ -51,8 +46,8 @@ passport_1.default.use(new passport_google_oauth20_1.Strategy({
             if (!existingUser.isVerified) {
                 return done(null, false, { message: "User is not verified." });
             }
-            if (existingUser.isActive === user_interface_1.IsActive.BLOCKED ||
-                existingUser.isActive === user_interface_1.IsActive.INACTIVE) {
+            if (existingUser.isActive === IsActive.BLOCKED ||
+                existingUser.isActive === IsActive.INACTIVE) {
                 return done(null, false, {
                     message: `User is ${existingUser.isActive}.`,
                 });
@@ -72,20 +67,20 @@ passport_1.default.use(new passport_google_oauth20_1.Strategy({
             return done(null, existingUser);
         }
         // CREATE NEW USER IF NOT FOUND
-        const newUser = await user_model_1.default.create({
+        const newUser = await User.create({
             email: email,
             name: name,
             picture: picture,
             // Google accounts are usually verified
             isVerified: true,
-            role: user_interface_1.UserRole.STUDENT,
+            role: UserRole.STUDENT,
             auths: [
                 {
                     provider: "google",
                     providerId: profile.id,
                 },
             ],
-            isActive: user_interface_1.IsActive.ACTIVE,
+            isActive: IsActive.ACTIVE,
         });
         return done(null, newUser);
     }
@@ -94,12 +89,12 @@ passport_1.default.use(new passport_google_oauth20_1.Strategy({
     }
 }));
 // 4. LOCAL STRATEGY
-passport_1.default.use(new passport_local_1.Strategy({
+passport.use(new LocalStrategy({
     usernameField: "email",
     passwordField: "password",
 }, async (email, password, done) => {
     try {
-        const isUserExists = await user_model_1.default.findOne({ email });
+        const isUserExists = await User.findOne({ email });
         if (!isUserExists) {
             return done(null, false, { message: "User does not exist." });
         }
@@ -109,8 +104,8 @@ passport_1.default.use(new passport_local_1.Strategy({
         if (!isUserExists.isVerified) {
             return done(null, false, { message: "User is not verified." });
         }
-        if (isUserExists.isActive === user_interface_1.IsActive.BLOCKED ||
-            isUserExists.isActive === user_interface_1.IsActive.INACTIVE) {
+        if (isUserExists.isActive === IsActive.BLOCKED ||
+            isUserExists.isActive === IsActive.INACTIVE) {
             return done(null, false, {
                 message: `User is ${isUserExists.isActive}.`,
             });
@@ -126,7 +121,7 @@ passport_1.default.use(new passport_local_1.Strategy({
                 message: "Password not set for this account",
             });
         }
-        const isPasswordMatched = await bcryptjs_1.default.compare(password, isUserExists.password);
+        const isPasswordMatched = await bcrypt.compare(password, isUserExists.password);
         if (!isPasswordMatched) {
             return done(null, false, { message: "Password does not match" });
         }
@@ -136,4 +131,4 @@ passport_1.default.use(new passport_local_1.Strategy({
         done(error);
     }
 }));
-exports.default = passport_1.default;
+export default passport;

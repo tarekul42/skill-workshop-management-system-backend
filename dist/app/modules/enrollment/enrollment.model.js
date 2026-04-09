@@ -1,27 +1,22 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const mongoose_1 = require("mongoose");
-const auditPlugin_1 = __importDefault(require("../../utils/auditPlugin"));
-const softDeletePlugin_1 = __importDefault(require("../../utils/softDeletePlugin"));
-const enrollment_interface_1 = require("./enrollment.interface");
-const enrollmentSchema = new mongoose_1.Schema({
+import { model, Schema } from "mongoose";
+import auditPlugin from "../../utils/auditPlugin";
+import softDeletePlugin from "../../utils/softDeletePlugin";
+import { ENROLLMENT_STATUS } from "./enrollment.interface";
+const enrollmentSchema = new Schema({
     user: {
-        type: mongoose_1.Schema.Types.ObjectId,
+        type: Schema.Types.ObjectId,
         ref: "User",
         required: true,
         index: true,
     },
     workshop: {
-        type: mongoose_1.Schema.Types.ObjectId,
+        type: Schema.Types.ObjectId,
         ref: "Workshop",
         required: true,
         index: true,
     },
     payment: {
-        type: mongoose_1.Schema.Types.ObjectId,
+        type: Schema.Types.ObjectId,
         ref: "Payment",
     },
     studentCount: {
@@ -30,15 +25,15 @@ const enrollmentSchema = new mongoose_1.Schema({
     },
     status: {
         type: String,
-        enum: Object.values(enrollment_interface_1.ENROLLMENT_STATUS),
-        default: enrollment_interface_1.ENROLLMENT_STATUS.PENDING,
+        enum: Object.values(ENROLLMENT_STATUS),
+        default: ENROLLMENT_STATUS.PENDING,
         index: true,
     },
 }, {
     timestamps: true,
 });
-enrollmentSchema.plugin(softDeletePlugin_1.default);
-enrollmentSchema.plugin(auditPlugin_1.default);
+enrollmentSchema.plugin(softDeletePlugin);
+enrollmentSchema.plugin(auditPlugin);
 enrollmentSchema.index({ user: 1, workshop: 1 });
-const Enrollment = (0, mongoose_1.model)("Enrollment", enrollmentSchema);
-exports.default = Enrollment;
+const Enrollment = model("Enrollment", enrollmentSchema);
+export default Enrollment;

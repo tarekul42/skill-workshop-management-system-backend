@@ -1,17 +1,12 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const express_1 = require("express");
-const multer_config_1 = __importDefault(require("../../config/multer.config"));
-const checkAuth_1 = __importDefault(require("../../middlewares/checkAuth"));
-const validateRequest_1 = __importDefault(require("../../middlewares/validateRequest"));
-const rateLimiter_1 = require("../../utils/rateLimiter");
-const user_interface_1 = require("../user/user.interface");
-const category_controller_1 = __importDefault(require("./category.controller"));
-const category_validation_1 = require("./category.validation");
-const router = (0, express_1.Router)();
+import { Router } from "express";
+import multerUpload from "../../config/multer.config";
+import checkAuth from "../../middlewares/checkAuth";
+import validateRequest from "../../middlewares/validateRequest";
+import { adminCrudLimiter } from "../../utils/rateLimiter";
+import { UserRole } from "../user/user.interface";
+import CategoryController from "./category.controller";
+import { createCategoryZodSchema, updateCategoryZodSchema, } from "./category.validation";
+const router = Router();
 /**
  * @openapi
  * tags:
@@ -58,7 +53,7 @@ const router = (0, express_1.Router)();
  *       401:
  *         $ref: "#/components/responses/UnauthorizedError"
  */
-router.post("/create", rateLimiter_1.adminCrudLimiter, (0, checkAuth_1.default)(user_interface_1.UserRole.ADMIN, user_interface_1.UserRole.SUPER_ADMIN), multer_config_1.default.single("file"), (0, validateRequest_1.default)(category_validation_1.createCategoryZodSchema), category_controller_1.default.createCategory);
+router.post("/create", adminCrudLimiter, checkAuth(UserRole.ADMIN, UserRole.SUPER_ADMIN), multerUpload.single("file"), validateRequest(createCategoryZodSchema), CategoryController.createCategory);
 /**
  * @openapi
  * /category:
@@ -79,7 +74,7 @@ router.post("/create", rateLimiter_1.adminCrudLimiter, (0, checkAuth_1.default)(
  *                       type: array
  *                       items: { $ref: "#/components/schemas/Category" }
  */
-router.get("/", category_controller_1.default.getAllCategories);
+router.get("/", CategoryController.getAllCategories);
 /**
  * @openapi
  * /category/{slug}:
@@ -106,7 +101,7 @@ router.get("/", category_controller_1.default.getAllCategories);
  *       404:
  *         $ref: "#/components/responses/NotFoundError"
  */
-router.get("/:slug", category_controller_1.default.getSingleCategory);
+router.get("/:slug", CategoryController.getSingleCategory);
 /**
  * @openapi
  * /category/{id}:
@@ -150,7 +145,7 @@ router.get("/:slug", category_controller_1.default.getSingleCategory);
  *       401:
  *         $ref: "#/components/responses/UnauthorizedError"
  */
-router.patch("/:id", rateLimiter_1.adminCrudLimiter, (0, checkAuth_1.default)(user_interface_1.UserRole.ADMIN, user_interface_1.UserRole.SUPER_ADMIN), multer_config_1.default.single("file"), (0, validateRequest_1.default)(category_validation_1.updateCategoryZodSchema), category_controller_1.default.updateCategory);
+router.patch("/:id", adminCrudLimiter, checkAuth(UserRole.ADMIN, UserRole.SUPER_ADMIN), multerUpload.single("file"), validateRequest(updateCategoryZodSchema), CategoryController.updateCategory);
 /**
  * @openapi
  * /category/{id}:
@@ -177,6 +172,6 @@ router.patch("/:id", rateLimiter_1.adminCrudLimiter, (0, checkAuth_1.default)(us
  *       404:
  *         $ref: "#/components/responses/NotFoundError"
  */
-router.delete("/:id", rateLimiter_1.adminCrudLimiter, (0, checkAuth_1.default)(user_interface_1.UserRole.ADMIN, user_interface_1.UserRole.SUPER_ADMIN), category_controller_1.default.deleteCategory);
+router.delete("/:id", adminCrudLimiter, checkAuth(UserRole.ADMIN, UserRole.SUPER_ADMIN), CategoryController.deleteCategory);
 const CategoryRoutes = router;
-exports.default = CategoryRoutes;
+export default CategoryRoutes;

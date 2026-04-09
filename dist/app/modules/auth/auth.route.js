@@ -1,17 +1,12 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const express_1 = require("express");
-const passport_1 = __importDefault(require("passport"));
-const env_1 = __importDefault(require("../../config/env"));
-const checkAuth_1 = __importDefault(require("../../middlewares/checkAuth"));
-const checkResetToken_1 = __importDefault(require("../../middlewares/checkResetToken"));
-const rateLimiter_1 = require("../../utils/rateLimiter");
-const user_interface_1 = require("../user/user.interface");
-const auth_controller_1 = __importDefault(require("./auth.controller"));
-const router = (0, express_1.Router)();
+import { Router } from "express";
+import passport from "passport";
+import envVariables from "../../config/env";
+import checkAuth from "../../middlewares/checkAuth";
+import checkResetToken from "../../middlewares/checkResetToken";
+import { authLimiter } from "../../utils/rateLimiter";
+import { UserRole } from "../user/user.interface";
+import AuthControllers from "./auth.controller";
+const router = Router();
 /**
  * @openapi
  * tags:
@@ -62,7 +57,7 @@ const router = (0, express_1.Router)();
  *       401:
  *         $ref: "#/components/responses/UnauthorizedError"
  */
-router.post("/login", rateLimiter_1.authLimiter, auth_controller_1.default.credentialsLogin);
+router.post("/login", authLimiter, AuthControllers.credentialsLogin);
 /**
  * @openapi
  * /auth/refresh-token:
@@ -87,7 +82,7 @@ router.post("/login", rateLimiter_1.authLimiter, auth_controller_1.default.crede
  *       400:
  *         $ref: "#/components/responses/BadRequestError"
  */
-router.post("/refresh-token", rateLimiter_1.authLimiter, auth_controller_1.default.getNewAccessToken);
+router.post("/refresh-token", authLimiter, AuthControllers.getNewAccessToken);
 /**
  * @openapi
  * /auth/logout:
@@ -109,7 +104,7 @@ router.post("/refresh-token", rateLimiter_1.authLimiter, auth_controller_1.defau
  *                   type: string
  *                   example: Logout successful
  */
-router.post("/logout", rateLimiter_1.authLimiter, auth_controller_1.default.logout);
+router.post("/logout", authLimiter, AuthControllers.logout);
 /**
  * @openapi
  * /auth/change-password:
@@ -144,7 +139,7 @@ router.post("/logout", rateLimiter_1.authLimiter, auth_controller_1.default.logo
  *       403:
  *         $ref: "#/components/responses/ForbiddenError"
  */
-router.post("/change-password", rateLimiter_1.authLimiter, (0, checkAuth_1.default)(...Object.values(user_interface_1.UserRole)), auth_controller_1.default.changePassword);
+router.post("/change-password", authLimiter, checkAuth(...Object.values(UserRole)), AuthControllers.changePassword);
 /**
  * @openapi
  * /auth/set-password:
@@ -174,7 +169,7 @@ router.post("/change-password", rateLimiter_1.authLimiter, (0, checkAuth_1.defau
  *       401:
  *         $ref: "#/components/responses/UnauthorizedError"
  */
-router.post("/set-password", rateLimiter_1.authLimiter, (0, checkAuth_1.default)(...Object.values(user_interface_1.UserRole)), auth_controller_1.default.setPassword);
+router.post("/set-password", authLimiter, checkAuth(...Object.values(UserRole)), AuthControllers.setPassword);
 /**
  * @openapi
  * /auth/forgot-password:
@@ -203,7 +198,7 @@ router.post("/set-password", rateLimiter_1.authLimiter, (0, checkAuth_1.default)
  *       400:
  *         $ref: "#/components/responses/BadRequestError"
  */
-router.post("/forgot-password", rateLimiter_1.authLimiter, auth_controller_1.default.forgotPassword);
+router.post("/forgot-password", authLimiter, AuthControllers.forgotPassword);
 /**
  * @openapi
  * /auth/reset-password:
@@ -234,7 +229,7 @@ router.post("/forgot-password", rateLimiter_1.authLimiter, auth_controller_1.def
  *       400:
  *         $ref: "#/components/responses/BadRequestError"
  */
-router.post("/reset-password", rateLimiter_1.authLimiter, checkResetToken_1.default, auth_controller_1.default.resetPassword);
+router.post("/reset-password", authLimiter, checkResetToken, AuthControllers.resetPassword);
 /**
  * @openapi
  * /auth/google:
@@ -251,9 +246,9 @@ router.post("/reset-password", rateLimiter_1.authLimiter, checkResetToken_1.defa
  *       302:
  *         description: Redirects to Google login page
  */
-router.get("/google", rateLimiter_1.authLimiter, async (req, res, next) => {
+router.get("/google", authLimiter, async (req, res, next) => {
     const redirect = req.query.redirect || "/";
-    passport_1.default.authenticate("google", {
+    passport.authenticate("google", {
         scope: ["profile", "email"],
         state: redirect,
     })(req, res, next);
@@ -269,8 +264,8 @@ router.get("/google", rateLimiter_1.authLimiter, async (req, res, next) => {
  *       302:
  *         description: Redirects to the frontend application
  */
-router.get("/google/callback", rateLimiter_1.authLimiter, passport_1.default.authenticate("google", {
-    failureRedirect: `${env_1.default.FRONTEND_URL}/login?error=${encodeURIComponent("There are some issues with your account. Please contact our support team.")}`,
-}), auth_controller_1.default.googleCallback);
+router.get("/google/callback", authLimiter, passport.authenticate("google", {
+    failureRedirect: `${envVariables.FRONTEND_URL}/login?error=${encodeURIComponent("There are some issues with your account. Please contact our support team.")}`,
+}), AuthControllers.googleCallback);
 const AuthRoutes = router;
-exports.default = AuthRoutes;
+export default AuthRoutes;

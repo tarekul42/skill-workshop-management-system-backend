@@ -73,7 +73,7 @@ const deleteLevel = catchAsync(async (req: Request, res: Response) => {
     statusCode: StatusCodes.OK,
     success: true,
     message: "Level deleted successfully",
-    data: result,
+    data: null,
   });
 });
 
@@ -157,7 +157,7 @@ const deleteWorkshop = catchAsync(async (req: Request, res: Response) => {
     statusCode: StatusCodes.OK,
     success: true,
     message: "Workshop deleted successfully",
-    data: result,
+    data: null,
   });
 });
 

@@ -1,20 +1,15 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const mongoose_1 = require("mongoose");
-const auditPlugin_1 = __importDefault(require("../../utils/auditPlugin"));
-const softDeletePlugin_1 = __importDefault(require("../../utils/softDeletePlugin"));
-const user_interface_1 = require("./user.interface");
-const authProviderSchema = new mongoose_1.Schema({
+import { model, Schema } from "mongoose";
+import auditPlugin from "../../utils/auditPlugin";
+import softDeletePlugin from "../../utils/softDeletePlugin";
+import { IsActive, UserRole } from "./user.interface";
+const authProviderSchema = new Schema({
     provider: { type: String, required: true },
     providerId: { type: String, required: true },
 }, {
     versionKey: false,
     _id: false,
 });
-const userSchema = new mongoose_1.Schema({
+const userSchema = new Schema({
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true, index: true },
     password: { type: String },
@@ -24,14 +19,14 @@ const userSchema = new mongoose_1.Schema({
     address: { type: String },
     isActive: {
         type: String,
-        enum: Object.values(user_interface_1.IsActive),
-        default: user_interface_1.IsActive.ACTIVE,
+        enum: Object.values(IsActive),
+        default: IsActive.ACTIVE,
     },
     isVerified: { type: Boolean, default: false },
     role: {
         type: String,
-        enum: Object.values(user_interface_1.UserRole),
-        default: user_interface_1.UserRole.STUDENT,
+        enum: Object.values(UserRole),
+        default: UserRole.STUDENT,
     },
     auths: {
         type: [authProviderSchema],
@@ -53,10 +48,10 @@ const userSchema = new mongoose_1.Schema({
         },
     },
 });
-userSchema.plugin(softDeletePlugin_1.default);
-userSchema.plugin(auditPlugin_1.default);
+userSchema.plugin(softDeletePlugin);
+userSchema.plugin(auditPlugin);
 userSchema.index({ isDeleted: 1, isActive: 1, role: 1 });
 userSchema.index({ isDeleted: 1, isVerified: 1 });
 userSchema.index({ name: "text", email: "text", address: "text" });
-const User = (0, mongoose_1.model)("User", userSchema);
-exports.default = User;
+const User = model("User", userSchema);
+export default User;

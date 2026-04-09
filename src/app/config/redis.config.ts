@@ -18,13 +18,13 @@ if (envVariables.REDIS.REDIS_PASSWORD) {
 const redisClient = createClient(redisOptions);
 
 redisClient.on("error", (err) =>
-  logger.error({ message: "Redis Client Error", err }),
+  logger.error({ msg: "Redis Client Error", err }),
 );
 
 const connectRedis = async () => {
   if (!redisClient.isOpen) {
     await redisClient.connect();
-    logger.info({ message: "Redis Connected" });
+    logger.info({ msg: "Redis Connected" });
   }
 };
 

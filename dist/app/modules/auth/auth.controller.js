@@ -1,31 +1,26 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const http_status_codes_1 = require("http-status-codes");
-const passport_1 = __importDefault(require("passport"));
-const env_1 = __importDefault(require("../../config/env"));
-const AppError_1 = __importDefault(require("../../errorHelpers/AppError"));
-const catchAsync_1 = __importDefault(require("../../utils/catchAsync"));
-const logger_1 = __importDefault(require("../../utils/logger"));
-const sendResponse_1 = __importDefault(require("../../utils/sendResponse"));
-const setCookie_1 = __importDefault(require("../../utils/setCookie"));
-const tokenBlacklist_1 = require("../../utils/tokenBlacklist");
-const userTokens_1 = require("../../utils/userTokens");
-const auth_service_1 = __importDefault(require("./auth.service"));
-const credentialsLogin = (0, catchAsync_1.default)(async (req, res, next) => {
-    passport_1.default.authenticate("local", { session: false }, async (err, user, info) => {
+import { StatusCodes } from "http-status-codes";
+import passport from "passport";
+import envVariables from "../../config/env";
+import AppError from "../../errorHelpers/AppError";
+import catchAsync from "../../utils/catchAsync";
+import logger from "../../utils/logger";
+import sendResponse from "../../utils/sendResponse";
+import setAuthCookie from "../../utils/setCookie";
+import { invalidateToken } from "../../utils/tokenBlacklist";
+import { createUserTokens } from "../../utils/userTokens";
+import AuthServices from "./auth.service";
+const credentialsLogin = catchAsync(async (req, res, next) => {
+    passport.authenticate("local", { session: false }, async (err, user, info) => {
         if (err) {
-            return next(new AppError_1.default(http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR, "Something went wrong during authentication."));
+            return next(new AppError(StatusCodes.INTERNAL_SERVER_ERROR, "Something went wrong during authentication."));
         }
         if (!user) {
-            return next(new AppError_1.default(http_status_codes_1.StatusCodes.UNAUTHORIZED, info?.message || "Incorrect email or password"));
+            return next(new AppError(StatusCodes.UNAUTHORIZED, info?.message || "Incorrect email or password"));
         }
-        const userTokens = await (0, userTokens_1.createUserTokens)(user);
-        (0, setCookie_1.default)(res, userTokens);
-        (0, sendResponse_1.default)(res, {
-            statusCode: http_status_codes_1.StatusCodes.OK,
+        const userTokens = await createUserTokens(user);
+        setAuthCookie(res, userTokens);
+        sendResponse(res, {
+            statusCode: StatusCodes.OK,
             success: true,
             message: "User logged in successfully",
             data: {
@@ -36,21 +31,21 @@ const credentialsLogin = (0, catchAsync_1.default)(async (req, res, next) => {
         });
     })(req, res, next);
 });
-const getNewAccessToken = (0, catchAsync_1.default)(async (req, res) => {
+const getNewAccessToken = catchAsync(async (req, res) => {
     const refreshToken = req.cookies.refreshToken;
     if (!refreshToken) {
-        throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "No refresh token found");
+        throw new AppError(StatusCodes.BAD_REQUEST, "No refresh token found");
     }
-    const tokenInfo = await auth_service_1.default.getNewAccessToken(refreshToken);
-    (0, setCookie_1.default)(res, tokenInfo);
-    (0, sendResponse_1.default)(res, {
-        statusCode: http_status_codes_1.StatusCodes.OK,
+    const tokenInfo = await AuthServices.getNewAccessToken(refreshToken);
+    setAuthCookie(res, tokenInfo);
+    sendResponse(res, {
+        statusCode: StatusCodes.OK,
         success: true,
         message: "New access token generated successfully",
         data: tokenInfo,
     });
 });
-const logout = (0, catchAsync_1.default)(async (req, res) => {
+const logout = catchAsync(async (req, res) => {
     const isProduction = process.env.NODE_ENV === "production";
     res.clearCookie("accessToken", {
         httpOnly: true,
@@ -70,23 +65,23 @@ const logout = (0, catchAsync_1.default)(async (req, res) => {
         accessToken = req.cookies.accessToken;
     }
     if (accessToken) {
-        await (0, tokenBlacklist_1.invalidateToken)(accessToken, env_1.default.JWT_ACCESS_SECRET);
+        await invalidateToken(accessToken, envVariables.JWT_ACCESS_SECRET);
     }
     if (req.session) {
         req.session.destroy((err) => {
             if (err) {
-                logger_1.default.error({ message: "Session destroy error", err });
+                logger.error({ msg: "Session destroy error", err });
             }
         });
     }
-    (0, sendResponse_1.default)(res, {
-        statusCode: http_status_codes_1.StatusCodes.OK,
+    sendResponse(res, {
+        statusCode: StatusCodes.OK,
         success: true,
         message: "Logout successful",
         data: null,
     });
 });
-const changePassword = (0, catchAsync_1.default)(async (req, res) => {
+const changePassword = catchAsync(async (req, res) => {
     const newPassword = req.body.newPassword;
     const oldPassword = req.body.oldPassword;
     const decodedToken = req.user;
@@ -97,36 +92,36 @@ const changePassword = (0, catchAsync_1.default)(async (req, res) => {
     else {
         accessToken = req.cookies.accessToken;
     }
-    await auth_service_1.default.changePassword(oldPassword, newPassword, decodedToken, accessToken);
-    (0, sendResponse_1.default)(res, {
+    await AuthServices.changePassword(oldPassword, newPassword, decodedToken, accessToken);
+    sendResponse(res, {
         success: true,
-        statusCode: http_status_codes_1.StatusCodes.OK,
+        statusCode: StatusCodes.OK,
         message: "Password changed successfully",
         data: null,
     });
 });
-const setPassword = (0, catchAsync_1.default)(async (req, res) => {
+const setPassword = catchAsync(async (req, res) => {
     const decodedToken = req.user;
     const { password } = req.body;
-    await auth_service_1.default.setPassword(decodedToken.userId, password);
-    (0, sendResponse_1.default)(res, {
+    await AuthServices.setPassword(decodedToken.userId, password);
+    sendResponse(res, {
         success: true,
-        statusCode: http_status_codes_1.StatusCodes.OK,
+        statusCode: StatusCodes.OK,
         message: "Password set successfully",
         data: null,
     });
 });
-const forgotPassword = (0, catchAsync_1.default)(async (req, res) => {
+const forgotPassword = catchAsync(async (req, res) => {
     const { email } = req.body;
-    await auth_service_1.default.forgotPassword(email);
-    (0, sendResponse_1.default)(res, {
+    await AuthServices.forgotPassword(email);
+    sendResponse(res, {
         success: true,
-        statusCode: http_status_codes_1.StatusCodes.OK,
+        statusCode: StatusCodes.OK,
         message: "Email has been sent",
         data: null,
     });
 });
-const resetPassword = (0, catchAsync_1.default)(async (req, res) => {
+const resetPassword = catchAsync(async (req, res) => {
     const newPassword = req.body.newPassword;
     const decodedToken = req.user;
     let accessToken = req.headers.authorization;
@@ -136,15 +131,15 @@ const resetPassword = (0, catchAsync_1.default)(async (req, res) => {
     else {
         accessToken = req.cookies.accessToken;
     }
-    await auth_service_1.default.resetPassword(newPassword, decodedToken, accessToken);
-    (0, sendResponse_1.default)(res, {
-        statusCode: http_status_codes_1.StatusCodes.OK,
+    await AuthServices.resetPassword(newPassword, decodedToken, accessToken);
+    sendResponse(res, {
+        statusCode: StatusCodes.OK,
         success: true,
         message: "Password reset successful",
         data: null,
     });
 });
-const googleCallback = (0, catchAsync_1.default)(async (req, res) => {
+const googleCallback = catchAsync(async (req, res) => {
     const stateParam = req.query.state;
     let redirectTo = "";
     if (typeof stateParam === "string") {
@@ -177,11 +172,11 @@ const googleCallback = (0, catchAsync_1.default)(async (req, res) => {
     }
     const user = req.user;
     if (!user) {
-        throw new AppError_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "User Not Found");
+        throw new AppError(StatusCodes.NOT_FOUND, "User Not Found");
     }
-    const tokenInfo = await (0, userTokens_1.createUserTokens)(user);
-    (0, setCookie_1.default)(res, tokenInfo);
-    res.redirect(`${env_1.default.FRONTEND_URL}/${redirectTo}`);
+    const tokenInfo = await createUserTokens(user);
+    setAuthCookie(res, tokenInfo);
+    res.redirect(`${envVariables.FRONTEND_URL}/${redirectTo}`);
 });
 const AuthControllers = {
     credentialsLogin,
@@ -193,4 +188,4 @@ const AuthControllers = {
     resetPassword,
     googleCallback,
 };
-exports.default = AuthControllers;
+export default AuthControllers;

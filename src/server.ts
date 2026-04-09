@@ -17,11 +17,11 @@ async function gracefulShutdown(exitCode: number) {
   if (isShuttingDown) return;
   isShuttingDown = true;
 
-  logger.info({ message: "Starting graceful shutdown..." });
+  logger.info({ msg: "Starting graceful shutdown..." });
 
   // Safety timeout — force-kill if cleanup hangs
   const forceTimer = setTimeout(() => {
-    logger.error({ message: "Shutdown timed out, forcing exit" });
+    logger.error({ msg: "Shutdown timed out, forcing exit" });
     process.exit(exitCode);
   }, SHUTDOWN_TIMEOUT_MS);
   forceTimer.unref(); // don't keep the event loop alive just for this timer
@@ -33,29 +33,29 @@ async function gracefulShutdown(exitCode: number) {
         (server as { closeIdleConnections: () => void }).closeIdleConnections();
       }
       await new Promise<void>((resolve) => server.close(() => resolve()));
-      logger.info({ message: "HTTP server closed" });
+      logger.info({ msg: "HTTP server closed" });
     }
 
     // 2. Close BullMQ worker and queue
     // Close worker first to stop processing new jobs
     await mailWorker.close();
-    logger.info({ message: "BullMQ worker closed" });
+    logger.info({ msg: "BullMQ worker closed" });
 
     // Close queue to release redis connection
     await mailQueue.close();
-    logger.info({ message: "BullMQ queue closed" });
+    logger.info({ msg: "BullMQ queue closed" });
 
     // 3. Close Mongoose connection
     await mongoose.connection.close();
-    logger.info({ message: "Mongoose connection closed" });
+    logger.info({ msg: "Mongoose connection closed" });
 
     // 4. Disconnect Redis client
     if (redisClient && redisClient.isOpen) {
       await redisClient.disconnect();
-      logger.info({ message: "Redis connection closed" });
+      logger.info({ msg: "Redis connection closed" });
     }
   } catch (err) {
-    logger.error({ message: "Error during shutdown cleanup", err });
+    logger.error({ msg: "Error during shutdown cleanup", err });
   }
 
   process.exit(exitCode);
@@ -63,18 +63,16 @@ async function gracefulShutdown(exitCode: number) {
 
 const startServer = async () => {
   try {
-    logger.info({ message: "Connecting to database...." });
+    logger.info({ msg: "Connecting to database...." });
     await mongoose.connect(envVariables.DATABASE_URL);
-    logger.info({ message: "Connected to Database." });
+    logger.info({ msg: "Connected to Database." });
 
     server = app.listen(envVariables.PORT, () => {
-      logger.info({
-        message: `Skill workshop management system backend is running on port: ${envVariables.PORT}`,
+      logger.info({ msg: `Skill workshop management system backend is running on port: ${envVariables.PORT}`,
       });
     });
   } catch (error) {
-    logger.error({
-      message: "Failed to connect to database or start server",
+    logger.error({ msg: "Failed to connect to database or start server",
       err: error,
     });
     process.exit(1);
@@ -88,27 +86,25 @@ const startServer = async () => {
 })();
 
 process.on("unhandledRejection", (error) => {
-  logger.error({
-    message: "Unhandled Rejection Detected. Server shutting down.",
+  logger.error({ msg: "Unhandled Rejection Detected. Server shutting down.",
     err: error,
   });
   gracefulShutdown(1);
 });
 
 process.on("uncaughtException", (error) => {
-  logger.error({
-    message: "Uncaught Exception Detected. Server shutting down.",
+  logger.error({ msg: "Uncaught Exception Detected. Server shutting down.",
     err: error,
   });
   gracefulShutdown(1);
 });
 
 process.on("SIGTERM", () => {
-  logger.info({ message: "SIGTERM received. Shutting down gracefully." });
+  logger.info({ msg: "SIGTERM received. Shutting down gracefully." });
   gracefulShutdown(0);
 });
 
 process.on("SIGINT", () => {
-  logger.info({ message: "SIGINT received. Shutting down gracefully." });
+  logger.info({ msg: "SIGINT received. Shutting down gracefully." });
   gracefulShutdown(0);
 });

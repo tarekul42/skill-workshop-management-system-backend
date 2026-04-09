@@ -59,10 +59,10 @@ workshopSchema.plugin(auditPlugin);
 const WorkShop = model<IWorkshop>("Workshop", workshopSchema);
 
 workshopSchema.pre("save", async function () {
-  logger.info({ message: "Pre-save hook title", title: this.title });
+  logger.info({ msg: "Pre-save hook title", title: this.title });
   if (this.isModified("title") || !this.slug) {
     this.slug = await generateUniqueSlug(WorkShop, this.title);
-    logger.info({ message: "Generated slug", slug: this.slug });
+    logger.info({ msg: "Generated slug", slug: this.slug });
   }
 });
 

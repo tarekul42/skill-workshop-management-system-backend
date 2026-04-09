@@ -22,7 +22,7 @@ const generatePDF = async (invoiceData: IInvoiceData): Promise<Buffer> => {
       resolve(Buffer.concat(buffer));
     });
     doc.on("error", (err) => {
-      logger.error({ message: "PDF creation error", err });
+      logger.error({ msg: "PDF creation error", err });
       reject(
         new AppError(
           StatusCodes.INTERNAL_SERVER_ERROR,

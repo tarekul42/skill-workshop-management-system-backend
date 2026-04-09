@@ -92,8 +92,7 @@ const validatePayment = async (payload: {
       method: "GET",
       url: `${envVariables.SSL.SSL_VALIDATION_API}?val_id=${payload.val_id}&store_id=${envVariables.SSL.SSL_STORE_ID}&store_passwd=${envVariables.SSL.SSL_STORE_PASS}`,
     });
-    logger.info({
-      message: "sslCommerz validate api response",
+    logger.info({ msg: "sslCommerz validate api response",
       data: response.data,
     });
 
@@ -111,7 +110,7 @@ const validatePayment = async (payload: {
     );
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    logger.error({ message: "Payment validation error", err: error });
+    logger.error({ msg: "Payment validation error", err: error });
     throw new AppError(
       StatusCodes.BAD_GATEWAY,
       errorMessage || "Payment validation failed",

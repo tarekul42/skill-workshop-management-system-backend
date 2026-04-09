@@ -1,13 +1,8 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const multer_1 = __importDefault(require("multer"));
-const multer_storage_cloudinary_1 = require("multer-storage-cloudinary");
-const cloudinary_config_1 = require("./cloudinary.config");
-const storage = new multer_storage_cloudinary_1.CloudinaryStorage({
-    cloudinary: cloudinary_config_1.cloudinaryUpload,
+import multer from "multer";
+import { CloudinaryStorage } from "multer-storage-cloudinary";
+import { cloudinaryUpload } from "./cloudinary.config";
+const storage = new CloudinaryStorage({
+    cloudinary: cloudinaryUpload,
     params: {
         public_id: (req, file) => {
             const fileName = file.originalname
@@ -37,9 +32,9 @@ const fileFilter = (req, file, cb) => {
         cb(new Error("Invalid file type. Only JPEG, PNG, and WebP are allowed."));
     }
 };
-const multerUpload = (0, multer_1.default)({
+const multerUpload = multer({
     storage: storage,
     limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
     fileFilter: fileFilter,
 });
-exports.default = multerUpload;
+export default multerUpload;
