@@ -14,6 +14,9 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV NODE_OPTIONS=--max-old-space-size=1024
 
+# Update and upgrade OS-level packages
+RUN apt-get update && apt-get upgrade -y && apt-get clean && rm -rf /var/lib/apt/lists/*
+
 # Switch to non-root user early
 # Ensure the app directory is owned by the bun user
 RUN chown -R bun:bun /app
