@@ -297,9 +297,11 @@ The system implements multiple layers of security to protect data and ensuring s
   - **Auth Limiter**: 10 attempts per 15 minutes for login/refresh.
   - **Admin Admin Limiter**: applied to Audit and other sensitive admin routes.
 - **Role-Based Access Control (RBAC)**: Strict permission checks for `STUDENT`, `ADMIN`, and `SUPER_ADMIN`.
-- **Security Audit**: The codebase has undergone a comprehensive security audit to identify and mitigate vulnerabilities.
-- **Input Sanitization**: Uses `express-mongo-sanitize` to prevent NoSQL injection.
-- **Secure Headers**: Implemented via `helmet` to set various HTTP headers.
+- **Token Blacklisting**: Implemented a Redis-based blacklist to invalidate tokens upon logout or password changes, preventing session hijacking.
+- **Dedicated Reset Secret**: Decoupled password reset tokens from access tokens by using a dedicated secret (`RESET_PASSWORD_SECRET`).
+- **Metrics Protection**: Secured the Prometheus `/metrics` endpoint with a mandatory API key check.
+- **Redirect Validation**: Enforced an allowlist for OAuth redirects to prevent Open Redirect vulnerabilities.
+- **Improved Token Security**: Added unique `jti` claims to all JWTs and enforced strict cookie `maxAge` and `path` settings.
 
 ---
 
@@ -343,6 +345,7 @@ JWT_ACCESS_SECRET=your_jwt_access_secret_here
 JWT_ACCESS_EXPIRES=1d
 JWT_REFRESH_SECRET=your_jwt_refresh_secret_here
 JWT_REFRESH_EXPIRES=365d
+RESET_PASSWORD_SECRET=your_dedicated_reset_secret_here
 
 # Super Admin
 SUPER_ADMIN_EMAIL=<YOUR_SUPER_ADMIN_EMAIL>
@@ -371,6 +374,7 @@ REDIS_PASSWORD=
 
 # CSRF
 CSRF_SECRET=your_csrf_secret_here_min_32_chars
+METRICS_API_KEY=your_metrics_api_key_here
 
 # SSL Commerz Payment
 SSL_STORE_ID=your_ssl_store_id

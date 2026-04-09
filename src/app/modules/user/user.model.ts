@@ -34,7 +34,16 @@ const userSchema = new Schema<IUser>(
       enum: Object.values(UserRole),
       default: UserRole.STUDENT,
     },
-    auths: [authProviderSchema],
+    auths: {
+      type: [authProviderSchema],
+      validate: {
+        validator: function (auths: IAuthProvider[]) {
+          const providers = auths.map((a) => a.provider);
+          return new Set(providers).size === providers.length;
+        },
+        message: "Duplicate auth providers are not allowed.",
+      },
+    },
   },
   {
     timestamps: true,

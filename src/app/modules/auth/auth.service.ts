@@ -5,6 +5,7 @@ import validator from "validator";
 import envVariables from "../../config/env";
 import AppError from "../../errorHelpers/AppError";
 import { mailQueue } from "../../jobs/mail.queue";
+import { invalidateToken } from "../../utils/tokenBlacklist";
 import { createNewAccessToken } from "../../utils/userTokens";
 import { IAuthProvider, IsActive } from "../user/user.interface";
 import User from "../user/user.model";
@@ -22,6 +23,7 @@ const changePassword = async (
   oldPassword: string,
   newPassword: string,
   decodedToken: JwtPayload,
+  accessToken: string,
 ) => {
   const user = await User.findById(decodedToken.userId);
 
@@ -55,6 +57,8 @@ const changePassword = async (
   );
 
   await user.save();
+
+  await invalidateToken(accessToken, envVariables.JWT_ACCESS_SECRET);
 };
 
 const setPassword = async (userId: string, plainPassword: string) => {
@@ -107,25 +111,18 @@ const forgotPassword = async (email: string) => {
   if (!validator.isEmail(email)) {
     throw new AppError(StatusCodes.BAD_REQUEST, "Invalid email format");
   }
+
   const isUserExists = await User.findOne({ email: { $eq: email } });
 
-  if (!isUserExists) {
-    throw new AppError(StatusCodes.NOT_FOUND, "User not found");
-  }
-
-  if (!isUserExists.isVerified) {
-    throw new AppError(StatusCodes.FORBIDDEN, "User is not verified");
-  }
-
+  // Generic success message to prevent user enumeration
   if (
+    !isUserExists ||
+    !isUserExists.isVerified ||
     isUserExists.isActive === IsActive.BLOCKED ||
-    isUserExists.isActive === IsActive.INACTIVE
+    isUserExists.isActive === IsActive.INACTIVE ||
+    isUserExists.isDeleted
   ) {
-    throw new AppError(StatusCodes.FORBIDDEN, "User is blocked or inactive");
-  }
-
-  if (isUserExists.isDeleted) {
-    throw new AppError(StatusCodes.FORBIDDEN, "User is deleted");
+    return;
   }
 
   const jwtPayload = {
@@ -134,11 +131,11 @@ const forgotPassword = async (email: string) => {
     role: isUserExists.role,
   };
 
-  const resetToken = jwt.sign(jwtPayload, envVariables.JWT_ACCESS_SECRET, {
+  const resetToken = jwt.sign(jwtPayload, envVariables.RESET_PASSWORD_SECRET, {
     expiresIn: "10m",
   });
 
-  const resetUILink = `${envVariables.FRONTEND_URL}/reset-password?id=${isUserExists._id}&token=${resetToken}`;
+  const resetUILink = `${envVariables.FRONTEND_URL}/reset-password?token=${resetToken}`;
 
   await mailQueue.add("forgot-password", {
     type: "forgot-password",
@@ -150,7 +147,11 @@ const forgotPassword = async (email: string) => {
   });
 };
 
-const resetPassword = async (newPassword: string, decodedToken: JwtPayload) => {
+const resetPassword = async (
+  newPassword: string,
+  decodedToken: JwtPayload,
+  accessToken: string,
+) => {
   const user = await User.findById(decodedToken.userId);
 
   if (!user) {
@@ -163,6 +164,8 @@ const resetPassword = async (newPassword: string, decodedToken: JwtPayload) => {
   );
 
   await user.save();
+
+  await invalidateToken(accessToken, envVariables.RESET_PASSWORD_SECRET);
 };
 
 const AuthServices = {

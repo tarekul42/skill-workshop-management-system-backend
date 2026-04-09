@@ -5,6 +5,7 @@ import { redisClient } from "../config/redis.config";
 import AppError from "../errorHelpers/AppError";
 import { IsActive, IUser } from "../modules/user/user.interface";
 import User from "../modules/user/user.model";
+import { parseExpiryToSeconds } from "./parseExpiry";
 import { generateToken, verifyToken } from "./jwt";
 
 const hashToken = (token: string) =>
@@ -31,7 +32,7 @@ const createUserTokens = async (user: Partial<IUser>) => {
 
   const hashedToken = hashToken(refreshToken);
   await redisClient.set(`refresh_token:${user._id}`, hashedToken, {
-    EX: 7 * 24 * 60 * 60, // 7 days in seconds
+    EX: parseExpiryToSeconds(envVariables.JWT_REFRESH_EXPIRES),
   });
 
   return { accessToken, refreshToken };
@@ -95,7 +96,7 @@ const createNewAccessToken = async (refreshToken: string) => {
 
   const hashedNewToken = hashToken(newRefreshToken);
   await redisClient.set(`refresh_token:${userId}`, hashedNewToken, {
-    EX: 7 * 24 * 60 * 60, // 7 days in seconds
+    EX: parseExpiryToSeconds(envVariables.JWT_REFRESH_EXPIRES),
   });
 
   return { accessToken, refreshToken: newRefreshToken };

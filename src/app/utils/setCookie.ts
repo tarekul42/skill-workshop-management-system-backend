@@ -1,5 +1,6 @@
 import { Response } from "express";
 import envVariables from "../config/env";
+import { parseExpiryToSeconds } from "./parseExpiry";
 
 interface IAuthTokens {
   accessToken?: string;
@@ -14,6 +15,8 @@ const setAuthCookie = (res: Response, tokenInfo: IAuthTokens) => {
       httpOnly: true,
       secure: isProduction,
       sameSite: isProduction ? "strict" : "lax",
+      maxAge: parseExpiryToSeconds(envVariables.JWT_ACCESS_EXPIRES) * 1000,
+      path: "/",
     });
   }
   if (tokenInfo.refreshToken) {
@@ -21,6 +24,8 @@ const setAuthCookie = (res: Response, tokenInfo: IAuthTokens) => {
       httpOnly: true,
       secure: isProduction,
       sameSite: isProduction ? "strict" : "lax",
+      maxAge: parseExpiryToSeconds(envVariables.JWT_REFRESH_EXPIRES) * 1000,
+      path: "/",
     });
   }
 };

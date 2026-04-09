@@ -21,11 +21,9 @@ const sendOtp = async (email: string, name: string) => {
   const normalizedEmail = email.toLowerCase();
   const user = await User.findOne({ email: { $eq: normalizedEmail } });
 
-  if (!user) {
-    throw new AppError(StatusCodes.NOT_FOUND, "User not found");
-  }
-  if (user.isVerified) {
-    throw new AppError(StatusCodes.BAD_REQUEST, "User already verified");
+  // Generic success message to prevent user enumeration
+  if (!user || user.isVerified) {
+    return;
   }
 
   const otp = generateOtp();
