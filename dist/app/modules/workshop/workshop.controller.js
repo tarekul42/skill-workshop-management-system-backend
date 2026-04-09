@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const http_status_codes_1 = require("http-status-codes");
 const catchAsync_1 = __importDefault(require("../../utils/catchAsync"));
 const sendResponse_1 = __importDefault(require("../../utils/sendResponse"));
+const parseParams_1 = require("../../utils/parseParams");
 const workshop_service_1 = __importDefault(require("./workshop.service"));
 const createLevel = (0, catchAsync_1.default)(async (req, res) => {
     const { name } = req.body;
@@ -18,7 +19,7 @@ const createLevel = (0, catchAsync_1.default)(async (req, res) => {
     });
 });
 const getSingleLevel = (0, catchAsync_1.default)(async (req, res) => {
-    const id = req.params.id;
+    const id = (0, parseParams_1.parseStringParam)(req.params.id, "id");
     const result = await workshop_service_1.default.getSingleLevel(id);
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_codes_1.StatusCodes.OK,
@@ -43,7 +44,7 @@ const getAllLevels = (0, catchAsync_1.default)(async (req, res) => {
     });
 });
 const updateLevel = (0, catchAsync_1.default)(async (req, res) => {
-    const id = req.params.id;
+    const id = (0, parseParams_1.parseStringParam)(req.params.id, "id");
     const { name } = req.body;
     const result = await workshop_service_1.default.updateLevel(id, { name });
     (0, sendResponse_1.default)(res, {
@@ -54,7 +55,7 @@ const updateLevel = (0, catchAsync_1.default)(async (req, res) => {
     });
 });
 const deleteLevel = (0, catchAsync_1.default)(async (req, res) => {
-    const id = req.params.id;
+    const id = (0, parseParams_1.parseStringParam)(req.params.id, "id");
     const result = await workshop_service_1.default.deleteLevel(id);
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_codes_1.StatusCodes.OK,
@@ -77,7 +78,7 @@ const createWorkshop = (0, catchAsync_1.default)(async (req, res) => {
     });
 });
 const getSingleWorkshop = (0, catchAsync_1.default)(async (req, res) => {
-    const slug = req.params.slug;
+    const slug = (0, parseParams_1.parseStringParam)(req.params.slug, "slug");
     const result = await workshop_service_1.default.getSingleWorkshop(slug);
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_codes_1.StatusCodes.OK,
@@ -103,7 +104,7 @@ const getAllWorkshops = (0, catchAsync_1.default)(async (req, res) => {
     });
 });
 const updateWorkshop = (0, catchAsync_1.default)(async (req, res) => {
-    const id = req.params.id;
+    const id = (0, parseParams_1.parseStringParam)(req.params.id, "id");
     const files = req.files;
     const payload = {
         ...req.body,
@@ -118,7 +119,7 @@ const updateWorkshop = (0, catchAsync_1.default)(async (req, res) => {
     });
 });
 const deleteWorkshop = (0, catchAsync_1.default)(async (req, res) => {
-    const id = req.params.id;
+    const id = (0, parseParams_1.parseStringParam)(req.params.id, "id");
     const result = await workshop_service_1.default.deleteWorkshop(id);
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_codes_1.StatusCodes.OK,

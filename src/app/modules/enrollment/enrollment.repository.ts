@@ -51,12 +51,20 @@ const createEnrollmentWithPayment = async (
     throw new AppError(StatusCodes.BAD_REQUEST, "Workshop price is not set.");
   }
 
-  // Guard: Prevent duplicate active enrollment for this user + workshop
-  const existingEnrollment = await Enrollment.findOne({
-    user: { $eq: userId },
-    workshop: { $eq: workshopId },
-    status: { $in: ["PENDING", "COMPLETE"] },
-  }).session(session);
+  // Guard: Prevent duplicate active enrollment for this user + workshop & Enforce workshop capacity (maxSeats)
+  const [existingEnrollment, currentEnrollmentCount] = await Promise.all([
+    Enrollment.findOne({
+      user: { $eq: userId },
+      workshop: { $eq: workshopId },
+      status: { $in: ["PENDING", "COMPLETE"] },
+    }).session(session),
+    workshop.maxSeats != null
+      ? Enrollment.countDocuments({
+          workshop: { $eq: workshopId },
+          status: { $in: ["PENDING", "COMPLETE"] },
+        }).session(session)
+      : Promise.resolve(0),
+  ]);
 
   if (existingEnrollment) {
     throw new AppError(
@@ -65,13 +73,7 @@ const createEnrollmentWithPayment = async (
     );
   }
 
-  // Guard: Enforce workshop capacity (maxSeats)
   if (workshop.maxSeats != null) {
-    const currentEnrollmentCount = await Enrollment.countDocuments({
-      workshop: { $eq: workshopId },
-      status: { $in: ["PENDING", "COMPLETE"] },
-    }).session(session);
-
     if (currentEnrollmentCount >= workshop.maxSeats) {
       throw new AppError(
         StatusCodes.BAD_REQUEST,

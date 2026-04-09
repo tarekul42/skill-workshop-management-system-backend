@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const http_status_codes_1 = __importDefault(require("http-status-codes"));
 const catchAsync_1 = __importDefault(require("../../utils/catchAsync"));
 const sendResponse_1 = __importDefault(require("../../utils/sendResponse"));
+const parseParams_1 = require("../../utils/parseParams");
 const user_service_1 = __importDefault(require("./user.service"));
 const createUser = (0, catchAsync_1.default)(async (req, res) => {
     const user = await user_service_1.default.createUser(req.body);
@@ -17,7 +18,7 @@ const createUser = (0, catchAsync_1.default)(async (req, res) => {
     });
 });
 const getSingleUser = (0, catchAsync_1.default)(async (req, res) => {
-    const id = req.params.id;
+    const id = (0, parseParams_1.parseStringParam)(req.params.id, "id");
     const result = await user_service_1.default.getSingleUser(id);
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_codes_1.default.OK,
@@ -48,7 +49,7 @@ const getAllUsers = (0, catchAsync_1.default)(async (req, res) => {
     });
 });
 const updateUser = (0, catchAsync_1.default)(async (req, res) => {
-    const userId = req.params.id;
+    const userId = (0, parseParams_1.parseStringParam)(req.params.id, "id");
     const payload = req.body;
     const verifiedToken = req.user;
     const user = await user_service_1.default.updateUser(userId, payload, verifiedToken);
@@ -60,7 +61,7 @@ const updateUser = (0, catchAsync_1.default)(async (req, res) => {
     });
 });
 const deleteUser = (0, catchAsync_1.default)(async (req, res) => {
-    const userId = req.params.id;
+    const userId = (0, parseParams_1.parseStringParam)(req.params.id, "id");
     const verifiedToken = req.user;
     await user_service_1.default.deleteUser(userId, verifiedToken);
     (0, sendResponse_1.default)(res, {

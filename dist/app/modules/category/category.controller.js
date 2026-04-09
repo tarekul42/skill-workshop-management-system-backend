@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const http_status_codes_1 = require("http-status-codes");
 const catchAsync_1 = __importDefault(require("../../utils/catchAsync"));
 const sendResponse_1 = __importDefault(require("../../utils/sendResponse"));
+const parseParams_1 = require("../../utils/parseParams");
 const category_service_1 = __importDefault(require("./category.service"));
 const createCategory = (0, catchAsync_1.default)(async (req, res) => {
     const payload = {
@@ -21,7 +22,7 @@ const createCategory = (0, catchAsync_1.default)(async (req, res) => {
     });
 });
 const getSingleCategory = (0, catchAsync_1.default)(async (req, res) => {
-    const slug = req.params.slug;
+    const slug = (0, parseParams_1.parseStringParam)(req.params.slug, "slug");
     const result = await category_service_1.default.getSingleCategory(slug);
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_codes_1.StatusCodes.OK,
@@ -42,7 +43,7 @@ const getAllCategories = (0, catchAsync_1.default)(async (req, res) => {
     });
 });
 const updateCategory = (0, catchAsync_1.default)(async (req, res) => {
-    const id = req.params.id;
+    const id = (0, parseParams_1.parseStringParam)(req.params.id, "id");
     const payload = {
         ...req.body,
         ...(req.file?.path && { thumbnail: req.file.path }),
@@ -56,7 +57,7 @@ const updateCategory = (0, catchAsync_1.default)(async (req, res) => {
     });
 });
 const deleteCategory = (0, catchAsync_1.default)(async (req, res) => {
-    const id = req.params.id;
+    const id = (0, parseParams_1.parseStringParam)(req.params.id, "id");
     const result = await category_service_1.default.deleteCategory(id);
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_codes_1.StatusCodes.OK,

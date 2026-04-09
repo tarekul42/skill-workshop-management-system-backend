@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import catchAsync from "../../utils/catchAsync";
 import sendResponse from "../../utils/sendResponse";
+import { parseStringParam } from "../../utils/parseParams";
 import { ICategory } from "./category.interface";
 import CategoryService from "./category.service";
 
@@ -22,7 +23,7 @@ const createCategory = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getSingleCategory = catchAsync(async (req: Request, res: Response) => {
-  const slug = req.params.slug as string;
+  const slug = parseStringParam(req.params.slug, "slug");
   const result = await CategoryService.getSingleCategory(slug);
 
   sendResponse(res, {
@@ -50,7 +51,7 @@ const getAllCategories = catchAsync(async (req: Request, res: Response) => {
 });
 
 const updateCategory = catchAsync(async (req: Request, res: Response) => {
-  const id = req.params.id as string;
+  const id = parseStringParam(req.params.id, "id");
 
   const payload: Partial<ICategory> = {
     ...req.body,
@@ -68,7 +69,7 @@ const updateCategory = catchAsync(async (req: Request, res: Response) => {
 });
 
 const deleteCategory = catchAsync(async (req: Request, res: Response) => {
-  const id = req.params.id as string;
+  const id = parseStringParam(req.params.id, "id");
 
   const result = await CategoryService.deleteCategory(id);
 

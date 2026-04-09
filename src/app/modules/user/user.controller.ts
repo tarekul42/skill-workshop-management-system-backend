@@ -3,6 +3,7 @@ import StatusCodes from "http-status-codes";
 import { JwtPayload } from "jsonwebtoken";
 import catchAsync from "../../utils/catchAsync";
 import sendResponse from "../../utils/sendResponse";
+import { parseStringParam } from "../../utils/parseParams";
 import UserServices from "./user.service";
 
 const createUser = catchAsync(async (req: Request, res: Response) => {
@@ -17,7 +18,7 @@ const createUser = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getSingleUser = catchAsync(async (req: Request, res: Response) => {
-  const id = req.params.id as string;
+  const id = parseStringParam(req.params.id, "id");
   const result = await UserServices.getSingleUser(id);
 
   sendResponse(res, {
@@ -56,7 +57,7 @@ const getAllUsers = catchAsync(async (req: Request, res: Response) => {
 });
 
 const updateUser = catchAsync(async (req: Request, res: Response) => {
-  const userId = req.params.id as string;
+  const userId = parseStringParam(req.params.id, "id");
   const payload = req.body;
   const verifiedToken = req.user as JwtPayload;
 
@@ -71,7 +72,7 @@ const updateUser = catchAsync(async (req: Request, res: Response) => {
 });
 
 const deleteUser = catchAsync(async (req: Request, res: Response) => {
-  const userId = req.params.id as string;
+  const userId = parseStringParam(req.params.id, "id");
   const verifiedToken = req.user as JwtPayload;
 
   await UserServices.deleteUser(userId, verifiedToken);

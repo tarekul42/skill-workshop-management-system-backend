@@ -143,7 +143,7 @@ const updateUser = async (
 
   const sensitiveFields = ["isDeleted", "isActive", "isVerified", "role"];
 
-  const allowedFields = ["name", "password", "phone", "age", "address"];
+  const allowedFields = ["name", "phone", "age", "address"];
 
   if (isAdmin) {
     allowedFields.push(...sensitiveFields);
