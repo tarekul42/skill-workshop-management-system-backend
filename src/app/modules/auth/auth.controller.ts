@@ -188,7 +188,11 @@ const resetPassword = catchAsync(async (req: Request, res: Response) => {
     accessToken = req.cookies.accessToken;
   }
 
-  await AuthServices.resetPassword(newPassword, decodedToken, accessToken as string);
+  await AuthServices.resetPassword(
+    newPassword,
+    decodedToken,
+    accessToken as string,
+  );
 
   sendResponse(res, {
     statusCode: StatusCodes.OK,

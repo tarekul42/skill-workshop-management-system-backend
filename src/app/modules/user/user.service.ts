@@ -179,7 +179,8 @@ const updateUser = async (
   // Log sensitive changes (role and status) explicitly
   const auditChanges: Record<string, unknown> = {};
   if (sanitizedPayload.role) auditChanges.role = sanitizedPayload.role;
-  if (sanitizedPayload.isActive !== undefined) auditChanges.isActive = sanitizedPayload.isActive;
+  if (sanitizedPayload.isActive !== undefined)
+    auditChanges.isActive = sanitizedPayload.isActive;
 
   await auditLogger({
     action: AuditAction.UPDATE,
@@ -198,10 +199,7 @@ const deleteUser = async (userId: string, decodedToken: JwtPayload) => {
     decodedToken.role === UserRole.SUPER_ADMIN;
 
   if (!isAdmin) {
-    throw new AppError(
-      StatusCodes.FORBIDDEN,
-      "Only admins can delete users",
-    );
+    throw new AppError(StatusCodes.FORBIDDEN, "Only admins can delete users");
   }
 
   const user = await User.findById(userId);

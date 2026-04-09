@@ -6,11 +6,9 @@ const generateToken = (
   secret: string,
   expiresIn: string,
 ) => {
-  const token = jwt.sign(
-    { ...payload, jti: crypto.randomUUID() },
-    secret,
-    { expiresIn } as SignOptions,
-  );
+  const token = jwt.sign({ ...payload, jti: crypto.randomUUID() }, secret, {
+    expiresIn,
+  } as SignOptions);
   return token;
 };
 

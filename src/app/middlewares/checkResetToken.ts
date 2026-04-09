@@ -12,7 +12,11 @@ import { isTokenBlacklisted } from "../utils/tokenBlacklist";
  * Middleware to verify password reset tokens using the dedicated RESET_PASSWORD_SECRET.
  * Also checks for user status and token blacklisting.
  */
-const checkResetToken = async (req: Request, _res: Response, next: NextFunction) => {
+const checkResetToken = async (
+  req: Request,
+  _res: Response,
+  next: NextFunction,
+) => {
   try {
     const User = mongoose.model("User");
     let resetToken = req.headers.authorization;
@@ -40,7 +44,10 @@ const checkResetToken = async (req: Request, _res: Response, next: NextFunction)
 
     const blacklisted = await isTokenBlacklisted(resetToken);
     if (blacklisted) {
-      throw new AppError(StatusCodes.UNAUTHORIZED, "Token has already been used or invalidated");
+      throw new AppError(
+        StatusCodes.UNAUTHORIZED,
+        "Token has already been used or invalidated",
+      );
     }
 
     const isUserExists = await User.findById(verifiedToken.userId);

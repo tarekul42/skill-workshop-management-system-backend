@@ -22,7 +22,10 @@ interface IEnrollment {
   createdAt?: Date;
 }
 
-interface IEnrollmentPopulated extends Omit<IEnrollment, "user" | "workshop" | "payment"> {
+interface IEnrollmentPopulated extends Omit<
+  IEnrollment,
+  "user" | "workshop" | "payment"
+> {
   user: IUser;
   workshop: IWorkshop;
   payment: IPayment;

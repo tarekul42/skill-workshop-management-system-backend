@@ -5,8 +5,8 @@ import { redisClient } from "../config/redis.config";
 import AppError from "../errorHelpers/AppError";
 import { IsActive, IUser } from "../modules/user/user.interface";
 import User from "../modules/user/user.model";
-import { parseExpiryToSeconds } from "./parseExpiry";
 import { generateToken, verifyToken } from "./jwt";
+import { parseExpiryToSeconds } from "./parseExpiry";
 
 const hashToken = (token: string) =>
   crypto.createHash("sha256").update(token).digest("hex");

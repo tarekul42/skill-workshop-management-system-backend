@@ -33,7 +33,10 @@ const checkAuth =
 
       const blacklisted = await isTokenBlacklisted(accessToken);
       if (blacklisted) {
-        throw new AppError(StatusCodes.UNAUTHORIZED, "Token has been invalidated");
+        throw new AppError(
+          StatusCodes.UNAUTHORIZED,
+          "Token has been invalidated",
+        );
       }
 
       const isUserExists = await User.findOne({ email: verifiedToken.email });

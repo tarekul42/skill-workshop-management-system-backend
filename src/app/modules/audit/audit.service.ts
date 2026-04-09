@@ -18,10 +18,7 @@ const toEqFilter = (value: unknown): { $eq: string } | undefined => {
     return undefined;
   }
   if (typeof value !== "string") {
-    throw new AppError(
-      StatusCodes.BAD_REQUEST,
-      "Invalid query parameter type"
-    );
+    throw new AppError(StatusCodes.BAD_REQUEST, "Invalid query parameter type");
   }
   return { $eq: value };
 };
@@ -52,7 +49,6 @@ const getAuditLogs = async (params: AuditQueryParams) => {
   const documentIdFilter = toEqFilter(documentId);
   if (documentIdFilter) filter.documentId = documentIdFilter;
 
-
   if (startDate || endDate) {
     if (
       (startDate && typeof startDate !== "string") ||
@@ -60,7 +56,7 @@ const getAuditLogs = async (params: AuditQueryParams) => {
     ) {
       throw new AppError(
         StatusCodes.BAD_REQUEST,
-        "Invalid date range query parameter type"
+        "Invalid date range query parameter type",
       );
     }
 
@@ -70,7 +66,7 @@ const getAuditLogs = async (params: AuditQueryParams) => {
       if (Number.isNaN(gteDate.getTime())) {
         throw new AppError(
           StatusCodes.BAD_REQUEST,
-          "Invalid startDate query parameter"
+          "Invalid startDate query parameter",
         );
       }
       createdAtFilter.$gte = gteDate;
@@ -80,7 +76,7 @@ const getAuditLogs = async (params: AuditQueryParams) => {
       if (Number.isNaN(lteDate.getTime())) {
         throw new AppError(
           StatusCodes.BAD_REQUEST,
-          "Invalid endDate query parameter"
+          "Invalid endDate query parameter",
         );
       }
       createdAtFilter.$lte = lteDate;

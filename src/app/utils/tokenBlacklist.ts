@@ -2,6 +2,7 @@ import crypto from "crypto";
 import { JwtPayload } from "jsonwebtoken";
 import { redisClient } from "../config/redis.config";
 import { verifyToken } from "./jwt";
+import logger from "./logger";
 
 /**
  * Generates a hash for the token to be used as a key in Redis.
@@ -15,7 +16,7 @@ const getTokenHash = (token: string) => {
 /**
  * Invalidates a token by adding its hash to a blacklist in Redis.
  * The entry in Redis will expire when the token itself would have expired.
- * 
+ *
  * @param token - The token string to invalidate.
  * @param secret - The secret used to verify the token (to get its expiry).
  */
@@ -34,13 +35,14 @@ export const invalidateToken = async (token: string, secret: string) => {
     }
   } catch (_error) {
     // If token is already invalid/expired, we don't need to do anything
+    logger.error(_error);
     return;
   }
 };
 
 /**
  * Checks if a token is blacklisted.
- * 
+ *
  * @param token - The token string to check.
  * @returns True if blacklisted, false otherwise.
  */

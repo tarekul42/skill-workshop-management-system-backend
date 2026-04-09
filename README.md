@@ -169,6 +169,7 @@ The API supports multiple versions to ensure backward compatibility:
 ### Observability & Metrics
 
 System metrics are exposed for Prometheus scraping at the `/metrics` endpoint. This includes:
+
 - HTTP request duration and status codes.
 - Database connection latency.
 - Redis memory usage.
@@ -271,17 +272,17 @@ System metrics are exposed for Prometheus scraping at the `/metrics` endpoint. T
 
 ### Audit (`/api/v1/audit`)
 
-| Method | Endpoint      | Description              | Access |
-| ------ | ------------- | ------------------------ | ------ |
-| GET    | `/audit`      | List all audit logs      | Admin  |
-| GET    | `/audit/:id`  | Get single audit log     | Admin  |
+| Method | Endpoint     | Description          | Access |
+| ------ | ------------ | -------------------- | ------ |
+| GET    | `/audit`     | List all audit logs  | Admin  |
+| GET    | `/audit/:id` | Get single audit log | Admin  |
 
 ### Infrastructure & Misc
 
-| Method | Endpoint            | Description                  | Access |
-| ------ | ------------------- | ---------------------------- | ------ |
-| GET    | `/metrics`          | Prometheus metrics scraping  | Public |
-| GET    | `/api/v1/csrf-token`| Generate new CSRF token      | Public |
+| Method | Endpoint             | Description                 | Access |
+| ------ | -------------------- | --------------------------- | ------ |
+| GET    | `/metrics`           | Prometheus metrics scraping | Public |
+| GET    | `/api/v1/csrf-token` | Generate new CSRF token     | Public |
 
 ---
 
