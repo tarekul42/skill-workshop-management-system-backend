@@ -215,10 +215,13 @@ const googleCallback = catchAsync(async (req: Request, res: Response) => {
       !sanitized.includes("://") &&
       !/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(sanitized)
     ) {
-      const normalizedPath = sanitized
-        .split("?")[0]
-        .replace(/^\/+/, "")
-        .replace(/\/+$/, "");
+      let normalizedPath = sanitized.split("?")[0];
+      while (normalizedPath.length > 0 && normalizedPath.startsWith("/")) {
+        normalizedPath = normalizedPath.substring(1);
+      }
+      while (normalizedPath.length > 0 && normalizedPath.endsWith("/")) {
+        normalizedPath = normalizedPath.substring(0, normalizedPath.length - 1);
+      }
       const ALLOWED_REDIRECT_PATHS = [
         "dashboard",
         "profile",
