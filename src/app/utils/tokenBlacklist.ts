@@ -32,7 +32,7 @@ export const invalidateToken = async (token: string, secret: string) => {
         EX: ttl,
       });
     }
-  } catch (error) {
+  } catch (_error) {
     // If token is already invalid/expired, we don't need to do anything
     return;
   }

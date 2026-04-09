@@ -211,7 +211,10 @@ const googleCallback = catchAsync(async (req: Request, res: Response) => {
       !sanitized.includes("://") &&
       !/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(sanitized)
     ) {
-      const normalizedPath = sanitized.split("?")[0].replace(/^\/+|\/+$/g, "");
+      const normalizedPath = sanitized
+        .split("?")[0]
+        .replace(/^\/+/, "")
+        .replace(/\/+$/, "");
       const ALLOWED_REDIRECT_PATHS = [
         "dashboard",
         "profile",

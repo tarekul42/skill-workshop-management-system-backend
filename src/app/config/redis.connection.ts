@@ -1,5 +1,4 @@
 import { ConnectionOptions } from "bullmq";
-import envVariables from "./env";
 
 const redisConnection: ConnectionOptions = {
   host: process.env.REDIS_HOST as string,
