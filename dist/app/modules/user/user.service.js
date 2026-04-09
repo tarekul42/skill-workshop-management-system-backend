@@ -99,7 +99,7 @@ const updateUser = async (userId, payload, decodedToken) => {
         sanitizedPayload.password = await bcryptjs_1.default.hash(payload.password, Number(env_1.default.BCRYPT_SALT_ROUND));
     }
     const sensitiveFields = ["isDeleted", "isActive", "isVerified", "role"];
-    const allowedFields = ["name", "password", "phone", "age", "address"];
+    const allowedFields = ["name", "phone", "age", "address"];
     if (isAdmin) {
         allowedFields.push(...sensitiveFields);
     }

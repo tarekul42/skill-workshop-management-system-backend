@@ -7,10 +7,11 @@ const http_status_codes_1 = require("http-status-codes");
 const env_1 = __importDefault(require("../../config/env"));
 const catchAsync_1 = __importDefault(require("../../utils/catchAsync"));
 const sendResponse_1 = __importDefault(require("../../utils/sendResponse"));
+const parseParams_1 = require("../../utils/parseParams");
 const sslCommerz_service_1 = __importDefault(require("../sslCommerz/sslCommerz.service"));
 const payment_service_1 = __importDefault(require("./payment.service"));
 const initPayment = (0, catchAsync_1.default)(async (req, res) => {
-    const enrollmentId = req.params.enrollmentId;
+    const enrollmentId = (0, parseParams_1.parseStringParam)(req.params.enrollmentId, "enrollmentId");
     const result = await payment_service_1.default.initPayment(enrollmentId);
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_codes_1.StatusCodes.OK,
@@ -69,7 +70,7 @@ const cancelPayment = (0, catchAsync_1.default)(async (req, res) => {
     }
 });
 const getInvoiceDownloadUrl = (0, catchAsync_1.default)(async (req, res) => {
-    const paymentId = req.params.paymentId;
+    const paymentId = (0, parseParams_1.parseStringParam)(req.params.paymentId, "paymentId");
     const invoiceUrl = await payment_service_1.default.getInvoiceDownloadUrl(paymentId);
     (0, sendResponse_1.default)(res, {
         success: true,

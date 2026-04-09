@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import AuditService from "./audit.service";
+import { parseStringParam } from "../../utils/parseParams";
 import catchAsync from "../../utils/catchAsync";
 
 const getAuditLogs = catchAsync(async (req: Request, res: Response) => {
@@ -34,7 +35,7 @@ const getAuditLogs = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getAuditLogById = catchAsync(async (req: Request, res: Response) => {
-  const id = req.params.id as string;
+  const id = parseStringParam(req.params.id, "id");
   const log = await AuditService.getAuditLogById(id);
 
   res.status(StatusCodes.OK).json({

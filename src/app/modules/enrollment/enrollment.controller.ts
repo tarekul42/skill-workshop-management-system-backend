@@ -3,6 +3,7 @@ import { StatusCodes } from "http-status-codes";
 import { JwtPayload } from "jsonwebtoken";
 import catchAsync from "../../utils/catchAsync";
 import sendResponse from "../../utils/sendResponse";
+import { parseStringParam } from "../../utils/parseParams";
 import { ENROLLMENT_STATUS } from "./enrollment.interface";
 import EnrollmentService from "./enrollment.service";
 
@@ -39,7 +40,7 @@ const getUserEnrollments = catchAsync(async (req: Request, res: Response) => {
 
 const getSingleEnrollment = catchAsync(async (req: Request, res: Response) => {
   const decodeToken = req.user as JwtPayload;
-  const enrollmentId = req.params.enrollmentId as string;
+  const enrollmentId = parseStringParam(req.params.enrollmentId, "enrollmentId");
 
   const enrollment = await EnrollmentService.getSingleEnrollment(
     enrollmentId,
@@ -74,7 +75,7 @@ const getAllEnrollments = catchAsync(async (req: Request, res: Response) => {
 const updateEnrollmentStatus = catchAsync(
   async (req: Request, res: Response) => {
     const decodeToken = req.user as JwtPayload;
-    const enrollmentId = req.params.enrollmentId as string;
+    const enrollmentId = parseStringParam(req.params.enrollmentId, "enrollmentId");
     const status = req.body.status as ENROLLMENT_STATUS;
 
     const updatedEnrollment = await EnrollmentService.updateEnrollmentStatus(
@@ -95,7 +96,7 @@ const updateEnrollmentStatus = catchAsync(
 
 const cancelEnrollment = catchAsync(async (req: Request, res: Response) => {
   const decodeToken = req.user as JwtPayload;
-  const enrollmentId = req.params.enrollmentId as string;
+  const enrollmentId = parseStringParam(req.params.enrollmentId, "enrollmentId");
 
   const result = await EnrollmentService.cancelEnrollment(
     enrollmentId,

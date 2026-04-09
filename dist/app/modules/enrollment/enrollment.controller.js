@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const http_status_codes_1 = require("http-status-codes");
 const catchAsync_1 = __importDefault(require("../../utils/catchAsync"));
 const sendResponse_1 = __importDefault(require("../../utils/sendResponse"));
+const parseParams_1 = require("../../utils/parseParams");
 const enrollment_service_1 = __importDefault(require("./enrollment.service"));
 const createEnrollment = (0, catchAsync_1.default)(async (req, res) => {
     const userId = req.user.userId;
@@ -33,7 +34,7 @@ const getUserEnrollments = (0, catchAsync_1.default)(async (req, res) => {
 });
 const getSingleEnrollment = (0, catchAsync_1.default)(async (req, res) => {
     const decodeToken = req.user;
-    const enrollmentId = req.params.enrollmentId;
+    const enrollmentId = (0, parseParams_1.parseStringParam)(req.params.enrollmentId, "enrollmentId");
     const enrollment = await enrollment_service_1.default.getSingleEnrollment(enrollmentId, decodeToken.userId, decodeToken.role);
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_codes_1.StatusCodes.OK,
@@ -55,7 +56,7 @@ const getAllEnrollments = (0, catchAsync_1.default)(async (req, res) => {
 });
 const updateEnrollmentStatus = (0, catchAsync_1.default)(async (req, res) => {
     const decodeToken = req.user;
-    const enrollmentId = req.params.enrollmentId;
+    const enrollmentId = (0, parseParams_1.parseStringParam)(req.params.enrollmentId, "enrollmentId");
     const status = req.body.status;
     const updatedEnrollment = await enrollment_service_1.default.updateEnrollmentStatus(enrollmentId, status, decodeToken.userId, decodeToken.role);
     (0, sendResponse_1.default)(res, {
@@ -67,7 +68,7 @@ const updateEnrollmentStatus = (0, catchAsync_1.default)(async (req, res) => {
 });
 const cancelEnrollment = (0, catchAsync_1.default)(async (req, res) => {
     const decodeToken = req.user;
-    const enrollmentId = req.params.enrollmentId;
+    const enrollmentId = (0, parseParams_1.parseStringParam)(req.params.enrollmentId, "enrollmentId");
     const result = await enrollment_service_1.default.cancelEnrollment(enrollmentId, decodeToken.userId);
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_codes_1.StatusCodes.OK,

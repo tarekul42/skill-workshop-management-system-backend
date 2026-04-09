@@ -56,7 +56,13 @@ class QueryBuilder<T> {
   sort(): this {
     const sort = this.query.sort || "-createdAt";
 
-    this.modelQuery = this.modelQuery.sort(sort);
+    // Validate: reject sort values starting with $ or containing dots (nested field attacks)
+    const sortFields = sort.split(",").map((s) => s.trim());
+    const sanitizedSort = sortFields
+      .filter((s) => !s.startsWith("$") && !s.includes("."))
+      .join(" ");
+
+    this.modelQuery = this.modelQuery.sort(sanitizedSort || "-createdAt");
 
     return this;
   }

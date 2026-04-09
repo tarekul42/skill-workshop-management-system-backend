@@ -4,13 +4,14 @@ import { JwtPayload } from "jsonwebtoken";
 import envVariables from "../../config/env";
 import catchAsync from "../../utils/catchAsync";
 import sendResponse from "../../utils/sendResponse";
+import { parseStringParam } from "../../utils/parseParams";
 import SSLService from "../sslCommerz/sslCommerz.service";
 import PaymentService from "./payment.service";
 
 const initPayment = catchAsync(async (req: Request, res: Response) => {
-  const enrollmentId = req.params.enrollmentId;
+  const enrollmentId = parseStringParam(req.params.enrollmentId, "enrollmentId");
 
-  const result = await PaymentService.initPayment(enrollmentId as string);
+  const result = await PaymentService.initPayment(enrollmentId);
 
   sendResponse(res, {
     statusCode: StatusCodes.OK,
@@ -99,11 +100,9 @@ const cancelPayment = catchAsync(async (req: Request, res: Response) => {
 
 const getInvoiceDownloadUrl = catchAsync(
   async (req: Request, res: Response) => {
-    const paymentId = req.params.paymentId;
+    const paymentId = parseStringParam(req.params.paymentId, "paymentId");
 
-    const invoiceUrl = await PaymentService.getInvoiceDownloadUrl(
-      paymentId as string,
-    );
+    const invoiceUrl = await PaymentService.getInvoiceDownloadUrl(paymentId);
 
     sendResponse(res, {
       success: true,

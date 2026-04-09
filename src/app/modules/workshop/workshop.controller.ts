@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import catchAsync from "../../utils/catchAsync";
 import sendResponse from "../../utils/sendResponse";
+import { parseStringParam } from "../../utils/parseParams";
 import { IWorkshop } from "./workshop.interface";
 import WorkshopService from "./workshop.service";
 
@@ -19,7 +20,7 @@ const createLevel = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getSingleLevel = catchAsync(async (req: Request, res: Response) => {
-  const id = req.params.id as string;
+  const id = parseStringParam(req.params.id, "id");
   const result = await WorkshopService.getSingleLevel(id);
 
   sendResponse(res, {
@@ -50,7 +51,7 @@ const getAllLevels = catchAsync(async (req: Request, res: Response) => {
 });
 
 const updateLevel = catchAsync(async (req: Request, res: Response) => {
-  const id = req.params.id as string;
+  const id = parseStringParam(req.params.id, "id");
   const { name } = req.body;
 
   const result = await WorkshopService.updateLevel(id, { name });
@@ -64,7 +65,7 @@ const updateLevel = catchAsync(async (req: Request, res: Response) => {
 });
 
 const deleteLevel = catchAsync(async (req: Request, res: Response) => {
-  const id = req.params.id as string;
+  const id = parseStringParam(req.params.id, "id");
 
   const result = await WorkshopService.deleteLevel(id);
 
@@ -95,7 +96,7 @@ const createWorkshop = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getSingleWorkshop = catchAsync(async (req: Request, res: Response) => {
-  const slug = req.params.slug as string;
+  const slug = parseStringParam(req.params.slug, "slug");
 
   const result = await WorkshopService.getSingleWorkshop(slug);
 
@@ -128,7 +129,7 @@ const getAllWorkshops = catchAsync(async (req: Request, res: Response) => {
 });
 
 const updateWorkshop = catchAsync(async (req: Request, res: Response) => {
-  const id = req.params.id as string;
+  const id = parseStringParam(req.params.id, "id");
 
   const files = req.files as Express.Multer.File[] | undefined;
 
@@ -148,7 +149,7 @@ const updateWorkshop = catchAsync(async (req: Request, res: Response) => {
 });
 
 const deleteWorkshop = catchAsync(async (req: Request, res: Response) => {
-  const id = req.params.id as string;
+  const id = parseStringParam(req.params.id, "id");
 
   const result = await WorkshopService.deleteWorkshop(id);
 
