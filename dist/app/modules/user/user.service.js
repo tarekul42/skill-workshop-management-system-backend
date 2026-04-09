@@ -6,7 +6,7 @@ import auditLogger from "../../utils/auditLogger";
 import QueryBuilder from "../../utils/queryBuilder";
 import { AuditAction } from "../audit/audit.interface";
 import { userSearchableFields } from "./user.constant";
-import { UserRole, isAdminRole, isSuperAdmin } from "./user.interface";
+import { UserRole, isAdminRole, isSuperAdmin, } from "./user.interface";
 import User from "./user.model";
 const createUser = async (payload) => {
     const { name, email, password, ...rest } = payload;

@@ -49,12 +49,8 @@
             ],
             "url": {
               "raw": "{{base_url}}/audit",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "audit"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["audit"]
             }
           }
         },
@@ -70,13 +66,8 @@
             ],
             "url": {
               "raw": "{{base_url}}/audit/:id",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "audit",
-                ":id"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["audit", ":id"]
             }
           }
         }
@@ -97,13 +88,8 @@
             ],
             "url": {
               "raw": "{{base_url}}/auth/login",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "auth",
-                "login"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
             },
             "body": {
               "mode": "raw",
@@ -142,13 +128,8 @@
             ],
             "url": {
               "raw": "{{base_url}}/auth/refresh-token",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "auth",
-                "refresh-token"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["auth", "refresh-token"]
             },
             "body": {
               "mode": "raw",
@@ -173,13 +154,8 @@
             ],
             "url": {
               "raw": "{{base_url}}/auth/logout",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "auth",
-                "logout"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["auth", "logout"]
             },
             "body": {
               "mode": "raw",
@@ -204,13 +180,8 @@
             ],
             "url": {
               "raw": "{{base_url}}/auth/change-password",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "auth",
-                "change-password"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["auth", "change-password"]
             },
             "body": {
               "mode": "raw",
@@ -235,13 +206,8 @@
             ],
             "url": {
               "raw": "{{base_url}}/auth/set-password",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "auth",
-                "set-password"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["auth", "set-password"]
             },
             "body": {
               "mode": "raw",
@@ -266,13 +232,8 @@
             ],
             "url": {
               "raw": "{{base_url}}/auth/forgot-password",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "auth",
-                "forgot-password"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["auth", "forgot-password"]
             },
             "body": {
               "mode": "raw",
@@ -297,13 +258,8 @@
             ],
             "url": {
               "raw": "{{base_url}}/auth/reset-password",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "auth",
-                "reset-password"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["auth", "reset-password"]
             },
             "body": {
               "mode": "raw",
@@ -328,13 +284,8 @@
             ],
             "url": {
               "raw": "{{base_url}}/auth/google",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "auth",
-                "google"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["auth", "google"]
             }
           }
         },
@@ -350,14 +301,8 @@
             ],
             "url": {
               "raw": "{{base_url}}/auth/google/callback",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "auth",
-                "google",
-                "callback"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["auth", "google", "callback"]
             }
           }
         }
@@ -378,13 +323,8 @@
             ],
             "url": {
               "raw": "{{base_url}}/category/create",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "category",
-                "create"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["category", "create"]
             },
             "body": {
               "mode": "raw",
@@ -409,12 +349,8 @@
             ],
             "url": {
               "raw": "{{base_url}}/category",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "category"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["category"]
             }
           }
         },
@@ -430,13 +366,8 @@
             ],
             "url": {
               "raw": "{{base_url}}/category/:slug",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "category",
-                ":slug"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["category", ":slug"]
             }
           }
         },
@@ -452,13 +383,8 @@
             ],
             "url": {
               "raw": "{{base_url}}/category/:id",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "category",
-                ":id"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["category", ":id"]
             },
             "body": {
               "mode": "raw",
@@ -483,13 +409,8 @@
             ],
             "url": {
               "raw": "{{base_url}}/category/:id",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "category",
-                ":id"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["category", ":id"]
             }
           }
         }
@@ -510,12 +431,8 @@
             ],
             "url": {
               "raw": "{{base_url}}/enrollment",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "enrollment"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["enrollment"]
             },
             "body": {
               "mode": "raw",
@@ -540,12 +457,8 @@
             ],
             "url": {
               "raw": "{{base_url}}/enrollment",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "enrollment"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["enrollment"]
             }
           }
         },
@@ -561,13 +474,8 @@
             ],
             "url": {
               "raw": "{{base_url}}/enrollment/my-enrollments",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "enrollment",
-                "my-enrollments"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["enrollment", "my-enrollments"]
             }
           }
         },
@@ -583,13 +491,8 @@
             ],
             "url": {
               "raw": "{{base_url}}/enrollment/:enrollmentId",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "enrollment",
-                ":enrollmentId"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["enrollment", ":enrollmentId"]
             }
           }
         },
@@ -605,14 +508,8 @@
             ],
             "url": {
               "raw": "{{base_url}}/enrollment/:enrollmentId/status",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "enrollment",
-                ":enrollmentId",
-                "status"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["enrollment", ":enrollmentId", "status"]
             },
             "body": {
               "mode": "raw",
@@ -637,13 +534,8 @@
             ],
             "url": {
               "raw": "{{base_url}}/enrollment/:enrollmentId",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "enrollment",
-                ":enrollmentId"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["enrollment", ":enrollmentId"]
             }
           }
         }
@@ -664,12 +556,8 @@
             ],
             "url": {
               "raw": "{{base_url}}/health",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "health"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["health"]
             }
           }
         },
@@ -685,13 +573,8 @@
             ],
             "url": {
               "raw": "{{base_url}}/health/ping",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "health",
-                "ping"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["health", "ping"]
             }
           }
         },
@@ -707,13 +590,8 @@
             ],
             "url": {
               "raw": "{{base_url}}/health/check-version",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "health",
-                "check-version"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["health", "check-version"]
             }
           }
         },
@@ -729,13 +607,8 @@
             ],
             "url": {
               "raw": "{{base_url}}/health/health-check",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "health",
-                "health-check"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["health", "health-check"]
             }
           }
         },
@@ -751,13 +624,8 @@
             ],
             "url": {
               "raw": "{{base_url}}/health/dashboard",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "health",
-                "dashboard"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["health", "dashboard"]
             }
           }
         }
@@ -778,13 +646,8 @@
             ],
             "url": {
               "raw": "{{base_url}}/otp/send",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "otp",
-                "send"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["otp", "send"]
             },
             "body": {
               "mode": "raw",
@@ -809,13 +672,8 @@
             ],
             "url": {
               "raw": "{{base_url}}/otp/verify",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "otp",
-                "verify"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["otp", "verify"]
             },
             "body": {
               "mode": "raw",
@@ -845,14 +703,8 @@
             ],
             "url": {
               "raw": "{{base_url}}/payment/init-payment/:enrollmentId",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "payment",
-                "init-payment",
-                ":enrollmentId"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["payment", "init-payment", ":enrollmentId"]
             },
             "body": {
               "mode": "raw",
@@ -877,13 +729,8 @@
             ],
             "url": {
               "raw": "{{base_url}}/payment/success",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "payment",
-                "success"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["payment", "success"]
             },
             "body": {
               "mode": "raw",
@@ -908,13 +755,8 @@
             ],
             "url": {
               "raw": "{{base_url}}/payment/fail",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "payment",
-                "fail"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["payment", "fail"]
             },
             "body": {
               "mode": "raw",
@@ -939,13 +781,8 @@
             ],
             "url": {
               "raw": "{{base_url}}/payment/cancel",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "payment",
-                "cancel"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["payment", "cancel"]
             },
             "body": {
               "mode": "raw",
@@ -970,14 +807,8 @@
             ],
             "url": {
               "raw": "{{base_url}}/payment/invoice/:paymentId",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "payment",
-                "invoice",
-                ":paymentId"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["payment", "invoice", ":paymentId"]
             }
           }
         },
@@ -993,13 +824,8 @@
             ],
             "url": {
               "raw": "{{base_url}}/payment/validate-payment",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "payment",
-                "validate-payment"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["payment", "validate-payment"]
             },
             "body": {
               "mode": "raw",
@@ -1024,13 +850,8 @@
             ],
             "url": {
               "raw": "{{base_url}}/payment/ipn",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "payment",
-                "ipn"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["payment", "ipn"]
             },
             "body": {
               "mode": "raw",
@@ -1055,13 +876,8 @@
             ],
             "url": {
               "raw": "{{base_url}}/payment/refund",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "payment",
-                "refund"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["payment", "refund"]
             },
             "body": {
               "mode": "raw",
@@ -1091,13 +907,8 @@
             ],
             "url": {
               "raw": "{{base_url}}/stats/enrollment",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "stats",
-                "enrollment"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["stats", "enrollment"]
             }
           }
         },
@@ -1113,13 +924,8 @@
             ],
             "url": {
               "raw": "{{base_url}}/stats/payment",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "stats",
-                "payment"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["stats", "payment"]
             }
           }
         },
@@ -1135,13 +941,8 @@
             ],
             "url": {
               "raw": "{{base_url}}/stats/users",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "stats",
-                "users"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["stats", "users"]
             }
           }
         },
@@ -1157,13 +958,8 @@
             ],
             "url": {
               "raw": "{{base_url}}/stats/workshops",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "stats",
-                "workshops"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["stats", "workshops"]
             }
           }
         }
@@ -1184,13 +980,8 @@
             ],
             "url": {
               "raw": "{{base_url}}/user/register",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "user",
-                "register"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["user", "register"]
             },
             "body": {
               "mode": "raw",
@@ -1215,13 +1006,8 @@
             ],
             "url": {
               "raw": "{{base_url}}/user/me",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "user",
-                "me"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["user", "me"]
             }
           }
         },
@@ -1237,13 +1023,8 @@
             ],
             "url": {
               "raw": "{{base_url}}/user/all-users",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "user",
-                "all-users"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["user", "all-users"]
             }
           }
         },
@@ -1259,13 +1040,8 @@
             ],
             "url": {
               "raw": "{{base_url}}/user/:id",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "user",
-                ":id"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["user", ":id"]
             }
           }
         },
@@ -1281,13 +1057,8 @@
             ],
             "url": {
               "raw": "{{base_url}}/user/:id",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "user",
-                ":id"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["user", ":id"]
             },
             "body": {
               "mode": "raw",
@@ -1312,13 +1083,8 @@
             ],
             "url": {
               "raw": "{{base_url}}/user/:id",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "user",
-                ":id"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["user", ":id"]
             }
           }
         }
@@ -1339,13 +1105,8 @@
             ],
             "url": {
               "raw": "{{base_url}}/workshop/levels",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "workshop",
-                "levels"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["workshop", "levels"]
             }
           }
         },
@@ -1361,14 +1122,8 @@
             ],
             "url": {
               "raw": "{{base_url}}/workshop/levels/:id",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "workshop",
-                "levels",
-                ":id"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["workshop", "levels", ":id"]
             }
           }
         },
@@ -1384,13 +1139,8 @@
             ],
             "url": {
               "raw": "{{base_url}}/workshop/create-level",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "workshop",
-                "create-level"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["workshop", "create-level"]
             },
             "body": {
               "mode": "raw",
@@ -1415,14 +1165,8 @@
             ],
             "url": {
               "raw": "{{base_url}}/workshop/levels/:id",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "workshop",
-                "levels",
-                ":id"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["workshop", "levels", ":id"]
             },
             "body": {
               "mode": "raw",
@@ -1447,14 +1191,8 @@
             ],
             "url": {
               "raw": "{{base_url}}/workshop/levels/:id",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "workshop",
-                "levels",
-                ":id"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["workshop", "levels", ":id"]
             }
           }
         },
@@ -1470,12 +1208,8 @@
             ],
             "url": {
               "raw": "{{base_url}}/workshop",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "workshop"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["workshop"]
             }
           }
         },
@@ -1491,13 +1225,8 @@
             ],
             "url": {
               "raw": "{{base_url}}/workshop/:slug",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "workshop",
-                ":slug"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["workshop", ":slug"]
             }
           }
         },
@@ -1513,13 +1242,8 @@
             ],
             "url": {
               "raw": "{{base_url}}/workshop/create",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "workshop",
-                "create"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["workshop", "create"]
             },
             "body": {
               "mode": "raw",
@@ -1544,13 +1268,8 @@
             ],
             "url": {
               "raw": "{{base_url}}/workshop/:id",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "workshop",
-                ":id"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["workshop", ":id"]
             },
             "body": {
               "mode": "raw",
@@ -1575,13 +1294,8 @@
             ],
             "url": {
               "raw": "{{base_url}}/workshop/:id",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "workshop",
-                ":id"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["workshop", ":id"]
             }
           }
         }

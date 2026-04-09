@@ -3,9 +3,9 @@ import { deleteImageFromCloudinary } from "../../config/cloudinary.config";
 import AppError from "../../errorHelpers/AppError";
 import logger from "../../utils/logger";
 import QueryBuilder from "../../utils/queryBuilder";
+import { WorkShop } from "../workshop/workshop.model";
 import { categorySearchableFields } from "./category.constant";
 import { Category } from "./category.model";
-import { WorkShop } from "../workshop/workshop.model";
 const createCategory = async (payload) => {
     if (typeof payload.name !== "string") {
         throw new AppError(StatusCodes.BAD_REQUEST, "Invalid category name");

@@ -92,7 +92,8 @@ const validatePayment = async (payload: {
       method: "GET",
       url: `${envVariables.SSL.SSL_VALIDATION_API}?val_id=${payload.val_id}&store_id=${envVariables.SSL.SSL_STORE_ID}&store_passwd=${envVariables.SSL.SSL_STORE_PASS}`,
     });
-    logger.info({ msg: "sslCommerz validate api response",
+    logger.info({
+      msg: "sslCommerz validate api response",
       data: response.data,
     });
 

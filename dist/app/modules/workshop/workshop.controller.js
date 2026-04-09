@@ -1,7 +1,7 @@
 import { StatusCodes } from "http-status-codes";
 import catchAsync from "../../utils/catchAsync";
-import sendResponse from "../../utils/sendResponse";
 import { parseStringParam } from "../../utils/parseParams";
+import sendResponse from "../../utils/sendResponse";
 import WorkshopService from "./workshop.service";
 const createLevel = catchAsync(async (req, res) => {
     const { name } = req.body;
@@ -51,7 +51,7 @@ const updateLevel = catchAsync(async (req, res) => {
 });
 const deleteLevel = catchAsync(async (req, res) => {
     const id = parseStringParam(req.params.id, "id");
-    const result = await WorkshopService.deleteLevel(id);
+    await WorkshopService.deleteLevel(id);
     sendResponse(res, {
         statusCode: StatusCodes.OK,
         success: true,
@@ -115,7 +115,7 @@ const updateWorkshop = catchAsync(async (req, res) => {
 });
 const deleteWorkshop = catchAsync(async (req, res) => {
     const id = parseStringParam(req.params.id, "id");
-    const result = await WorkshopService.deleteWorkshop(id);
+    await WorkshopService.deleteWorkshop(id);
     sendResponse(res, {
         statusCode: StatusCodes.OK,
         success: true,

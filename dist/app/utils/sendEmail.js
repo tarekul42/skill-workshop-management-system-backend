@@ -29,8 +29,7 @@ const sendEmail = async ({ to, subject, templateName, templateData, attachments,
                 contentType: attachments.contentType,
             })),
         });
-        logger.info({ msg: `\u2709\uFE0F Email sent to ${to}: ${info.messageId}`,
-        });
+        logger.info({ msg: `\u2709\uFE0F Email sent to ${to}: ${info.messageId}` });
     }
     catch (error) {
         logger.error({ msg: "Email sending error", err: error });

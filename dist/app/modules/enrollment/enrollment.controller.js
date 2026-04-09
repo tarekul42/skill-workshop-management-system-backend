@@ -1,7 +1,7 @@
 import { StatusCodes } from "http-status-codes";
 import catchAsync from "../../utils/catchAsync";
-import sendResponse from "../../utils/sendResponse";
 import { parseStringParam } from "../../utils/parseParams";
+import sendResponse from "../../utils/sendResponse";
 import EnrollmentService from "./enrollment.service";
 const createEnrollment = catchAsync(async (req, res) => {
     const userId = req.user.userId;
@@ -53,7 +53,7 @@ const updateEnrollmentStatus = catchAsync(async (req, res) => {
     const decodeToken = req.user;
     const enrollmentId = parseStringParam(req.params.enrollmentId, "enrollmentId");
     const status = req.body.status;
-    const updatedEnrollment = await EnrollmentService.updateEnrollmentStatus(enrollmentId, status, decodeToken.userId, decodeToken.role);
+    await EnrollmentService.updateEnrollmentStatus(enrollmentId, status, decodeToken.userId, decodeToken.role);
     sendResponse(res, {
         statusCode: StatusCodes.OK,
         success: true,
@@ -64,7 +64,7 @@ const updateEnrollmentStatus = catchAsync(async (req, res) => {
 const cancelEnrollment = catchAsync(async (req, res) => {
     const decodeToken = req.user;
     const enrollmentId = parseStringParam(req.params.enrollmentId, "enrollmentId");
-    const result = await EnrollmentService.cancelEnrollment(enrollmentId, decodeToken.userId);
+    await EnrollmentService.cancelEnrollment(enrollmentId, decodeToken.userId);
     sendResponse(res, {
         statusCode: StatusCodes.OK,
         success: true,

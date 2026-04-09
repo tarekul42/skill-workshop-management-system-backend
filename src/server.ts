@@ -68,11 +68,13 @@ const startServer = async () => {
     logger.info({ msg: "Connected to Database." });
 
     server = app.listen(envVariables.PORT, () => {
-      logger.info({ msg: `Skill workshop management system backend is running on port: ${envVariables.PORT}`,
+      logger.info({
+        msg: `Skill workshop management system backend is running on port: ${envVariables.PORT}`,
       });
     });
   } catch (error) {
-    logger.error({ msg: "Failed to connect to database or start server",
+    logger.error({
+      msg: "Failed to connect to database or start server",
       err: error,
     });
     process.exit(1);
@@ -86,14 +88,16 @@ const startServer = async () => {
 })();
 
 process.on("unhandledRejection", (error) => {
-  logger.error({ msg: "Unhandled Rejection Detected. Server shutting down.",
+  logger.error({
+    msg: "Unhandled Rejection Detected. Server shutting down.",
     err: error,
   });
   gracefulShutdown(1);
 });
 
 process.on("uncaughtException", (error) => {
-  logger.error({ msg: "Uncaught Exception Detected. Server shutting down.",
+  logger.error({
+    msg: "Uncaught Exception Detected. Server shutting down.",
     err: error,
   });
   gracefulShutdown(1);

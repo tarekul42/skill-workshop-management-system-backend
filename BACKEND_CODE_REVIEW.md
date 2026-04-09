@@ -36,6 +36,7 @@ This is a well-structured MERN backend for a workshop management system. The pro
 **Problem**: The `forgotPassword` and `sendOtp` endpoints throw explicit errors when a user is not found (`User not found`), not verified, or blocked. This allows attackers to enumerate valid email addresses registered in the system. An attacker can systematically probe the forgot-password endpoint to discover which emails exist, whether they are verified, and whether they are blocked.
 
 **Fix Instruction for AI Agent**:
+
 ```
 In src/app/modules/auth/auth.service.ts:
 - In the forgotPassword function, remove the specific "User not found", "User is not verified", and "User is blocked" checks.
@@ -58,6 +59,7 @@ In src/app/modules/otp/otp.service.ts:
 **Problem**: The access token and refresh token cookies are set without `maxAge` or `expires` options. This means the cookies become **session cookies** that are automatically cleared when the browser closes. While this seems secure, it conflicts with the JWT token expiries set in `userTokens.ts` (where refresh tokens live in Redis for 7 days). More importantly, the access token cookie has no explicit expiry, so the cookie persists even after the JWT inside it has expired, leading to confusing user experience and unnecessary auth failures. Additionally, the `sameSite` is `"lax"` in development, which is fine, but the `secure` flag being `false` in development means cookies are sent over HTTP in local dev.
 
 **Fix Instruction for AI Agent**:
+
 ```
 In src/app/utils/setCookie.ts:
 - Add a maxAge option to both the accessToken and refreshToken cookies.
@@ -79,6 +81,7 @@ Create a helper function parseExpiryToSeconds(expiryString: string): number that
 **Problem**: When a user logs out, only the cookies are cleared and the session is destroyed. The access token remains valid until it naturally expires. Similarly, when a user changes or resets their password, the existing access token is not invalidated. An attacker who has stolen an access token can continue using it until its expiry time.
 
 **Fix Instruction for AI Agent**:
+
 ```
 In src/app/utils/userTokens.ts or a new file src/app/utils/tokenBlacklist.ts:
 - Create a tokenBlacklist utility that stores the access token's JTI (or hash) in Redis with an expiry matching the token's remaining TTL.
@@ -107,6 +110,7 @@ In jwt.ts:
 **Problem**: The `forgotPassword` function signs the reset token using `JWT_ACCESS_SECRET`. This means if the access token secret is compromised, an attacker can forge password reset tokens. Password reset tokens should use a separate, dedicated secret to provide defense-in-depth.
 
 **Fix Instruction for AI Agent**:
+
 ```
 In src/app/config/env.ts:
 - Add a new required environment variable: RESET_PASSWORD_SECRET (string).
@@ -129,6 +133,7 @@ In src/app/middlewares/checkAuth.ts (or wherever the reset password route is ver
 **Problem**: When a user sets a password via `setPassword`, a new `credentials` auth provider is appended to the `auths` array without checking if one already exists. Similarly, if a user registers with email/password and later authenticates via Google, a duplicate Google provider can be added. There is no unique constraint on `auths.provider`.
 
 **Fix Instruction for AI Agent**:
+
 ```
 In src/app/modules/user/user.model.ts:
 - Add a validation on the authProviderSchema or userSchema to ensure unique providers:
@@ -154,6 +159,7 @@ In src/app/modules/auth/auth.service.ts setPassword:
 **Problem**: The `googleCallback` function sanitizes the `state` parameter by stripping backslashes and leading slashes, and rejects absolute URLs. However, it does not validate the resulting `redirectTo` value against an allowlist of safe frontend paths. An attacker could craft a state parameter like `../../evil-page` or `..%2F..%2Fevil` that passes the current sanitization but redirects to unintended locations relative to the frontend URL.
 
 **Fix Instruction for AI Agent**:
+
 ```
 In src/app/modules/auth/auth.controller.ts googleCallback:
 - After sanitization, validate the redirectTo value against an allowlist of permitted paths:
@@ -179,6 +185,7 @@ In src/app/modules/auth/auth.route.ts:
 **Problem**: The `/metrics` endpoint (Prometheus metrics) is publicly accessible without any authentication. While Prometheus metrics should be scraped by a monitoring server, exposing them publicly leaks internal information about the system: request rates, latencies, error rates, queue depths, Redis memory, and database latency. An attacker can use this information to plan attacks or detect system weaknesses.
 
 **Fix Instruction for AI Agent**:
+
 ```
 In src/app.ts:
 - Add authentication to the /metrics endpoint. You can either:
@@ -211,6 +218,7 @@ In src/app/config/env.ts:
 **Problem**: The password reset URL includes both the user's MongoDB ObjectId (`_id`) and the JWT reset token as query parameters: `?id=${isUserExists._id}&token=${resetToken}`. Exposing the internal database ObjectId is an unnecessary information leak. The JWT token already contains the userId in its payload, so the `_id` parameter is redundant and serves no purpose.
 
 **Fix Instruction for AI Agent**:
+
 ```
 In src/app/modules/auth/auth.service.ts:
 - Remove the _id from the reset link. Change line 141 to:
@@ -228,6 +236,7 @@ In src/app/modules/auth/auth.service.ts:
 **Problem**: `@types/swagger-jsdoc` and `@types/swagger-ui-express` are listed in `dependencies` instead of `devDependencies`. Type definitions are only needed at compile time and should not be included in production builds, as they increase the production dependency footprint and attack surface unnecessarily.
 
 **Fix Instruction for AI Agent**:
+
 ```
 In package.json:
 - Move `@types/swagger-jsdoc` from dependencies to devDependencies.
@@ -244,6 +253,7 @@ In package.json:
 **Problem**: The refresh token Redis expiry is hardcoded to `7 * 24 * 60 * 60` (7 days in seconds), while the JWT refresh token itself uses `JWT_REFRESH_EXPIRES` from environment variables. If someone changes `JWT_REFRESH_EXPIRES` to a different value (e.g., "30d"), the Redis-stored hash will still expire after 7 days, causing token validation failures.
 
 **Fix Instruction for AI Agent**:
+
 ```
 In src/app/utils/userTokens.ts:
 - Create a helper function parseExpiryToSeconds(expiry: string): number that parses strings like "7d", "15m", "1h" into seconds.
@@ -263,6 +273,7 @@ In src/app/utils/userTokens.ts:
 **Problem**: Unlike all other controllers (user, workshop, category, enrollment, payment, auth, otp, stats), the audit controller's functions are NOT wrapped in `catchAsync`. This means if any async operation inside the audit controller throws an error, it will result in an unhandled promise rejection instead of being caught by the global error handler.
 
 **Fix Instruction for AI Agent**:
+
 ```
 In src/app/modules/audit/audit.controller.ts:
 - Import catchAsync from "../../utils/catchAsync"
@@ -281,10 +292,11 @@ In src/app/modules/audit/audit.controller.ts:
 **Problem**: The pattern of checking `userRole === "ADMIN" || userRole === "SUPER_ADMIN"` or `userRole === "ADMIN" && userRole === "SUPER_ADMIN"` is repeated in multiple places: `enrollment.service.ts` (lines 90, 144), `auth.service.ts` ( setPassword line 66), `user.service.ts` (lines 106-108, 195-198), and `userTokens.ts` (lines 67-69). This violates DRY and makes role changes error-prone.
 
 **Fix Instruction for AI Agent**:
+
 ```
 In src/app/modules/user/user.interface.ts:
 - Add helper functions or constants:
-  export const isAdminRole = (role: string): boolean => 
+  export const isAdminRole = (role: string): boolean =>
     role === UserRole.ADMIN || role === UserRole.SUPER_ADMIN;
   export const isSuperAdmin = (role: string): boolean =>
     role === UserRole.SUPER_ADMIN;
@@ -309,25 +321,26 @@ With calls to isAdminRole() and isSuperAdmin().
 **Problem**: The `getAllEnrollments` function manually implements pagination (skip, limit, total, totalPage) instead of using the existing `QueryBuilder` class. Every other getAll method in the project uses `QueryBuilder`. This inconsistency means pagination bugs need to be fixed in multiple places, and the manual implementation lacks NoSQL injection protection, sorting, and field selection that QueryBuilder provides.
 
 **Fix Instruction for AI Agent**:
+
 ```
 In src/app/modules/enrollment/enrollment.service.ts:
 - Replace the manual implementation in getAllEnrollments with:
   const getAllEnrollments = async (query: Record<string, string>) => {
     const queryBuilder = new QueryBuilder(Enrollment.find(), query);
-    
+
     const enrollmentsData = queryBuilder
       .filter()
       .sort()
       .fields()
       .paginate();
-    
+
     const [data, meta] = await Promise.all([
       enrollmentsData.build().populate("user", "name email phone")
         .populate("workshop", "title price images location")
         .populate("payment", "status amount transactionId"),
       queryBuilder.getMeta(),
     ]);
-    
+
     return { data, meta };
   };
 - Note: populate() needs to be called after build() since build() returns the query.
@@ -343,6 +356,7 @@ In src/app/modules/enrollment/enrollment.service.ts:
 **Problem**: The audit log service filters by `collectionName` (e.g., `auditLogger({ collectionName: "User" })` is called throughout the app), and the audit service likely queries by `collectionName` for filtering. However, the audit model only has compound indexes on `(collectionName, action)` and `(collectionName, documentId, action)`. While these compound indexes do cover collectionName queries, if queries ever filter by `collectionName` alone without `action` or `documentId`, the index may not be optimally used. More importantly, there's no index on `performedBy` which is used for filtering logs by user.
 
 **Fix Instruction for AI Agent**:
+
 ```
 In src/app/modules/audit/audit.model.ts:
 - Add a dedicated index on performedBy if the service queries by it:
@@ -360,6 +374,7 @@ In src/app/modules/audit/audit.model.ts:
 **Problem**: The `deleteCategory` function uses a dynamic `await import("../workshop/workshop.model")` to check for associated workshops. This is an anti-pattern that introduces unnecessary runtime overhead and makes the dependency graph unclear. Static imports should be preferred unless there's a circular dependency issue, in which case the architecture should be refactored.
 
 **Fix Instruction for AI Agent**:
+
 ```
 In src/app/modules/category/category.service.ts:
 - Move the dynamic import to a static import at the top of the file:
@@ -380,6 +395,7 @@ In src/app/modules/category/category.service.ts:
 **Problem**: The V2 router only has a placeholder health endpoint. The project already has a full API versioning system with header-based and URL-based versioning, deprecation headers, and Sunset headers. However, there's no actual V2 API. The header-based versioning fallback in `api.ts` (line 16-23) means if a client sends `X-API-Version: 2`, they get a nearly empty router instead of a 404 or "not yet available" response.
 
 **Fix Instruction for AI Agent**:
+
 ```
 In src/app/route/v2.ts:
 - Either:
@@ -396,6 +412,7 @@ In src/app/route/v2.ts:
 **Problem**: There's a `schema.post("save", ...)` hook at line 61 that is completely empty — it only contains a comment and no logic. This hook is registered and fires on every document save, consuming resources for no reason. A second, functional `post("save")` hook exists at line 74 which actually performs the audit logging.
 
 **Fix Instruction for AI Agent**:
+
 ```
 In src/app/utils/auditPlugin.ts:
 - Delete the entire first post("save") hook (lines 61-67):
@@ -418,6 +435,7 @@ In src/app/utils/auditPlugin.ts:
 **Problem**: The OpenAPI spec for the `/auth/reset-password` endpoint documents `oldPassword` as a required field in the request body. However, the actual implementation (resetPassword controller/service) only requires `newPassword` — there is no `oldPassword` involved since the user is resetting via a token. This mismatch between documentation and implementation can mislead frontend developers.
 
 **Fix Instruction for AI Agent**:
+
 ```
 In src/app/modules/auth/auth.route.ts:
 - Fix the OpenAPI spec for /auth/reset-password (around line 232):
@@ -443,11 +461,12 @@ In src/app/modules/auth/auth.route.ts:
 **Problem**: The transaction ID is generated using `tran_${Date.now()}_${Math.floor(Math.random() * 10000)}`. This format has a collision probability problem: `Date.now()` has millisecond precision (1000 values per second), and `Math.random() * 10000` gives only 10,000 possible suffixes. In a high-traffic scenario, two concurrent requests within the same millisecond have a 1/10,000 chance of generating the same transaction ID. With the payment model having a `unique: true` on `transactionId`, this would cause payment creation to fail intermittently. Also, `Math.random()` is not cryptographically secure.
 
 **Fix Instruction for AI Agent**:
+
 ```
 In src/app/utils/getTransactionId.ts:
 - Replace the entire implementation with a crypto-based approach:
   import crypto from 'crypto';
-  
+
   export const getTransactionId = () => {
     const timestamp = Date.now().toString(36);
     const random = crypto.randomBytes(4).toString('hex'); // 8 hex chars = 4 billion combinations
@@ -465,6 +484,7 @@ In src/app/utils/getTransactionId.ts:
 **Problem**: The `getAllWorkshops` function caches results in Redis using the key `workshops:list:${JSON.stringify(query)}` with a 60-second TTL. However, when a workshop is updated (`updateWorkshop`) or deleted (`deleteWorkshop`), the cache is not invalidated. This means users can see stale data for up to 60 seconds after changes. More critically, if a workshop's title or slug changes, the cache may serve incorrect slugs for routing.
 
 **Fix Instruction for AI Agent**:
+
 ```
 In src/app/modules/workshop/workshop.service.ts:
 - Add a cache invalidation function:
@@ -498,6 +518,7 @@ In src/app/modules/workshop/workshop.service.ts:
 **Problem**: The workshop capacity check (maxSeats) uses `countDocuments` inside a Mongoose session/transaction. However, MongoDB's default read concern (`local`) for transactions does not guarantee that the count reflects all committed transactions from other concurrent connections. Under high concurrency, two users could both see the count as below maxSeats and both get enrolled, exceeding the workshop capacity.
 
 **Fix Instruction for AI Agent**:
+
 ```
 In src/app/modules/enrollment/enrollment.repository.ts:
 - Change the session options to use snapshot read concern:
@@ -525,6 +546,7 @@ In src/app/modules/enrollment/enrollment.repository.ts:
 **Problem**: The Redis client has an error event listener that logs the error but doesn't handle it. Redis client errors emitted on the 'error' event will crash the Node.js process if no listener is attached (which is the case here — the listener only logs). More importantly, if Redis goes down temporarily, the application continues to operate but all Redis-dependent features (sessions, rate limiting, caching, OTP) will fail silently.
 
 **Fix Instruction for AI Agent**:
+
 ```
 In src/app/config/redis.config.ts:
 - Enhance the Redis error handler to set a flag and implement reconnection logic:
@@ -557,6 +579,7 @@ In src/app/config/redis.config.ts:
 **Problem**: The soft delete plugin hooks into `findOneAndUpdate` to add `{ isDeleted: { $ne: true } }` filter. However, `enrollment.service.ts` uses `findOneAndUpdate` to change enrollment status (lines 163, 210). The soft delete plugin's pre-hook modifies the query to filter out deleted documents, which is correct. But if an enrollment is soft-deleted and then someone tries to update its status via `findOneAndUpdate`, the query will silently return `null` instead of throwing an error. The service checks for `null` after the update, so this is partially handled, but the user gets a generic "Enrollment not found" instead of "Enrollment has been deleted."
 
 **Fix Instruction for AI Agent**:
+
 ```
 In src/app/modules/enrollment/enrollment.service.ts:
 - In updateEnrollmentStatus and cancelEnrollment:
@@ -578,6 +601,7 @@ In src/app/modules/enrollment/enrollment.service.ts:
 **Problem**: The payment success route is registered as `router.post("/success", ...)`, but SSLCommerz's default behavior is to redirect the user's browser to the success URL via GET. The route should accept GET requests for the browser redirect and POST for the server-to-server validation. Currently, if SSLCommerz sends a GET redirect to `/api/v1/payment/success?transactionId=...`, Express will return 404.
 
 **Fix Instruction for AI Agent**:
+
 ```
 In src/app/modules/payment/payment.route.ts:
 - Change the success/fail/cancel routes to accept both GET and POST:
@@ -597,6 +621,7 @@ In src/app/modules/payment/payment.route.ts:
 **Problem**: The workshop validation schema allows `description` to be an unbounded string, and arrays like `whatYouLearn`, `prerequisites`, `benefits`, and `syllabus` have no length limits. An attacker could submit a workshop with a 10MB description or arrays with thousands of entries, causing storage bloat and performance degradation in queries and aggregations.
 
 **Fix Instruction for AI Agent**:
+
 ```
 In src/app/modules/workshop/workshop.validation.ts:
 - Add max length constraints:
@@ -618,6 +643,7 @@ In src/app/modules/workshop/workshop.validation.ts:
 **Problem**: `findUserById` queries the User collection within the enrollment transaction. Then `findWorkshopById` queries WorkShop. Then separate queries check for existing enrollments and count documents. That's at least 4 sequential database queries per enrollment creation. While some parallelization is difficult within a transaction, the duplicate enrollment check and capacity check could potentially be combined.
 
 **Fix Instruction for AI Agent**:
+
 ```
 In src/app/modules/enrollment/enrollment.repository.ts:
 - Run the duplicate enrollment check and capacity check in parallel since they are independent reads:
@@ -646,20 +672,21 @@ In src/app/modules/enrollment/enrollment.repository.ts:
 **Problem**: The stats service runs 20+ aggregation pipelines against MongoDB whenever admin stats are requested. These pipelines include lookups, groups, sorts, and limits. On large datasets, these aggregations can be slow and consume significant MongoDB resources. There's no caching layer and no time-range filtering on most queries.
 
 **Fix Instruction for AI Agent**:
+
 ```
 In src/app/modules/stats/stats.service.ts:
 - Add Redis caching with a short TTL (e.g., 5 minutes) for stats:
   import { redisClient } from '../../config/redis.config';
-  
+
   const CACHE_KEY = 'stats:admin';
   const CACHE_TTL = 300; // 5 minutes
 
   const getStats = async () => {
     const cached = await redisClient.get(CACHE_KEY);
     if (cached) return JSON.parse(cached);
-    
+
     // ... run all aggregations ...
-    
+
     const result = { users, workshops, enrollments, payments };
     await redisClient.set(CACHE_KEY, JSON.stringify(result), { EX: CACHE_TTL });
     return result;
@@ -678,16 +705,17 @@ In src/app/modules/stats/stats.service.ts:
 **Problem**: The `sort()` method directly passes `this.query.sort` to Mongoose's `.sort()` without any validation. While Mongoose generally handles invalid sort values gracefully, a malicious user could potentially pass sort values like `$natural: -1` or sort by fields that shouldn't be sortable (like `password`). More importantly, sorting by non-indexed fields on large collections will cause full collection scans.
 
 **Fix Instruction for AI Agent**:
+
 ```
 In src/app/utils/queryBuilder.ts:
 - Add a whitelist of sortable fields, or at least validate that the sort parameter doesn't contain MongoDB operators:
   sort(): this {
     const sort = this.query.sort || '-createdAt';
-    
+
     // Validate: reject sort values starting with $ or containing dots (nested field attacks)
     const sortFields = sort.split(',').map(s => s.trim());
     const sanitizedSort = sortFields.filter(s => !s.startsWith('$') && !s.includes('.')).join(' ');
-    
+
     this.modelQuery = this.modelQuery.sort(sanitizedSort || '-createdAt');
     return this;
   };
@@ -702,6 +730,7 @@ In src/app/utils/queryBuilder.ts:
 **Problem**: Throughout the codebase, there are numerous `as string` type assertions on `req.params.id`, `req.params.slug`, `req.params.paymentId`, and `req.params.enrollmentId`. These are TypeScript assertions that don't provide runtime safety. If Express changes its types or if a param is unexpectedly undefined, the assertion will hide the bug.
 
 **Fix Instruction for AI Agent**:
+
 ```
 Create a utility function in src/app/utils/parseParams.ts:
   export const parseStringParam = (value: unknown, paramName: string): string => {
@@ -723,15 +752,16 @@ Then replace all `req.params.id as string` with `parseStringParam(req.params.id,
 **Problem**: The `allowedFields` array starts with `["name", "password", "phone", "age", "address"]`. Then for non-admin own-profile updates, it pushes `"name", "phone", "age", "address"` again (lines 155-156). These are already in the array from line 151. While this doesn't cause bugs, it's confusing and suggests the logic may not have been carefully considered.
 
 **Fix Instruction for AI Agent**:
+
 ```
 In src/app/modules/user/user.service.ts updateUser:
 - Simplify the allowedFields logic:
   const allowedFields = ['name', 'phone', 'age', 'address'];
-  
+
   if (payload.password !== undefined) {
     sanitizedPayload.password = await bcrypt.hash(payload.password, Number(envVariables.BCRYPT_SALT_ROUND));
   }
-  
+
   if (isAdmin) {
     allowedFields.push('isActive', 'isVerified', 'role');
   }
@@ -750,6 +780,7 @@ In src/app/modules/user/user.service.ts updateUser:
 **Problem**: Some controllers send `data: null` in the response body for actions like logout, password change, and delete. Others send `data: undefined` (which means the key is omitted from JSON). For example, `logout` sends `data: null` while `deleteUser` returns `null` from the service which is then set as `data: result` where result is `null`. This inconsistency can cause issues on the frontend when checking for the presence of `data`.
 
 **Fix Instruction for AI Agent**:
+
 ```
 Establish a project-wide convention:
 - For operations that don't return data (delete, logout, password change), always send `data: null`.
@@ -773,6 +804,7 @@ Review and fix these controllers:
 **Problem**: The package.json declares `"type": "commonjs"` but the project uses Bun runtime which handles both CJS and ESM. The tsconfig.json sets `"module": "commonjs"` and `"noEmit": true` (which is correct for Bun's TypeScript execution). However, the `tsconfig.build.json` is what's used for `bun run build`, and it may not be aligned. This setup works because Bun handles module resolution differently from Node.js, but it could cause confusion for new developers and may break if the project ever migrates to Node.js.
 
 **Fix Instruction for AI Agent**:
+
 ```
 In package.json:
 - If you intend to use Bun exclusively, change "type": "commonjs" to "type": "module" and update imports accordingly.
@@ -795,6 +827,7 @@ Best recommendation for a Bun-only project:
 **Problem**: The project requires 40+ environment variables (as seen in `env.ts`), but there's no `.env.example` file in the repository. New developers must read `env.ts` to figure out which variables are needed, their types, and what values to use. This creates a poor developer experience.
 
 **Fix Instruction for AI Agent**:
+
 ```
 Create a .env.example file at the project root with all required variables:
 
@@ -852,6 +885,7 @@ Add .env.example to .gitignore? No, .env.example should be committed. Only .env 
 **Problem**: The main `tsconfig.json` has `"noEmit": true` which is correct for IDE/development usage with Bun. However, `tsconfig.build.json` is used for `bun run build` which uses `tsc`. This dual-config pattern can lead to configuration drift where the build config doesn't match the development config, causing unexpected type errors at build time that weren't caught during development.
 
 **Fix Instruction for AI Agent**:
+
 ```
 Read tsconfig.build.json and ensure it extends tsconfig.json with overrides only:
   {
@@ -876,6 +910,7 @@ This ensures build config always inherits from the main config.
 **Problem**: Throughout the codebase, logging is done with `logger.info({ message: "..." })` and `logger.error({ message: "...", err })`. Pino's conventional property for the log message is `msg`, not `message`. Using `message` means the message doesn't appear in Pino's default output format and is treated as a regular stringified property, which degrades log readability in structured logging tools.
 
 **Fix Instruction for AI Agent**:
+
 ```
 Create a codemod or do a project-wide find-and-replace:
 - Replace all logger.info({ message: "..." }) with logger.info({ msg: "..." })
@@ -907,6 +942,7 @@ This applies to ALL files that use logger:
 **Problem**: `ts-node-dev` is listed as a devDependency but is never used in any npm script. The dev script uses `bun --watch ./src/server.ts` instead. This is a dead dependency that adds to `node_modules` size.
 
 **Fix Instruction for AI Agent**:
+
 ```
 In package.json:
 - Remove "ts-node-dev": "^2.0.0" from devDependencies.
@@ -922,6 +958,7 @@ In package.json:
 **Problem**: Both `ioredis` (^5.10.0) and `redis` (^5.11.0) are installed as dependencies. The project uses `ioredis` for session storage (`connect-redis` works with both, but the code imports from `redis`). Having two Redis clients increases bundle size and can cause confusion. The `redis` client is used in `redis.config.ts` via `import { createClient } from "redis"`, while `ioredis` types are installed but not directly imported anywhere.
 
 **Fix Instruction for AI Agent**:
+
 ```
 In package.json:
 - Verify which Redis client is actually used:
@@ -941,6 +978,7 @@ In package.json:
 **Problem**: The Dockerfile sets `ENV NODE_OPTIONS=--max-old-space-size=1024` but the production stage uses `oven/bun:1-slim` which runs via Bun, not Node.js. `NODE_OPTIONS` is a Node.js environment variable and has no effect when running with Bun. Bun has its own memory management and doesn't respect `NODE_OPTIONS`.
 
 **Fix Instruction for AI Agent**:
+
 ```
 In Dockerfile:
 - Remove the NODE_OPTIONS line since it has no effect with Bun.
@@ -962,6 +1000,7 @@ In Dockerfile:
 **Problem**: MongoDB's port is mapped to `27018:27017`, exposing it to the host machine. Redis is similarly mapped to `6379:6379`. In a production deployment, these database ports should NOT be exposed to the host. Only the backend service port (5000) should be exposed. Exposing database ports increases the attack surface.
 
 **Fix Instruction for AI Agent**:
+
 ```
 In docker-compose.yml:
 - Remove or comment out the ports mapping for mongodb and redis services:
@@ -986,6 +1025,7 @@ In docker-compose.yml:
 **Problem**: The Redis service in Docker Compose has no `command` to enable authentication. Combined with issue 6.2 (exposed port), this means anyone who can reach port 6379 on the host can access Redis without a password. Even if the port is not exposed, it's good practice to set a password.
 
 **Fix Instruction for AI Agent**:
+
 ```
 In docker-compose.yml:
 - Add a password to the Redis service:
@@ -1007,6 +1047,7 @@ In docker-compose.yml:
 **Problem**: Both MongoDB and Redis have health checks with `condition: service_healthy`, but the backend service itself has no health check. In a production environment with a reverse proxy (like nginx) or orchestrator (like Kubernetes), the proxy needs to know when the backend is healthy to route traffic.
 
 **Fix Instruction for AI Agent**:
+
 ```
 In docker-compose.yml:
 - Add a health check to the backend service:
@@ -1028,6 +1069,7 @@ In docker-compose.yml:
 **Problem**: `ioredis-mock`, `mongodb-memory-server`, and `supertest` are installed as devDependencies, and there's a `test` script (`"test": "bun test tests/"`), but the `tests/` directory doesn't exist in the repository. These dependencies are dead weight without tests.
 
 **Fix Instruction for AI Agent**:
+
 ```
 Short-term:
 - Remove ioredis-mock, mongodb-memory-server, and supertest from devDependencies if no tests exist yet.
@@ -1046,50 +1088,50 @@ Long-term:
 
 ## Summary Table
 
-| # | Severity | Category | Issue | File(s) |
-|---|----------|----------|-------|---------|
-| 1.1 | 🔴 Critical | Security | User enumeration via forgot-password/OTP | auth.service.ts, otp.service.ts |
-| 1.2 | 🔴 Critical | Security | Token cookies missing maxAge | setCookie.ts |
-| 1.3 | 🟠 High | Security | No token blacklisting on logout/password change | auth.controller.ts |
-| 1.4 | 🟠 High | Security | Password reset uses access token secret | auth.service.ts |
-| 1.5 | 🟠 High | Security | Duplicate auth providers allowed | auth.service.ts, passport.ts |
-| 1.6 | 🟠 High | Security | OAuth redirect state not validated against allowlist | auth.controller.ts |
-| 1.7 | 🟡 Medium | Security | Metrics endpoint unprotected | app.ts |
-| 1.8 | 🟡 Medium | Security | Reset link leaks user ID | auth.service.ts |
-| 1.9 | 🟡 Medium | Security | Type packages in dependencies | package.json |
-| 1.10 | 🔵 Low | Security | Refresh token expiry hardcoded | userTokens.ts |
-| 2.1 | 🟠 High | Architecture | Audit controller not wrapped in catchAsync | audit.controller.ts |
-| 2.2 | 🟠 High | Architecture | Duplicated role authorization logic | Multiple files |
-| 2.3 | 🟡 Medium | Architecture | Manual pagination instead of QueryBuilder | enrollment.service.ts |
-| 2.4 | 🟡 Medium | Architecture | Missing audit log indexes | audit.model.ts |
-| 2.5 | 🟡 Medium | Architecture | Dynamic import anti-pattern | category.service.ts |
-| 2.6 | 🟡 Medium | Architecture | Empty V2 router | route/v2.ts |
-| 2.7 | 🟡 Medium | Architecture | Dead audit plugin post-save hook | auditPlugin.ts |
-| 2.8 | 🔵 Low | Architecture | OpenAPI spec mismatch for reset-password | auth.route.ts |
-| 3.1 | 🔴 Critical | Reliability | Transaction ID collision risk | getTransactionId.ts |
-| 3.2 | 🟠 High | Reliability | Workshop cache not invalidated | workshop.service.ts |
-| 3.3 | 🟠 High | Reliability | Enrollment capacity race condition | enrollment.repository.ts |
-| 3.4 | 🟡 Medium | Reliability | Redis error handling insufficient | redis.config.ts |
-| 3.5 | 🟡 Medium | Reliability | Soft delete silent null returns | enrollment.service.ts |
-| 3.6 | 🟡 Medium | Reliability | Payment callbacks should accept GET | payment.route.ts |
-| 3.7 | 🟡 Medium | Reliability | No input length validation on arrays | workshop.validation.ts |
-| 4.1 | 🟡 Medium | Performance | N+1 queries in enrollment | enrollment.repository.ts |
-| 4.2 | 🟡 Medium | Performance | Unbounded aggregation in stats | stats.service.ts |
-| 4.3 | 🟡 Medium | Performance | Unvalidated sort parameter | queryBuilder.ts |
-| 4.4 | 🔵 Low | Performance | Redundant type assertions | Multiple controllers |
-| 4.5 | 🔵 Low | Performance | Duplicate allowedFields entries | user.service.ts |
-| 5.1 | 🟡 Medium | Code Quality | Inconsistent error response format | Multiple controllers |
-| 5.2 | 🟡 Medium | Code Quality | CommonJS type with Bun runtime | package.json |
-| 5.3 | 🟡 Medium | Code Quality | No .env.example file | Project root |
-| 5.4 | 🟡 Medium | Code Quality | Dual tsconfig pattern | tsconfig.json |
-| 5.5 | 🟡 Medium | Code Quality | Wrong Pino log property name | Multiple files |
-| 5.6 | 🔵 Low | Code Quality | Dead ts-node-dev dependency | package.json |
-| 5.7 | 🔵 Low | Code Quality | Duplicate Redis client packages | package.json |
-| 6.1 | 🟠 High | Infrastructure | Docker NODE_OPTIONS ignored by Bun | Dockerfile |
-| 6.2 | 🟡 Medium | Infrastructure | Database ports exposed in Docker | docker-compose.yml |
-| 6.3 | 🟡 Medium | Infrastructure | Redis no auth in Docker | docker-compose.yml |
-| 6.4 | 🟡 Medium | Infrastructure | No backend health check in Docker | docker-compose.yml |
-| 6.5 | 🔵 Low | Infrastructure | Test dependencies but no tests | package.json |
+| #    | Severity    | Category       | Issue                                                | File(s)                         |
+| ---- | ----------- | -------------- | ---------------------------------------------------- | ------------------------------- |
+| 1.1  | 🔴 Critical | Security       | User enumeration via forgot-password/OTP             | auth.service.ts, otp.service.ts |
+| 1.2  | 🔴 Critical | Security       | Token cookies missing maxAge                         | setCookie.ts                    |
+| 1.3  | 🟠 High     | Security       | No token blacklisting on logout/password change      | auth.controller.ts              |
+| 1.4  | 🟠 High     | Security       | Password reset uses access token secret              | auth.service.ts                 |
+| 1.5  | 🟠 High     | Security       | Duplicate auth providers allowed                     | auth.service.ts, passport.ts    |
+| 1.6  | 🟠 High     | Security       | OAuth redirect state not validated against allowlist | auth.controller.ts              |
+| 1.7  | 🟡 Medium   | Security       | Metrics endpoint unprotected                         | app.ts                          |
+| 1.8  | 🟡 Medium   | Security       | Reset link leaks user ID                             | auth.service.ts                 |
+| 1.9  | 🟡 Medium   | Security       | Type packages in dependencies                        | package.json                    |
+| 1.10 | 🔵 Low      | Security       | Refresh token expiry hardcoded                       | userTokens.ts                   |
+| 2.1  | 🟠 High     | Architecture   | Audit controller not wrapped in catchAsync           | audit.controller.ts             |
+| 2.2  | 🟠 High     | Architecture   | Duplicated role authorization logic                  | Multiple files                  |
+| 2.3  | 🟡 Medium   | Architecture   | Manual pagination instead of QueryBuilder            | enrollment.service.ts           |
+| 2.4  | 🟡 Medium   | Architecture   | Missing audit log indexes                            | audit.model.ts                  |
+| 2.5  | 🟡 Medium   | Architecture   | Dynamic import anti-pattern                          | category.service.ts             |
+| 2.6  | 🟡 Medium   | Architecture   | Empty V2 router                                      | route/v2.ts                     |
+| 2.7  | 🟡 Medium   | Architecture   | Dead audit plugin post-save hook                     | auditPlugin.ts                  |
+| 2.8  | 🔵 Low      | Architecture   | OpenAPI spec mismatch for reset-password             | auth.route.ts                   |
+| 3.1  | 🔴 Critical | Reliability    | Transaction ID collision risk                        | getTransactionId.ts             |
+| 3.2  | 🟠 High     | Reliability    | Workshop cache not invalidated                       | workshop.service.ts             |
+| 3.3  | 🟠 High     | Reliability    | Enrollment capacity race condition                   | enrollment.repository.ts        |
+| 3.4  | 🟡 Medium   | Reliability    | Redis error handling insufficient                    | redis.config.ts                 |
+| 3.5  | 🟡 Medium   | Reliability    | Soft delete silent null returns                      | enrollment.service.ts           |
+| 3.6  | 🟡 Medium   | Reliability    | Payment callbacks should accept GET                  | payment.route.ts                |
+| 3.7  | 🟡 Medium   | Reliability    | No input length validation on arrays                 | workshop.validation.ts          |
+| 4.1  | 🟡 Medium   | Performance    | N+1 queries in enrollment                            | enrollment.repository.ts        |
+| 4.2  | 🟡 Medium   | Performance    | Unbounded aggregation in stats                       | stats.service.ts                |
+| 4.3  | 🟡 Medium   | Performance    | Unvalidated sort parameter                           | queryBuilder.ts                 |
+| 4.4  | 🔵 Low      | Performance    | Redundant type assertions                            | Multiple controllers            |
+| 4.5  | 🔵 Low      | Performance    | Duplicate allowedFields entries                      | user.service.ts                 |
+| 5.1  | 🟡 Medium   | Code Quality   | Inconsistent error response format                   | Multiple controllers            |
+| 5.2  | 🟡 Medium   | Code Quality   | CommonJS type with Bun runtime                       | package.json                    |
+| 5.3  | 🟡 Medium   | Code Quality   | No .env.example file                                 | Project root                    |
+| 5.4  | 🟡 Medium   | Code Quality   | Dual tsconfig pattern                                | tsconfig.json                   |
+| 5.5  | 🟡 Medium   | Code Quality   | Wrong Pino log property name                         | Multiple files                  |
+| 5.6  | 🔵 Low      | Code Quality   | Dead ts-node-dev dependency                          | package.json                    |
+| 5.7  | 🔵 Low      | Code Quality   | Duplicate Redis client packages                      | package.json                    |
+| 6.1  | 🟠 High     | Infrastructure | Docker NODE_OPTIONS ignored by Bun                   | Dockerfile                      |
+| 6.2  | 🟡 Medium   | Infrastructure | Database ports exposed in Docker                     | docker-compose.yml              |
+| 6.3  | 🟡 Medium   | Infrastructure | Redis no auth in Docker                              | docker-compose.yml              |
+| 6.4  | 🟡 Medium   | Infrastructure | No backend health check in Docker                    | docker-compose.yml              |
+| 6.5  | 🔵 Low      | Infrastructure | Test dependencies but no tests                       | package.json                    |
 
 ---
 

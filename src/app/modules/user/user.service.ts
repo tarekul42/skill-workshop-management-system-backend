@@ -7,7 +7,13 @@ import auditLogger from "../../utils/auditLogger";
 import QueryBuilder from "../../utils/queryBuilder";
 import { AuditAction } from "../audit/audit.interface";
 import { userSearchableFields } from "./user.constant";
-import { IAuthProvider, IUser, UserRole, isAdminRole, isSuperAdmin } from "./user.interface";
+import {
+  IAuthProvider,
+  IUser,
+  UserRole,
+  isAdminRole,
+  isSuperAdmin,
+} from "./user.interface";
 import User from "./user.model";
 
 const createUser = async (payload: Partial<IUser>) => {

@@ -3,13 +3,16 @@ import { StatusCodes } from "http-status-codes";
 import { JwtPayload } from "jsonwebtoken";
 import envVariables from "../../config/env";
 import catchAsync from "../../utils/catchAsync";
-import sendResponse from "../../utils/sendResponse";
 import { parseStringParam } from "../../utils/parseParams";
+import sendResponse from "../../utils/sendResponse";
 import SSLService from "../sslCommerz/sslCommerz.service";
 import PaymentService from "./payment.service";
 
 const initPayment = catchAsync(async (req: Request, res: Response) => {
-  const enrollmentId = parseStringParam(req.params.enrollmentId, "enrollmentId");
+  const enrollmentId = parseStringParam(
+    req.params.enrollmentId,
+    "enrollmentId",
+  );
 
   const result = await PaymentService.initPayment(enrollmentId);
 

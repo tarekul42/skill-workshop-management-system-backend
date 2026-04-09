@@ -1,7 +1,7 @@
 import { StatusCodes } from "http-status-codes";
 import catchAsync from "../../utils/catchAsync";
-import sendResponse from "../../utils/sendResponse";
 import { parseStringParam } from "../../utils/parseParams";
+import sendResponse from "../../utils/sendResponse";
 import CategoryService from "./category.service";
 const createCategory = catchAsync(async (req, res) => {
     const payload = {
@@ -53,7 +53,7 @@ const updateCategory = catchAsync(async (req, res) => {
 });
 const deleteCategory = catchAsync(async (req, res) => {
     const id = parseStringParam(req.params.id, "id");
-    const result = await CategoryService.deleteCategory(id);
+    await CategoryService.deleteCategory(id);
     sendResponse(res, {
         statusCode: StatusCodes.OK,
         success: true,
