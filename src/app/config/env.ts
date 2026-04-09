@@ -54,6 +54,8 @@ interface IEnvConfig {
     REDIS_PASSWORD: string;
   };
   CSRF_SECRET: string;
+  RESET_PASSWORD_SECRET: string;
+  METRICS_API_KEY: string;
 }
 
 const loadEnvVariables = (): IEnvConfig => {
@@ -98,6 +100,10 @@ const loadEnvVariables = (): IEnvConfig => {
     "REDIS_PORT",
     "CSRF_SECRET",
   ];
+
+  if (process.env.NODE_ENV !== "test") {
+    requiredEnvVariables.push("RESET_PASSWORD_SECRET", "METRICS_API_KEY");
+  }
 
   requiredEnvVariables.forEach((envVariables) => {
     if (!process.env[envVariables]) {
@@ -159,6 +165,12 @@ const loadEnvVariables = (): IEnvConfig => {
       REDIS_PASSWORD: process.env.REDIS_PASSWORD ?? "",
     },
     CSRF_SECRET: process.env.CSRF_SECRET as string,
+    RESET_PASSWORD_SECRET:
+      (process.env.RESET_PASSWORD_SECRET as string) ||
+      (process.env.NODE_ENV === "test" ? "test-reset-secret" : ""),
+    METRICS_API_KEY:
+      (process.env.METRICS_API_KEY as string) ||
+      (process.env.NODE_ENV === "test" ? "test-metrics-key" : ""),
   };
 };
 

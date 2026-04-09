@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import jwt, { JwtPayload, SignOptions } from "jsonwebtoken";
 
 const generateToken = (
@@ -5,7 +6,9 @@ const generateToken = (
   secret: string,
   expiresIn: string,
 ) => {
-  const token = jwt.sign(payload, secret, { expiresIn } as SignOptions);
+  const token = jwt.sign({ ...payload, jti: crypto.randomUUID() }, secret, {
+    expiresIn,
+  } as SignOptions);
   return token;
 };
 

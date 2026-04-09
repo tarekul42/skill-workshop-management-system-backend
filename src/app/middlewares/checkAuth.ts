@@ -6,6 +6,7 @@ import AppError from "../errorHelpers/AppError";
 import { IsActive } from "../modules/user/user.interface";
 import User from "../modules/user/user.model";
 import { verifyToken } from "../utils/jwt";
+import { isTokenBlacklisted } from "../utils/tokenBlacklist";
 
 const checkAuth =
   (...authRoles: string[]) =>
@@ -28,6 +29,14 @@ const checkAuth =
 
       if (!verifiedToken) {
         throw new AppError(StatusCodes.FORBIDDEN, "Invalid access token");
+      }
+
+      const blacklisted = await isTokenBlacklisted(accessToken);
+      if (blacklisted) {
+        throw new AppError(
+          StatusCodes.UNAUTHORIZED,
+          "Token has been invalidated",
+        );
       }
 
       const isUserExists = await User.findOne({ email: verifiedToken.email });

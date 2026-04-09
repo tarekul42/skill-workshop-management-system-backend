@@ -8,6 +8,7 @@ import catchAsync from "../../utils/catchAsync";
 import logger from "../../utils/logger";
 import sendResponse from "../../utils/sendResponse";
 import setAuthCookie from "../../utils/setCookie";
+import { invalidateToken } from "../../utils/tokenBlacklist";
 import { createUserTokens } from "../../utils/userTokens";
 import { IUser } from "../user/user.interface";
 import AuthServices from "./auth.service";
@@ -95,6 +96,17 @@ const logout = catchAsync(async (req: Request, res: Response) => {
     sameSite: isProduction ? "strict" : "lax",
   });
 
+  let accessToken = req.headers.authorization;
+  if (accessToken?.startsWith("Bearer ")) {
+    accessToken = accessToken.split(" ")[1];
+  } else {
+    accessToken = req.cookies.accessToken;
+  }
+
+  if (accessToken) {
+    await invalidateToken(accessToken, envVariables.JWT_ACCESS_SECRET);
+  }
+
   if (req.session) {
     req.session.destroy((err) => {
       if (err) {
@@ -116,10 +128,18 @@ const changePassword = catchAsync(async (req: Request, res: Response) => {
   const oldPassword = req.body.oldPassword;
   const decodedToken = req.user;
 
+  let accessToken = req.headers.authorization;
+  if (accessToken?.startsWith("Bearer ")) {
+    accessToken = accessToken.split(" ")[1];
+  } else {
+    accessToken = req.cookies.accessToken;
+  }
+
   await AuthServices.changePassword(
     oldPassword,
     newPassword,
     decodedToken as JwtPayload,
+    accessToken as string,
   );
 
   sendResponse(res, {
@@ -161,7 +181,18 @@ const resetPassword = catchAsync(async (req: Request, res: Response) => {
   const newPassword = req.body.newPassword;
   const decodedToken = req.user as JwtPayload;
 
-  await AuthServices.resetPassword(newPassword, decodedToken);
+  let accessToken = req.headers.authorization;
+  if (accessToken?.startsWith("Bearer ")) {
+    accessToken = accessToken.split(" ")[1];
+  } else {
+    accessToken = req.cookies.accessToken;
+  }
+
+  await AuthServices.resetPassword(
+    newPassword,
+    decodedToken,
+    accessToken as string,
+  );
 
   sendResponse(res, {
     statusCode: StatusCodes.OK,
@@ -184,7 +215,30 @@ const googleCallback = catchAsync(async (req: Request, res: Response) => {
       !sanitized.includes("://") &&
       !/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(sanitized)
     ) {
-      redirectTo = sanitized;
+      let normalizedPath = sanitized.split("?")[0];
+      while (normalizedPath.length > 0 && normalizedPath.startsWith("/")) {
+        normalizedPath = normalizedPath.substring(1);
+      }
+      while (normalizedPath.length > 0 && normalizedPath.endsWith("/")) {
+        normalizedPath = normalizedPath.substring(0, normalizedPath.length - 1);
+      }
+      const ALLOWED_REDIRECT_PATHS = [
+        "dashboard",
+        "profile",
+        "settings",
+        "workshops",
+        "enrollments",
+        "payments",
+        "",
+      ];
+
+      const isAllowed = ALLOWED_REDIRECT_PATHS.some(
+        (p) => normalizedPath === p || normalizedPath.startsWith(p + "/"),
+      );
+
+      if (isAllowed) {
+        redirectTo = sanitized;
+      }
     }
   }
 

@@ -22,7 +22,9 @@ const findUserById = async (userId: string, session: ClientSession) => {
 };
 
 const findWorkshopById = async (workshopId: string, session: ClientSession) => {
-  return await WorkShop.findById(workshopId).select("price maxSeats").session(session);
+  return await WorkShop.findById(workshopId)
+    .select("price maxSeats")
+    .session(session);
 };
 
 const createEnrollmentWithPayment = async (

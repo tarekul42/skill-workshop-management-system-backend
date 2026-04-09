@@ -311,7 +311,11 @@ const handleIPN = async (body: Record<string, string>) => {
   return { received: true };
 };
 
-const refundPayment = async (paymentId: string, userId: string, reason?: string) => {
+const refundPayment = async (
+  paymentId: string,
+  userId: string,
+  reason?: string,
+) => {
   const payment = await PaymentRepository.findPaymentWithEnrollment(paymentId);
 
   if (!payment) {

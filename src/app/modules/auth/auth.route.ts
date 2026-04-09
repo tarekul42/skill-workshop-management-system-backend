@@ -2,6 +2,7 @@ import { NextFunction, Request, Response, Router } from "express";
 import passport from "passport";
 import envVariables from "../../config/env";
 import checkAuth from "../../middlewares/checkAuth";
+import checkResetToken from "../../middlewares/checkResetToken";
 import { authLimiter } from "../../utils/rateLimiter";
 import { UserRole } from "../user/user.interface";
 import AuthControllers from "./auth.controller";
@@ -250,7 +251,7 @@ router.post("/forgot-password", authLimiter, AuthControllers.forgotPassword);
 router.post(
   "/reset-password",
   authLimiter,
-  checkAuth(...Object.values(UserRole)),
+  checkResetToken,
   AuthControllers.resetPassword,
 );
 
