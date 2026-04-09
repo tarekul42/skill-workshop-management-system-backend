@@ -1,19 +1,14 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const http_status_codes_1 = require("http-status-codes");
-const catchAsync_1 = __importDefault(require("../../utils/catchAsync"));
-const sendResponse_1 = __importDefault(require("../../utils/sendResponse"));
-const parseParams_1 = require("../../utils/parseParams");
-const enrollment_service_1 = __importDefault(require("./enrollment.service"));
-const createEnrollment = (0, catchAsync_1.default)(async (req, res) => {
+import { StatusCodes } from "http-status-codes";
+import catchAsync from "../../utils/catchAsync";
+import { parseStringParam } from "../../utils/parseParams";
+import sendResponse from "../../utils/sendResponse";
+import EnrollmentService from "./enrollment.service";
+const createEnrollment = catchAsync(async (req, res) => {
     const userId = req.user.userId;
     const payload = req.body;
-    const result = await enrollment_service_1.default.createEnrollment(payload, userId);
-    (0, sendResponse_1.default)(res, {
-        statusCode: http_status_codes_1.StatusCodes.CREATED,
+    const result = await EnrollmentService.createEnrollment(payload, userId);
+    sendResponse(res, {
+        statusCode: StatusCodes.CREATED,
         success: true,
         message: "Enrollment created successfully",
         data: {
@@ -22,59 +17,59 @@ const createEnrollment = (0, catchAsync_1.default)(async (req, res) => {
         },
     });
 });
-const getUserEnrollments = (0, catchAsync_1.default)(async (req, res) => {
+const getUserEnrollments = catchAsync(async (req, res) => {
     const decodeToken = req.user;
-    const enrollments = await enrollment_service_1.default.getUserEnrollments(decodeToken.userId);
-    (0, sendResponse_1.default)(res, {
-        statusCode: http_status_codes_1.StatusCodes.OK,
+    const enrollments = await EnrollmentService.getUserEnrollments(decodeToken.userId);
+    sendResponse(res, {
+        statusCode: StatusCodes.OK,
         success: true,
         message: "Enrollments fetched successfully",
         data: enrollments,
     });
 });
-const getSingleEnrollment = (0, catchAsync_1.default)(async (req, res) => {
+const getSingleEnrollment = catchAsync(async (req, res) => {
     const decodeToken = req.user;
-    const enrollmentId = (0, parseParams_1.parseStringParam)(req.params.enrollmentId, "enrollmentId");
-    const enrollment = await enrollment_service_1.default.getSingleEnrollment(enrollmentId, decodeToken.userId, decodeToken.role);
-    (0, sendResponse_1.default)(res, {
-        statusCode: http_status_codes_1.StatusCodes.OK,
+    const enrollmentId = parseStringParam(req.params.enrollmentId, "enrollmentId");
+    const enrollment = await EnrollmentService.getSingleEnrollment(enrollmentId, decodeToken.userId, decodeToken.role);
+    sendResponse(res, {
+        statusCode: StatusCodes.OK,
         success: true,
         message: "Enrollment fetched successfully",
         data: enrollment,
     });
 });
-const getAllEnrollments = (0, catchAsync_1.default)(async (req, res) => {
+const getAllEnrollments = catchAsync(async (req, res) => {
     const query = req.query;
-    const enrollments = await enrollment_service_1.default.getAllEnrollments(query);
-    (0, sendResponse_1.default)(res, {
-        statusCode: http_status_codes_1.StatusCodes.OK,
+    const enrollments = await EnrollmentService.getAllEnrollments(query);
+    sendResponse(res, {
+        statusCode: StatusCodes.OK,
         success: true,
         message: "Enrollments fetched successfully",
         data: enrollments,
         meta: enrollments.meta,
     });
 });
-const updateEnrollmentStatus = (0, catchAsync_1.default)(async (req, res) => {
+const updateEnrollmentStatus = catchAsync(async (req, res) => {
     const decodeToken = req.user;
-    const enrollmentId = (0, parseParams_1.parseStringParam)(req.params.enrollmentId, "enrollmentId");
+    const enrollmentId = parseStringParam(req.params.enrollmentId, "enrollmentId");
     const status = req.body.status;
-    const updatedEnrollment = await enrollment_service_1.default.updateEnrollmentStatus(enrollmentId, status, decodeToken.userId, decodeToken.role);
-    (0, sendResponse_1.default)(res, {
-        statusCode: http_status_codes_1.StatusCodes.OK,
+    await EnrollmentService.updateEnrollmentStatus(enrollmentId, status, decodeToken.userId, decodeToken.role);
+    sendResponse(res, {
+        statusCode: StatusCodes.OK,
         success: true,
         message: "Enrollment status updated successfully",
-        data: updatedEnrollment,
+        data: null,
     });
 });
-const cancelEnrollment = (0, catchAsync_1.default)(async (req, res) => {
+const cancelEnrollment = catchAsync(async (req, res) => {
     const decodeToken = req.user;
-    const enrollmentId = (0, parseParams_1.parseStringParam)(req.params.enrollmentId, "enrollmentId");
-    const result = await enrollment_service_1.default.cancelEnrollment(enrollmentId, decodeToken.userId);
-    (0, sendResponse_1.default)(res, {
-        statusCode: http_status_codes_1.StatusCodes.OK,
+    const enrollmentId = parseStringParam(req.params.enrollmentId, "enrollmentId");
+    await EnrollmentService.cancelEnrollment(enrollmentId, decodeToken.userId);
+    sendResponse(res, {
+        statusCode: StatusCodes.OK,
         success: true,
         message: "Enrollment cancelled successfully",
-        data: result,
+        data: null,
     });
 });
 const EnrollmentController = {
@@ -85,4 +80,4 @@ const EnrollmentController = {
     updateEnrollmentStatus,
     cancelEnrollment,
 };
-exports.default = EnrollmentController;
+export default EnrollmentController;

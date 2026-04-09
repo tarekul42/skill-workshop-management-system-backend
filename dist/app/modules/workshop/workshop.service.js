@@ -1,47 +1,42 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const http_status_codes_1 = require("http-status-codes");
-const cloudinary_config_1 = require("../../config/cloudinary.config");
-const redis_config_1 = require("../../config/redis.config");
-const AppError_1 = __importDefault(require("../../errorHelpers/AppError"));
-const auditLogger_1 = __importDefault(require("../../utils/auditLogger"));
-const logger_1 = __importDefault(require("../../utils/logger"));
-const queryBuilder_1 = __importDefault(require("../../utils/queryBuilder"));
-const audit_interface_1 = require("../audit/audit.interface");
-const workshop_constant_1 = require("./workshop.constant");
-const workshop_model_1 = require("./workshop.model");
+import { StatusCodes } from "http-status-codes";
+import { deleteImageFromCloudinary } from "../../config/cloudinary.config";
+import { redisClient } from "../../config/redis.config";
+import AppError from "../../errorHelpers/AppError";
+import auditLogger from "../../utils/auditLogger";
+import logger from "../../utils/logger";
+import QueryBuilder from "../../utils/queryBuilder";
+import { AuditAction } from "../audit/audit.interface";
+import { levelSearchableFields, workshopSearchableFields, } from "./workshop.constant";
+import { Level, WorkShop } from "./workshop.model";
 const createLevel = async (payload) => {
     if (!payload || typeof payload.name !== "string") {
-        throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Invalid level name");
+        throw new AppError(StatusCodes.BAD_REQUEST, "Invalid level name");
     }
-    const existingLevel = await workshop_model_1.Level.findOne({ name: { $eq: payload.name } });
+    const existingLevel = await Level.findOne({ name: { $eq: payload.name } });
     if (existingLevel) {
-        throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Level already exists");
+        throw new AppError(StatusCodes.BAD_REQUEST, "Level already exists");
     }
-    const level = await workshop_model_1.Level.create(payload);
-    await (0, auditLogger_1.default)({
-        action: audit_interface_1.AuditAction.CREATE,
+    const level = await Level.create(payload);
+    await auditLogger({
+        action: AuditAction.CREATE,
         collectionName: "Level",
         documentId: level._id,
     });
     return level;
 };
 const getSingleLevel = async (id) => {
-    const level = await workshop_model_1.Level.findById(id);
+    const level = await Level.findById(id);
     if (!level) {
-        throw new AppError_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "Level not found");
+        throw new AppError(StatusCodes.NOT_FOUND, "Level not found");
     }
     return {
         data: level,
     };
 };
 const getAllLevels = async (query) => {
-    const queryBuilder = new queryBuilder_1.default(workshop_model_1.Level.find(), query);
+    const queryBuilder = new QueryBuilder(Level.find(), query);
     const levels = queryBuilder
-        .search(workshop_constant_1.levelSearchableFields)
+        .search(levelSearchableFields)
         .filter()
         .sort()
         .fields()
@@ -56,28 +51,28 @@ const getAllLevels = async (query) => {
     };
 };
 const updateLevel = async (id, payload) => {
-    const existingLevel = await workshop_model_1.Level.findById(id);
+    const existingLevel = await Level.findById(id);
     if (!existingLevel) {
-        throw new AppError_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "Level not found");
+        throw new AppError(StatusCodes.NOT_FOUND, "Level not found");
     }
     if (payload.name && payload.name !== existingLevel.name) {
         if (typeof payload.name !== "string") {
-            throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Invalid level name");
+            throw new AppError(StatusCodes.BAD_REQUEST, "Invalid level name");
         }
-        const duplicateLevel = await workshop_model_1.Level.findOne({ name: { $eq: payload.name } });
+        const duplicateLevel = await Level.findOne({ name: { $eq: payload.name } });
         if (duplicateLevel) {
-            throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Level with this name already exists");
+            throw new AppError(StatusCodes.BAD_REQUEST, "Level with this name already exists");
         }
     }
     const updateData = {};
     if (typeof payload.name === "string") {
         updateData.name = payload.name;
     }
-    const updatedLevel = await workshop_model_1.Level.findByIdAndUpdate(id, updateData, {
+    const updatedLevel = await Level.findByIdAndUpdate(id, updateData, {
         returnDocument: "after",
     });
-    await (0, auditLogger_1.default)({
-        action: audit_interface_1.AuditAction.UPDATE,
+    await auditLogger({
+        action: AuditAction.UPDATE,
         collectionName: "Level",
         documentId: id,
         changes: updateData,
@@ -85,12 +80,12 @@ const updateLevel = async (id, payload) => {
     return updatedLevel;
 };
 const deleteLevel = async (id) => {
-    const existingLevel = await workshop_model_1.Level.findById(id);
+    const existingLevel = await Level.findById(id);
     if (!existingLevel) {
-        throw new AppError_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "Level not found");
+        throw new AppError(StatusCodes.NOT_FOUND, "Level not found");
     }
-    await (0, auditLogger_1.default)({
-        action: audit_interface_1.AuditAction.DELETE,
+    await auditLogger({
+        action: AuditAction.DELETE,
         collectionName: "Level",
         documentId: existingLevel._id,
     });
@@ -98,26 +93,26 @@ const deleteLevel = async (id) => {
 };
 const createWorkshop = async (payload) => {
     if (typeof payload.title !== "string") {
-        throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Workshop title must be a string");
+        throw new AppError(StatusCodes.BAD_REQUEST, "Workshop title must be a string");
     }
-    const existingWorkshop = await workshop_model_1.WorkShop.findOne({
+    const existingWorkshop = await WorkShop.findOne({
         title: { $eq: payload.title },
     });
     if (existingWorkshop) {
-        throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Workshop already exists");
+        throw new AppError(StatusCodes.BAD_REQUEST, "Workshop already exists");
     }
-    const workshop = await workshop_model_1.WorkShop.create(payload);
-    await (0, auditLogger_1.default)({
-        action: audit_interface_1.AuditAction.CREATE,
+    const workshop = await WorkShop.create(payload);
+    await auditLogger({
+        action: AuditAction.CREATE,
         collectionName: "WorkShop",
         documentId: workshop._id,
     });
     return workshop;
 };
 const getSingleWorkshop = async (slug) => {
-    const workshop = await workshop_model_1.WorkShop.findOne({ slug: { $eq: slug } });
+    const workshop = await WorkShop.findOne({ slug: { $eq: slug } });
     if (!workshop) {
-        throw new AppError_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "Workshop not found");
+        throw new AppError(StatusCodes.NOT_FOUND, "Workshop not found");
     }
     return {
         data: workshop,
@@ -125,13 +120,13 @@ const getSingleWorkshop = async (slug) => {
 };
 const getAllWorkshops = async (query) => {
     const cacheKey = `workshops:list:${JSON.stringify(query)}`;
-    const cachedData = await redis_config_1.redisClient.get(cacheKey);
+    const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
         return JSON.parse(cachedData);
     }
-    const queryBuilder = new queryBuilder_1.default(workshop_model_1.WorkShop.find(), query);
+    const queryBuilder = new QueryBuilder(WorkShop.find(), query);
     const workshops = queryBuilder
-        .search(workshop_constant_1.workshopSearchableFields)
+        .search(workshopSearchableFields)
         .filter()
         .sort()
         .fields()
@@ -144,19 +139,19 @@ const getAllWorkshops = async (query) => {
         data,
         meta,
     };
-    await redis_config_1.redisClient.set(cacheKey, JSON.stringify(result), {
+    await redisClient.set(cacheKey, JSON.stringify(result), {
         EX: 60, // cache for 60 seconds
     });
     return result;
 };
 const updateWorkshop = async (id, payload) => {
-    const existingWorkshop = await workshop_model_1.WorkShop.findById(id);
+    const existingWorkshop = await WorkShop.findById(id);
     if (!existingWorkshop) {
-        throw new AppError_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "Workshop not found");
+        throw new AppError(StatusCodes.NOT_FOUND, "Workshop not found");
     }
     const title = payload.title;
     if (title && typeof title !== "string") {
-        throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Invalid title format");
+        throw new AppError(StatusCodes.BAD_REQUEST, "Invalid title format");
     }
     // Build a safe update object from a whitelist of allowed fields
     const safePayload = {};
@@ -164,11 +159,11 @@ const updateWorkshop = async (id, payload) => {
         safePayload.title = payload.title;
     }
     if (safePayload.title && safePayload.title !== existingWorkshop.title) {
-        const duplicateWorkshop = await workshop_model_1.WorkShop.findOne({
+        const duplicateWorkshop = await WorkShop.findOne({
             title: { $eq: safePayload.title },
         });
         if (duplicateWorkshop) {
-            throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Workshop with this title already exists");
+            throw new AppError(StatusCodes.BAD_REQUEST, "Workshop with this title already exists");
         }
     }
     if (typeof payload.description === "string") {
@@ -188,7 +183,7 @@ const updateWorkshop = async (id, payload) => {
             safePayload.startDate = payload.startDate;
         }
         else {
-            throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Invalid startDate format");
+            throw new AppError(StatusCodes.BAD_REQUEST, "Invalid startDate format");
         }
     }
     if (payload.endDate !== undefined) {
@@ -199,14 +194,14 @@ const updateWorkshop = async (id, payload) => {
             safePayload.endDate = payload.endDate;
         }
         else {
-            throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Invalid endDate format");
+            throw new AppError(StatusCodes.BAD_REQUEST, "Invalid endDate format");
         }
     }
     if (Array.isArray(payload.whatYouLearn)) {
         const sanitizedWhatYouLearn = payload.whatYouLearn.filter((item) => typeof item === "string");
         if (sanitizedWhatYouLearn.length !== payload.whatYouLearn.length &&
             payload.whatYouLearn.length > 0) {
-            throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Invalid whatYouLearn format");
+            throw new AppError(StatusCodes.BAD_REQUEST, "Invalid whatYouLearn format");
         }
         safePayload.whatYouLearn = sanitizedWhatYouLearn;
     }
@@ -214,7 +209,7 @@ const updateWorkshop = async (id, payload) => {
         const sanitizedPrerequisites = payload.prerequisites.filter((item) => typeof item === "string");
         if (sanitizedPrerequisites.length !== payload.prerequisites.length &&
             payload.prerequisites.length > 0) {
-            throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Invalid prerequisites format");
+            throw new AppError(StatusCodes.BAD_REQUEST, "Invalid prerequisites format");
         }
         safePayload.prerequisites = sanitizedPrerequisites;
     }
@@ -241,20 +236,20 @@ const updateWorkshop = async (id, payload) => {
     if (payload.images || payload.deleteImages) {
         safePayload.images = finalImages;
     }
-    const updatedWorkshop = await workshop_model_1.WorkShop.findByIdAndUpdate(id, safePayload, {
+    const updatedWorkshop = await WorkShop.findByIdAndUpdate(id, safePayload, {
         returnDocument: "after",
     });
-    await (0, auditLogger_1.default)({
-        action: audit_interface_1.AuditAction.UPDATE,
+    await auditLogger({
+        action: AuditAction.UPDATE,
         collectionName: "WorkShop",
         documentId: id,
         changes: safePayload,
     });
     if (imagesToDelete.length > 0) {
-        const results = await Promise.allSettled(imagesToDelete.map((url) => (0, cloudinary_config_1.deleteImageFromCloudinary)(url)));
+        const results = await Promise.allSettled(imagesToDelete.map((url) => deleteImageFromCloudinary(url)));
         const failures = results.filter((r) => r.status === "rejected");
         if (failures.length > 0) {
-            logger_1.default.error({
+            logger.error({
                 message: `Failed to delete ${failures.length} images from Cloudinary`,
             });
         }
@@ -299,12 +294,12 @@ const processWorkshopImages = (existingImages, newImages, deleteImages) => {
     };
 };
 const deleteWorkshop = async (id) => {
-    const existingWorkshop = await workshop_model_1.WorkShop.findById(id);
+    const existingWorkshop = await WorkShop.findById(id);
     if (!existingWorkshop) {
-        throw new AppError_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "Workshop not found");
+        throw new AppError(StatusCodes.NOT_FOUND, "Workshop not found");
     }
-    await (0, auditLogger_1.default)({
-        action: audit_interface_1.AuditAction.DELETE,
+    await auditLogger({
+        action: AuditAction.DELETE,
         collectionName: "WorkShop",
         documentId: existingWorkshop._id,
     });
@@ -322,4 +317,4 @@ const WorkshopService = {
     updateWorkshop,
     deleteWorkshop,
 };
-exports.default = WorkshopService;
+export default WorkshopService;

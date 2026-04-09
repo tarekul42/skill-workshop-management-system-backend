@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import catchAsync from "../../utils/catchAsync";
-import sendResponse from "../../utils/sendResponse";
 import { parseStringParam } from "../../utils/parseParams";
+import sendResponse from "../../utils/sendResponse";
 import { ICategory } from "./category.interface";
 import CategoryService from "./category.service";
 
@@ -71,13 +71,13 @@ const updateCategory = catchAsync(async (req: Request, res: Response) => {
 const deleteCategory = catchAsync(async (req: Request, res: Response) => {
   const id = parseStringParam(req.params.id, "id");
 
-  const result = await CategoryService.deleteCategory(id);
+  await CategoryService.deleteCategory(id);
 
   sendResponse(res, {
     statusCode: StatusCodes.OK,
     success: true,
     message: "Category deleted successfully",
-    data: result,
+    data: null,
   });
 });
 

@@ -1,131 +1,126 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const http_status_codes_1 = require("http-status-codes");
-const catchAsync_1 = __importDefault(require("../../utils/catchAsync"));
-const sendResponse_1 = __importDefault(require("../../utils/sendResponse"));
-const parseParams_1 = require("../../utils/parseParams");
-const workshop_service_1 = __importDefault(require("./workshop.service"));
-const createLevel = (0, catchAsync_1.default)(async (req, res) => {
+import { StatusCodes } from "http-status-codes";
+import catchAsync from "../../utils/catchAsync";
+import { parseStringParam } from "../../utils/parseParams";
+import sendResponse from "../../utils/sendResponse";
+import WorkshopService from "./workshop.service";
+const createLevel = catchAsync(async (req, res) => {
     const { name } = req.body;
-    const result = await workshop_service_1.default.createLevel({ name });
-    (0, sendResponse_1.default)(res, {
-        statusCode: http_status_codes_1.StatusCodes.CREATED,
+    const result = await WorkshopService.createLevel({ name });
+    sendResponse(res, {
+        statusCode: StatusCodes.CREATED,
         success: true,
         message: "Level created successfully",
         data: result,
     });
 });
-const getSingleLevel = (0, catchAsync_1.default)(async (req, res) => {
-    const id = (0, parseParams_1.parseStringParam)(req.params.id, "id");
-    const result = await workshop_service_1.default.getSingleLevel(id);
-    (0, sendResponse_1.default)(res, {
-        statusCode: http_status_codes_1.StatusCodes.OK,
+const getSingleLevel = catchAsync(async (req, res) => {
+    const id = parseStringParam(req.params.id, "id");
+    const result = await WorkshopService.getSingleLevel(id);
+    sendResponse(res, {
+        statusCode: StatusCodes.OK,
         success: true,
         message: "Level fetched successfully",
         data: result,
     });
 });
-const getAllLevels = (0, catchAsync_1.default)(async (req, res) => {
+const getAllLevels = catchAsync(async (req, res) => {
     const query = {};
     for (const [key, value] of Object.entries(req.query)) {
         if (typeof value === "string") {
             query[key] = value;
         }
     }
-    const result = await workshop_service_1.default.getAllLevels(query);
-    (0, sendResponse_1.default)(res, {
-        statusCode: http_status_codes_1.StatusCodes.OK,
+    const result = await WorkshopService.getAllLevels(query);
+    sendResponse(res, {
+        statusCode: StatusCodes.OK,
         success: true,
         message: "Levels fetched successfully",
         data: result,
     });
 });
-const updateLevel = (0, catchAsync_1.default)(async (req, res) => {
-    const id = (0, parseParams_1.parseStringParam)(req.params.id, "id");
+const updateLevel = catchAsync(async (req, res) => {
+    const id = parseStringParam(req.params.id, "id");
     const { name } = req.body;
-    const result = await workshop_service_1.default.updateLevel(id, { name });
-    (0, sendResponse_1.default)(res, {
-        statusCode: http_status_codes_1.StatusCodes.OK,
+    const result = await WorkshopService.updateLevel(id, { name });
+    sendResponse(res, {
+        statusCode: StatusCodes.OK,
         success: true,
         message: "Level updated successfully",
         data: result,
     });
 });
-const deleteLevel = (0, catchAsync_1.default)(async (req, res) => {
-    const id = (0, parseParams_1.parseStringParam)(req.params.id, "id");
-    const result = await workshop_service_1.default.deleteLevel(id);
-    (0, sendResponse_1.default)(res, {
-        statusCode: http_status_codes_1.StatusCodes.OK,
+const deleteLevel = catchAsync(async (req, res) => {
+    const id = parseStringParam(req.params.id, "id");
+    await WorkshopService.deleteLevel(id);
+    sendResponse(res, {
+        statusCode: StatusCodes.OK,
         success: true,
         message: "Level deleted successfully",
-        data: result,
+        data: null,
     });
 });
-const createWorkshop = (0, catchAsync_1.default)(async (req, res) => {
+const createWorkshop = catchAsync(async (req, res) => {
     const payload = {
         ...req.body,
         images: (req.files ?? []).map((file) => file.path),
     };
-    const result = await workshop_service_1.default.createWorkshop(payload);
-    (0, sendResponse_1.default)(res, {
-        statusCode: http_status_codes_1.StatusCodes.CREATED,
+    const result = await WorkshopService.createWorkshop(payload);
+    sendResponse(res, {
+        statusCode: StatusCodes.CREATED,
         success: true,
         message: "Workshop created successfully",
         data: result,
     });
 });
-const getSingleWorkshop = (0, catchAsync_1.default)(async (req, res) => {
-    const slug = (0, parseParams_1.parseStringParam)(req.params.slug, "slug");
-    const result = await workshop_service_1.default.getSingleWorkshop(slug);
-    (0, sendResponse_1.default)(res, {
-        statusCode: http_status_codes_1.StatusCodes.OK,
+const getSingleWorkshop = catchAsync(async (req, res) => {
+    const slug = parseStringParam(req.params.slug, "slug");
+    const result = await WorkshopService.getSingleWorkshop(slug);
+    sendResponse(res, {
+        statusCode: StatusCodes.OK,
         success: true,
         message: "Workshop fetched successfully",
         data: result,
     });
 });
-const getAllWorkshops = (0, catchAsync_1.default)(async (req, res) => {
+const getAllWorkshops = catchAsync(async (req, res) => {
     const query = {};
     for (const [key, value] of Object.entries(req.query)) {
         if (typeof value === "string") {
             query[key] = value;
         }
     }
-    const result = await workshop_service_1.default.getAllWorkshops(query);
-    (0, sendResponse_1.default)(res, {
-        statusCode: http_status_codes_1.StatusCodes.OK,
+    const result = await WorkshopService.getAllWorkshops(query);
+    sendResponse(res, {
+        statusCode: StatusCodes.OK,
         success: true,
         message: "Workshops fetched successfully",
         data: result.data,
         meta: result.meta,
     });
 });
-const updateWorkshop = (0, catchAsync_1.default)(async (req, res) => {
-    const id = (0, parseParams_1.parseStringParam)(req.params.id, "id");
+const updateWorkshop = catchAsync(async (req, res) => {
+    const id = parseStringParam(req.params.id, "id");
     const files = req.files;
     const payload = {
         ...req.body,
         ...(files?.length && { images: files.map((file) => file.path) }),
     };
-    const result = await workshop_service_1.default.updateWorkshop(id, payload);
-    (0, sendResponse_1.default)(res, {
-        statusCode: http_status_codes_1.StatusCodes.OK,
+    const result = await WorkshopService.updateWorkshop(id, payload);
+    sendResponse(res, {
+        statusCode: StatusCodes.OK,
         success: true,
         message: "Workshop updated successfully",
         data: result,
     });
 });
-const deleteWorkshop = (0, catchAsync_1.default)(async (req, res) => {
-    const id = (0, parseParams_1.parseStringParam)(req.params.id, "id");
-    const result = await workshop_service_1.default.deleteWorkshop(id);
-    (0, sendResponse_1.default)(res, {
-        statusCode: http_status_codes_1.StatusCodes.OK,
+const deleteWorkshop = catchAsync(async (req, res) => {
+    const id = parseStringParam(req.params.id, "id");
+    await WorkshopService.deleteWorkshop(id);
+    sendResponse(res, {
+        statusCode: StatusCodes.OK,
         success: true,
         message: "Workshop deleted successfully",
-        data: result,
+        data: null,
     });
 });
 const WorkshopController = {
@@ -140,4 +135,4 @@ const WorkshopController = {
     updateWorkshop,
     deleteWorkshop,
 };
-exports.default = WorkshopController;
+export default WorkshopController;

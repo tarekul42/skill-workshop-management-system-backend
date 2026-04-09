@@ -1,39 +1,34 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const bcryptjs_1 = __importDefault(require("bcryptjs"));
-const env_1 = __importDefault(require("../config/env"));
-const user_interface_1 = require("../modules/user/user.interface");
-const user_model_1 = __importDefault(require("../modules/user/user.model"));
-const logger_1 = __importDefault(require("./logger"));
+import bcrypt from "bcryptjs";
+import envVariables from "../config/env";
+import { UserRole } from "../modules/user/user.interface";
+import User from "../modules/user/user.model";
+import logger from "./logger";
 const seedSuperAdmin = async () => {
     try {
-        const isSuperAdminExists = await user_model_1.default.findOne({
-            email: env_1.default.SUPER_ADMIN_EMAIL,
+        const isSuperAdminExists = await User.findOne({
+            email: envVariables.SUPER_ADMIN_EMAIL,
         });
         if (isSuperAdminExists) {
-            logger_1.default.info({ message: "Super Admin already exists!" });
+            logger.info({ msg: "Super Admin already exists!" });
             return;
         }
-        const hashedPassword = await bcryptjs_1.default.hash(env_1.default.SUPER_ADMIN_PASSWORD, Number(env_1.default.BCRYPT_SALT_ROUND));
+        const hashedPassword = await bcrypt.hash(envVariables.SUPER_ADMIN_PASSWORD, Number(envVariables.BCRYPT_SALT_ROUND));
         const authProvider = {
             provider: "credentials",
-            providerId: env_1.default.SUPER_ADMIN_EMAIL,
+            providerId: envVariables.SUPER_ADMIN_EMAIL,
         };
         const payload = {
             name: "Super Admin",
-            role: user_interface_1.UserRole.SUPER_ADMIN,
-            email: env_1.default.SUPER_ADMIN_EMAIL,
+            role: UserRole.SUPER_ADMIN,
+            email: envVariables.SUPER_ADMIN_EMAIL,
             password: hashedPassword,
             isVerified: true,
             auths: [authProvider],
         };
-        await user_model_1.default.create(payload);
+        await User.create(payload);
     }
     catch (err) {
-        logger_1.default.error({ message: "Error seeding super admin", err });
+        logger.error({ msg: "Error seeding super admin", err });
     }
 };
-exports.default = seedSuperAdmin;
+export default seedSuperAdmin;

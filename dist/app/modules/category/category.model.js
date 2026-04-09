@@ -1,13 +1,7 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.Category = void 0;
-const mongoose_1 = require("mongoose");
-const auditPlugin_1 = __importDefault(require("../../utils/auditPlugin"));
-const softDeletePlugin_1 = __importDefault(require("../../utils/softDeletePlugin"));
-const categorySchema = new mongoose_1.Schema({
+import { model, Schema } from "mongoose";
+import auditPlugin from "../../utils/auditPlugin";
+import softDeletePlugin from "../../utils/softDeletePlugin";
+const categorySchema = new Schema({
     name: { type: String, required: true, unique: true, trim: true },
     slug: { type: String, required: true, unique: true, trim: true },
     thumbnail: { type: String, trim: true },
@@ -15,7 +9,7 @@ const categorySchema = new mongoose_1.Schema({
 }, {
     timestamps: true,
 });
-categorySchema.plugin(softDeletePlugin_1.default);
-categorySchema.plugin(auditPlugin_1.default);
-const Category = (0, mongoose_1.model)("Category", categorySchema);
-exports.Category = Category;
+categorySchema.plugin(softDeletePlugin);
+categorySchema.plugin(auditPlugin);
+const Category = model("Category", categorySchema);
+export { Category };

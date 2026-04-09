@@ -1,44 +1,39 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const http_status_codes_1 = require("http-status-codes");
-const cloudinary_config_1 = require("../../config/cloudinary.config");
-const AppError_1 = __importDefault(require("../../errorHelpers/AppError"));
-const logger_1 = __importDefault(require("../../utils/logger"));
-const queryBuilder_1 = __importDefault(require("../../utils/queryBuilder"));
-const category_constant_1 = require("./category.constant");
-const category_model_1 = require("./category.model");
-const workshop_model_1 = require("../workshop/workshop.model");
+import { StatusCodes } from "http-status-codes";
+import { deleteImageFromCloudinary } from "../../config/cloudinary.config";
+import AppError from "../../errorHelpers/AppError";
+import logger from "../../utils/logger";
+import QueryBuilder from "../../utils/queryBuilder";
+import { WorkShop } from "../workshop/workshop.model";
+import { categorySearchableFields } from "./category.constant";
+import { Category } from "./category.model";
 const createCategory = async (payload) => {
     if (typeof payload.name !== "string") {
-        throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Invalid category name");
+        throw new AppError(StatusCodes.BAD_REQUEST, "Invalid category name");
     }
-    const existingCategory = await category_model_1.Category.findOne({
+    const existingCategory = await Category.findOne({
         name: { $eq: payload.name },
     });
     if (existingCategory) {
-        throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "A Category with this name already exists");
+        throw new AppError(StatusCodes.BAD_REQUEST, "A Category with this name already exists");
     }
     const slug = payload.name
         .toLowerCase()
         .trim()
         .replace(/[^a-z0-9]+/g, "-")
         .replace(/^-|-$/g, "");
-    const category = await category_model_1.Category.create({ ...payload, slug });
+    const category = await Category.create({ ...payload, slug });
     return category;
 };
 const getSingleCategory = async (slug) => {
-    const category = await category_model_1.Category.findOne({ slug });
+    const category = await Category.findOne({ slug });
     return {
         data: category,
     };
 };
 const getAllCategories = async (query) => {
-    const queryBuilder = new queryBuilder_1.default(category_model_1.Category.find(), query);
+    const queryBuilder = new QueryBuilder(Category.find(), query);
     const categoriesData = queryBuilder
-        .search(category_constant_1.categorySearchableFields)
+        .search(categorySearchableFields)
         .filter()
         .sort()
         .fields()
@@ -53,32 +48,32 @@ const getAllCategories = async (query) => {
     };
 };
 const updateCategory = async (id, payload) => {
-    const existingCategory = await category_model_1.Category.findById(id);
+    const existingCategory = await Category.findById(id);
     if (!existingCategory) {
-        throw new AppError_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "Category not found");
+        throw new AppError(StatusCodes.NOT_FOUND, "Category not found");
     }
     // 1. Validation: Name specific checks
     // We copy to a local variable to handle trimming without mutating the original payload
     let payloadName = payload.name;
     if (payloadName !== undefined) {
         if (typeof payloadName !== "string") {
-            throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Invalid category name");
+            throw new AppError(StatusCodes.BAD_REQUEST, "Invalid category name");
         }
         const trimmedName = payloadName.trim();
         if (trimmedName.length === 0) {
-            throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Category name cannot be empty");
+            throw new AppError(StatusCodes.BAD_REQUEST, "Category name cannot be empty");
         }
         // Update our local variable to the clean version
         payloadName = trimmedName;
     }
     // 2. Duplicate Check: Only run if name is being updated.
     if (payloadName) {
-        const duplicateCategory = await category_model_1.Category.findOne({
+        const duplicateCategory = await Category.findOne({
             name: { $eq: payloadName },
             _id: { $ne: id },
         });
         if (duplicateCategory) {
-            throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "A Category with this name already exists");
+            throw new AppError(StatusCodes.BAD_REQUEST, "A Category with this name already exists");
         }
     }
     // 3. Prepare update data
@@ -98,20 +93,20 @@ const updateCategory = async (id, payload) => {
         updateData.description = payload.description;
     }
     // 4. Update & existence check in one go
-    const updatedCategory = await category_model_1.Category.findByIdAndUpdate(id, { $set: updateData }, {
+    const updatedCategory = await Category.findByIdAndUpdate(id, { $set: updateData }, {
         returnDocument: "after",
         runValidators: true,
     });
     if (!updatedCategory) {
-        throw new AppError_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "Category not found");
+        throw new AppError(StatusCodes.NOT_FOUND, "Category not found");
     }
     if (payload.thumbnail && existingCategory.thumbnail) {
         try {
-            await (0, cloudinary_config_1.deleteImageFromCloudinary)(existingCategory.thumbnail);
+            await deleteImageFromCloudinary(existingCategory.thumbnail);
         }
         catch (error) {
             // Log error but don't fail the request - category update already succeeded
-            logger_1.default.error({
+            logger.error({
                 message: "Failed to delete old thumbnail from Cloudinary",
                 err: error,
             });
@@ -120,17 +115,17 @@ const updateCategory = async (id, payload) => {
     return updatedCategory;
 };
 const deleteCategory = async (id) => {
-    const existingCategory = await category_model_1.Category.findById(id);
+    const existingCategory = await Category.findById(id);
     if (!existingCategory) {
-        throw new AppError_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "Category not found");
+        throw new AppError(StatusCodes.NOT_FOUND, "Category not found");
     }
     // Guard: Prevent deleting a category that has associated workshops
-    const workshopCount = await workshop_model_1.WorkShop.countDocuments({
+    const workshopCount = await WorkShop.countDocuments({
         category: { $eq: id },
         isDeleted: { $ne: true },
     });
     if (workshopCount > 0) {
-        throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, `Cannot delete category: ${workshopCount} workshop(s) are still using it. Reassign or delete them first.`);
+        throw new AppError(StatusCodes.BAD_REQUEST, `Cannot delete category: ${workshopCount} workshop(s) are still using it. Reassign or delete them first.`);
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await existingCategory.softDelete();
@@ -143,4 +138,4 @@ const CategoryService = {
     updateCategory,
     deleteCategory,
 };
-exports.default = CategoryService;
+export default CategoryService;

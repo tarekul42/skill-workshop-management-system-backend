@@ -1,66 +1,61 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const bcryptjs_1 = __importDefault(require("bcryptjs"));
-const http_status_codes_1 = require("http-status-codes");
-const env_1 = __importDefault(require("../../config/env"));
-const AppError_1 = __importDefault(require("../../errorHelpers/AppError"));
-const auditLogger_1 = __importDefault(require("../../utils/auditLogger"));
-const queryBuilder_1 = __importDefault(require("../../utils/queryBuilder"));
-const audit_interface_1 = require("../audit/audit.interface");
-const user_constant_1 = require("./user.constant");
-const user_interface_1 = require("./user.interface");
-const user_model_1 = __importDefault(require("./user.model"));
+import bcrypt from "bcryptjs";
+import { StatusCodes } from "http-status-codes";
+import envVariables from "../../config/env";
+import AppError from "../../errorHelpers/AppError";
+import auditLogger from "../../utils/auditLogger";
+import QueryBuilder from "../../utils/queryBuilder";
+import { AuditAction } from "../audit/audit.interface";
+import { userSearchableFields } from "./user.constant";
+import { UserRole, isAdminRole, isSuperAdmin, } from "./user.interface";
+import User from "./user.model";
 const createUser = async (payload) => {
     const { name, email, password, ...rest } = payload;
     if (typeof email !== "string" || email.trim().length === 0) {
-        throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Valid email is required");
+        throw new AppError(StatusCodes.BAD_REQUEST, "Valid email is required");
     }
     if (typeof password !== "string" || password.length === 0) {
-        throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Valid password is required");
+        throw new AppError(StatusCodes.BAD_REQUEST, "Valid password is required");
     }
-    const isUserExists = await user_model_1.default.findOne({ email: { $eq: email } });
+    const isUserExists = await User.findOne({ email: { $eq: email } });
     if (isUserExists) {
-        throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "User already exists");
+        throw new AppError(StatusCodes.BAD_REQUEST, "User already exists");
     }
     const authProvider = {
         provider: "credentials",
         providerId: email,
     };
-    const hashedPassword = await bcryptjs_1.default.hash(password, Number(env_1.default.BCRYPT_SALT_ROUND));
-    const user = await user_model_1.default.create({
+    const hashedPassword = await bcrypt.hash(password, Number(envVariables.BCRYPT_SALT_ROUND));
+    const user = await User.create({
         name,
         email,
         password: hashedPassword,
         auths: [authProvider],
         ...rest,
     });
-    await (0, auditLogger_1.default)({
-        action: audit_interface_1.AuditAction.CREATE,
+    await auditLogger({
+        action: AuditAction.CREATE,
         collectionName: "User",
         documentId: user._id,
     });
     return user;
 };
 const getSingleUser = async (id) => {
-    const user = await user_model_1.default.findById(id);
+    const user = await User.findById(id);
     if (!user) {
-        throw new AppError_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "User not found");
+        throw new AppError(StatusCodes.NOT_FOUND, "User not found");
     }
     return { data: user };
 };
 const getMe = async (userId) => {
-    const user = await user_model_1.default.findById(userId);
+    const user = await User.findById(userId);
     return {
         data: user,
     };
 };
 const getAllUsers = async (query) => {
-    const queryBuilder = new queryBuilder_1.default(user_model_1.default.find(), query);
+    const queryBuilder = new QueryBuilder(User.find(), query);
     const usersData = queryBuilder
-        .search(user_constant_1.userSearchableFields)
+        .search(userSearchableFields)
         .filter()
         .sort()
         .fields()
@@ -75,28 +70,28 @@ const getAllUsers = async (query) => {
     };
 };
 const updateUser = async (userId, payload, decodedToken) => {
-    const user = await user_model_1.default.findById(userId);
+    const user = await User.findById(userId);
     if (!user) {
-        throw new AppError_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "User not found");
+        throw new AppError(StatusCodes.NOT_FOUND, "User not found");
     }
-    const isAdmin = (0, user_interface_1.isAdminRole)(decodedToken.role);
+    const isAdmin = isAdminRole(decodedToken.role);
     const isOwnProfile = decodedToken.userId === userId;
     if (!isAdmin && !isOwnProfile) {
-        throw new AppError_1.default(http_status_codes_1.StatusCodes.FORBIDDEN, "You are not authorized to update this user");
+        throw new AppError(StatusCodes.FORBIDDEN, "You are not authorized to update this user");
     }
     const sanitizedPayload = {};
     if (payload.role) {
-        if (!(0, user_interface_1.isAdminRole)(decodedToken.role)) {
-            throw new AppError_1.default(http_status_codes_1.StatusCodes.FORBIDDEN, "You are not authorized to change role");
+        if (!isAdminRole(decodedToken.role)) {
+            throw new AppError(StatusCodes.FORBIDDEN, "You are not authorized to change role");
         }
-        if (payload.role === user_interface_1.UserRole.SUPER_ADMIN &&
-            !(0, user_interface_1.isSuperAdmin)(decodedToken.role)) {
-            throw new AppError_1.default(http_status_codes_1.StatusCodes.FORBIDDEN, "You are not authorized to assign SUPER_ADMIN role");
+        if (payload.role === UserRole.SUPER_ADMIN &&
+            !isSuperAdmin(decodedToken.role)) {
+            throw new AppError(StatusCodes.FORBIDDEN, "You are not authorized to assign SUPER_ADMIN role");
         }
         sanitizedPayload.role = payload.role;
     }
     if (payload.password) {
-        sanitizedPayload.password = await bcryptjs_1.default.hash(payload.password, Number(env_1.default.BCRYPT_SALT_ROUND));
+        sanitizedPayload.password = await bcrypt.hash(payload.password, Number(envVariables.BCRYPT_SALT_ROUND));
     }
     const sensitiveFields = ["isDeleted", "isActive", "isVerified", "role"];
     const allowedFields = ["name", "phone", "age", "address"];
@@ -113,7 +108,7 @@ const updateUser = async (userId, payload, decodedToken) => {
             sanitizedPayload[typedKey] = payload[typedKey];
         }
     }
-    const updatedUser = await user_model_1.default.findByIdAndUpdate(userId, { $set: sanitizedPayload }, {
+    const updatedUser = await User.findByIdAndUpdate(userId, { $set: sanitizedPayload }, {
         returnDocument: "after",
         runValidators: true,
     });
@@ -123,8 +118,8 @@ const updateUser = async (userId, payload, decodedToken) => {
         auditChanges.role = sanitizedPayload.role;
     if (sanitizedPayload.isActive !== undefined)
         auditChanges.isActive = sanitizedPayload.isActive;
-    await (0, auditLogger_1.default)({
-        action: audit_interface_1.AuditAction.UPDATE,
+    await auditLogger({
+        action: AuditAction.UPDATE,
         collectionName: "User",
         documentId: userId,
         performedBy: decodedToken.userId,
@@ -133,21 +128,21 @@ const updateUser = async (userId, payload, decodedToken) => {
     return updatedUser;
 };
 const deleteUser = async (userId, decodedToken) => {
-    const isAdmin = (0, user_interface_1.isAdminRole)(decodedToken.role);
+    const isAdmin = isAdminRole(decodedToken.role);
     if (!isAdmin) {
-        throw new AppError_1.default(http_status_codes_1.StatusCodes.FORBIDDEN, "Only admins can delete users");
+        throw new AppError(StatusCodes.FORBIDDEN, "Only admins can delete users");
     }
-    const user = await user_model_1.default.findById(userId);
+    const user = await User.findById(userId);
     if (!user) {
-        throw new AppError_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "User not found");
+        throw new AppError(StatusCodes.NOT_FOUND, "User not found");
     }
-    if (user.role === user_interface_1.UserRole.SUPER_ADMIN) {
-        throw new AppError_1.default(http_status_codes_1.StatusCodes.FORBIDDEN, "Cannot delete a SUPER_ADMIN account");
+    if (user.role === UserRole.SUPER_ADMIN) {
+        throw new AppError(StatusCodes.FORBIDDEN, "Cannot delete a SUPER_ADMIN account");
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await user.softDelete();
-    await (0, auditLogger_1.default)({
-        action: audit_interface_1.AuditAction.DELETE,
+    await auditLogger({
+        action: AuditAction.DELETE,
         collectionName: "User",
         documentId: userId,
         performedBy: decodedToken.userId,
@@ -162,4 +157,4 @@ const UserServices = {
     updateUser,
     deleteUser,
 };
-exports.default = UserServices;
+export default UserServices;

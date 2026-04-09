@@ -3,10 +3,10 @@ import { deleteImageFromCloudinary } from "../../config/cloudinary.config";
 import AppError from "../../errorHelpers/AppError";
 import logger from "../../utils/logger";
 import QueryBuilder from "../../utils/queryBuilder";
+import { WorkShop } from "../workshop/workshop.model";
 import { categorySearchableFields } from "./category.constant";
 import { ICategory } from "./category.interface";
 import { Category } from "./category.model";
-import { WorkShop } from "../workshop/workshop.model";
 
 const createCategory = async (payload: ICategory) => {
   if (typeof payload.name !== "string") {

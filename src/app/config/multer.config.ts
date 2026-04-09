@@ -6,7 +6,7 @@ import { cloudinaryUpload } from "./cloudinary.config";
 const storage = new CloudinaryStorage({
   cloudinary: cloudinaryUpload,
   params: {
-    public_id: (req, file) => {
+    public_id: (_req, file) => {
       const fileName = file.originalname
         .toLowerCase()
         .replace(/\s+/g, "-") // empty space remove replace with dash

@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
-import AuditService from "./audit.service";
-import { parseStringParam } from "../../utils/parseParams";
 import catchAsync from "../../utils/catchAsync";
+import { parseStringParam } from "../../utils/parseParams";
+import AuditService from "./audit.service";
 
 const getAuditLogs = catchAsync(async (req: Request, res: Response) => {
   const {

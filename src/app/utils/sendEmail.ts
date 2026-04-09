@@ -49,11 +49,9 @@ const sendEmail = async ({
         contentType: attachments.contentType,
       })),
     });
-    logger.info({
-      message: `\u2709\uFE0F Email sent to ${to}: ${info.messageId}`,
-    });
+    logger.info({ msg: `\u2709\uFE0F Email sent to ${to}: ${info.messageId}` });
   } catch (error: unknown) {
-    logger.error({ message: "Email sending error", err: error });
+    logger.error({ msg: "Email sending error", err: error });
     throw new AppError(StatusCodes.BAD_REQUEST, "Email sending error");
   }
 };

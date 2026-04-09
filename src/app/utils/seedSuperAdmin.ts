@@ -11,7 +11,7 @@ const seedSuperAdmin = async () => {
     });
 
     if (isSuperAdminExists) {
-      logger.info({ message: "Super Admin already exists!" });
+      logger.info({ msg: "Super Admin already exists!" });
       return;
     }
 
@@ -36,7 +36,7 @@ const seedSuperAdmin = async () => {
 
     await User.create(payload);
   } catch (err) {
-    logger.error({ message: "Error seeding super admin", err });
+    logger.error({ msg: "Error seeding super admin", err });
   }
 };
 

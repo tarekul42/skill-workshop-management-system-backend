@@ -1,53 +1,45 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.uploadBufferToCloudinary = exports.deleteImageFromCloudinary = exports.cloudinaryUpload = void 0;
-const cloudinary_1 = require("cloudinary");
-const http_status_codes_1 = require("http-status-codes");
-const AppError_1 = __importDefault(require("../errorHelpers/AppError"));
-const logger_1 = __importDefault(require("../utils/logger"));
-const env_1 = __importDefault(require("./env"));
-cloudinary_1.v2.config({
-    cloud_name: env_1.default.CLOUDINARY.CLOUDINARY_CLOUD_NAME,
-    api_key: env_1.default.CLOUDINARY.CLOUDINARY_API_KEY,
-    api_secret: env_1.default.CLOUDINARY.CLOUDINARY_API_SECRET,
+import { v2 as cloudinary } from "cloudinary";
+import { StatusCodes } from "http-status-codes";
+import AppError from "../errorHelpers/AppError";
+import logger from "../utils/logger";
+import envVariables from "./env";
+cloudinary.config({
+    cloud_name: envVariables.CLOUDINARY.CLOUDINARY_CLOUD_NAME,
+    api_key: envVariables.CLOUDINARY.CLOUDINARY_API_KEY,
+    api_secret: envVariables.CLOUDINARY.CLOUDINARY_API_SECRET,
 });
 const uploadBufferToCloudinary = async (buffer, fileName) => {
     return new Promise((resolve, reject) => {
         const public_id = `${fileName}-${Date.now()}`;
-        cloudinary_1.v2.uploader
+        cloudinary.uploader
             .upload_stream({
             resource_type: "auto",
             public_id: public_id,
             folder: "pdf",
         }, (error, result) => {
             if (error) {
-                return reject(new AppError_1.default(http_status_codes_1.StatusCodes.INTERNAL_SERVER_ERROR, "Cloudinary upload failed", error.message));
+                return reject(new AppError(StatusCodes.INTERNAL_SERVER_ERROR, "Cloudinary upload failed", error.message));
             }
             resolve(result);
         })
             .end(buffer);
     });
 };
-exports.uploadBufferToCloudinary = uploadBufferToCloudinary;
 const deleteImageFromCloudinary = async (url) => {
     try {
         const regex = /\/v\d+\/([^/]+)\.(jpg|jpeg|png|gif|webp)$/i;
         const match = url.match(regex);
         if (match && match[1]) {
             const publicId = match[1];
-            await cloudinary_1.v2.uploader.destroy(publicId);
+            await cloudinary.uploader.destroy(publicId);
         }
         else {
-            throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Invalid Cloudinary URL format", `Could not extract public ID from URL: ${url}`);
+            throw new AppError(StatusCodes.BAD_REQUEST, "Invalid Cloudinary URL format", `Could not extract public ID from URL: ${url}`);
         }
     }
     catch (err) {
-        logger_1.default.warn({ message: "Cloudinary cleanup failed", error: String(err) });
+        logger.warn({ msg: "Cloudinary cleanup failed", error: String(err) });
     }
 };
-exports.deleteImageFromCloudinary = deleteImageFromCloudinary;
-const cloudinaryUpload = cloudinary_1.v2;
-exports.cloudinaryUpload = cloudinaryUpload;
+const cloudinaryUpload = cloudinary;
+export { cloudinaryUpload, deleteImageFromCloudinary, uploadBufferToCloudinary, };

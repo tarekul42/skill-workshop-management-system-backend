@@ -1,40 +1,35 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const connect_redis_1 = require("connect-redis");
-const cookie_parser_1 = __importDefault(require("cookie-parser"));
-const cors_1 = __importDefault(require("cors"));
-const express_1 = __importDefault(require("express"));
-const express_session_1 = __importDefault(require("express-session"));
-const helmet_1 = __importDefault(require("helmet"));
-const hpp_1 = __importDefault(require("hpp"));
-const passport_1 = __importDefault(require("passport"));
-const swagger_ui_express_1 = __importDefault(require("swagger-ui-express"));
-const csrf_config_1 = require("./app/config/csrf.config");
-const env_1 = __importDefault(require("./app/config/env"));
-require("./app/config/passport");
-const redis_config_1 = require("./app/config/redis.config");
-const swagger_config_1 = require("./app/config/swagger.config");
-const globalErrorHandler_1 = __importDefault(require("./app/middlewares/globalErrorHandler"));
-const mongoSanitize_1 = __importDefault(require("./app/middlewares/mongoSanitize"));
-const notFound_1 = __importDefault(require("./app/middlewares/notFound"));
-const requestLogger_1 = __importDefault(require("./app/middlewares/requestLogger"));
-const api_1 = __importDefault(require("./app/route/api"));
-const auditContext_1 = require("./app/utils/auditContext");
-const logger_1 = __importDefault(require("./app/utils/logger"));
-const metrics_1 = require("./app/utils/metrics");
-const rateLimiter_1 = require("./app/utils/rateLimiter");
-const app = (0, express_1.default)();
+import { RedisStore } from "connect-redis";
+import cookieParser from "cookie-parser";
+import cors from "cors";
+import express from "express";
+import expressSession from "express-session";
+import helmet from "helmet";
+import hpp from "hpp";
+import passport from "passport";
+import swaggerUi from "swagger-ui-express";
+import { doubleCsrfProtection, generateCsrfToken, } from "./app/config/csrf.config";
+import envVariables from "./app/config/env";
+import "./app/config/passport";
+import { redisClient } from "./app/config/redis.config";
+import { swaggerSpec } from "./app/config/swagger.config";
+import globalErrorHandler from "./app/middlewares/globalErrorHandler";
+import mongoSanitize from "./app/middlewares/mongoSanitize";
+import notFound from "./app/middlewares/notFound";
+import requestLogger from "./app/middlewares/requestLogger";
+import apiRouter from "./app/route/api";
+import { auditContextMiddleware } from "./app/utils/auditContext";
+import logger from "./app/utils/logger";
+import { httpRequestDurationMicroseconds, register, updateSystemMetrics, } from "./app/utils/metrics";
+import { generalLimiter } from "./app/utils/rateLimiter";
+const app = express();
 // ──── Security Check ────
-if (env_1.default.EXPRESS_SESSION_SECRET.length < 32) {
-    logger_1.default.warn({
+if (envVariables.EXPRESS_SESSION_SECRET.length < 32) {
+    logger.warn({
         message: "Warning: EXPRESS_SESSION_SECRET should be at least 32 characters for security.",
     });
 }
 // ──── HTTP Request Logger ────
-app.use(requestLogger_1.default);
+app.use(requestLogger);
 // ──── Metrics Middleware ────
 app.use((req, res, next) => {
     const start = process.hrtime();
@@ -43,7 +38,7 @@ app.use((req, res, next) => {
         // Use req.route.path if available (matched express route)
         // Otherwise use a generic label to prevent cardinality explosion DoS
         const route = req.route ? req.route.path : "(unmatched)";
-        metrics_1.httpRequestDurationMicroseconds.observe({
+        httpRequestDurationMicroseconds.observe({
             method: req.method,
             route,
             status_code: res.statusCode,
@@ -53,7 +48,7 @@ app.use((req, res, next) => {
 });
 // ──── Security Headers ────
 // contentSecurityPolicy is configured to allow swagger-ui-express assets
-app.use((0, helmet_1.default)({
+app.use(helmet({
     contentSecurityPolicy: {
         directives: {
             defaultSrc: ["'self'"],
@@ -77,41 +72,41 @@ app.use((0, helmet_1.default)({
 }));
 app.set("trust proxy", 1);
 // ──── CORS ────
-app.use((0, cors_1.default)({
-    origin: env_1.default.FRONTEND_URL,
+app.use(cors({
+    origin: envVariables.FRONTEND_URL,
     credentials: true,
 }));
 // ──── Body Parsers ────
-app.use(express_1.default.json({ limit: "16kb" }));
-app.use(express_1.default.urlencoded({ extended: true, limit: "16kb" }));
+app.use(express.json({ limit: "16kb" }));
+app.use(express.urlencoded({ extended: true, limit: "16kb" }));
 // ──── Cookie Parser ────
-app.use((0, cookie_parser_1.default)());
+app.use(cookieParser());
 // ──── Input Sanitization ────
-app.use(mongoSanitize_1.default); // strip $ and . from req.body/query/params
-app.use((0, hpp_1.default)()); // prevent HTTP parameter pollution
+app.use(mongoSanitize); // strip $ and . from req.body/query/params
+app.use(hpp()); // prevent HTTP parameter pollution
 // ──── Session & Auth ────
-app.use((0, express_session_1.default)({
-    store: new connect_redis_1.RedisStore({ client: redis_config_1.redisClient }),
-    secret: env_1.default.EXPRESS_SESSION_SECRET,
+app.use(expressSession({
+    store: new RedisStore({ client: redisClient }),
+    secret: envVariables.EXPRESS_SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     cookie: {
-        secure: env_1.default.NODE_ENV === "production",
+        secure: envVariables.NODE_ENV === "production",
         httpOnly: true,
-        sameSite: env_1.default.NODE_ENV === "production" ? "strict" : "lax",
+        sameSite: envVariables.NODE_ENV === "production" ? "strict" : "lax",
         maxAge: 24 * 60 * 60 * 1000, // 24 hours
     },
 }));
-app.use(passport_1.default.initialize());
+app.use(passport.initialize());
 // ──── CSRF Protection ────
-app.use(csrf_config_1.doubleCsrfProtection);
+app.use(doubleCsrfProtection);
 // ──── Audit Context ────
-app.use(auditContext_1.auditContextMiddleware);
+app.use(auditContextMiddleware);
 // ──── Swagger Documentation ────
 app.get("/api-docs.json", (_req, res) => {
-    res.json(swagger_config_1.swaggerSpec);
+    res.json(swaggerSpec);
 });
-app.use("/api-docs", swagger_ui_express_1.default.serve, swagger_ui_express_1.default.setup(swagger_config_1.swaggerSpec, {
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
     customCss: ".swagger-ui .topbar { display: none }", // example refinement
     customCssUrl: "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.11.0/swagger-ui.min.css",
     customJs: [
@@ -121,29 +116,29 @@ app.use("/api-docs", swagger_ui_express_1.default.serve, swagger_ui_express_1.de
 }));
 // ──── CSRF Token Endpoint ────
 app.get("/api/v1/csrf-token", (req, res) => {
-    const token = (0, csrf_config_1.generateCsrfToken)(req, res);
+    const token = generateCsrfToken(req, res);
     res.status(200).json({ csrfToken: token });
 });
 // Versioned CSRF token endpoint for newer clients (and to support header-based versioning)
 app.get("/api/csrf-token", (req, res) => {
-    const token = (0, csrf_config_1.generateCsrfToken)(req, res);
+    const token = generateCsrfToken(req, res);
     res.status(200).json({ csrfToken: token });
 });
 // ──── API Routes ────
-app.use("/api", rateLimiter_1.generalLimiter, api_1.default);
+app.use("/api", generalLimiter, apiRouter);
 // ──── Metrics Endpoint ────
 app.get("/metrics", async (req, res) => {
     const apiKey = req.headers["x-metrics-key"];
-    if (apiKey !== env_1.default.METRICS_API_KEY) {
+    if (apiKey !== envVariables.METRICS_API_KEY) {
         return res.status(403).end("Forbidden");
     }
     try {
-        await (0, metrics_1.updateSystemMetrics)();
-        res.set("Content-Type", metrics_1.register.contentType);
-        res.end(await metrics_1.register.metrics());
+        await updateSystemMetrics();
+        res.set("Content-Type", register.contentType);
+        res.end(await register.metrics());
     }
     catch (ex) {
-        logger_1.default.error(ex, "Error while collecting metrics");
+        logger.error(ex, "Error while collecting metrics");
         res.status(500).end("Internal server error");
     }
 });
@@ -154,6 +149,6 @@ app.get("/", (_req, res) => {
     });
 });
 // ──── Global Error Handler & 404 ────
-app.use(globalErrorHandler_1.default);
-app.use(notFound_1.default);
-exports.default = app;
+app.use(globalErrorHandler);
+app.use(notFound);
+export default app;

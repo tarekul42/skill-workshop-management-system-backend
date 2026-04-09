@@ -2,7 +2,9 @@ import { StatusCodes } from "http-status-codes";
 import { Types } from "mongoose";
 import AppError from "../../errorHelpers/AppError";
 import auditLogger from "../../utils/auditLogger";
+import QueryBuilder from "../../utils/queryBuilder";
 import { AuditAction } from "../audit/audit.interface";
+import { isAdminRole } from "../user/user.interface";
 import {
   ENROLLMENT_STATUS,
   IEnrollment,
@@ -10,8 +12,6 @@ import {
 } from "./enrollment.interface";
 import Enrollment from "./enrollment.model";
 import EnrollmentRepository from "./enrollment.repository";
-import QueryBuilder from "../../utils/queryBuilder";
-import { isAdminRole } from "../user/user.interface";
 
 const createEnrollment = async (
   payload: Partial<IEnrollment>,

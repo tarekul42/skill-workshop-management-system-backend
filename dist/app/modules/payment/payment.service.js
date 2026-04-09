@@ -1,40 +1,35 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const http_status_codes_1 = require("http-status-codes");
-const AppError_1 = __importDefault(require("../../errorHelpers/AppError"));
-const mail_queue_1 = require("../../jobs/mail.queue");
-const auditLogger_1 = __importDefault(require("../../utils/auditLogger"));
-const logger_1 = __importDefault(require("../../utils/logger"));
-const audit_interface_1 = require("../audit/audit.interface");
-const enrollment_interface_1 = require("../enrollment/enrollment.interface");
-const sslCommerz_service_1 = __importDefault(require("../sslCommerz/sslCommerz.service"));
-const payment_interface_1 = require("./payment.interface");
-const payment_repository_1 = __importDefault(require("./payment.repository"));
+import { StatusCodes } from "http-status-codes";
+import AppError from "../../errorHelpers/AppError";
+import { mailQueue } from "../../jobs/mail.queue";
+import auditLogger from "../../utils/auditLogger";
+import logger from "../../utils/logger";
+import { AuditAction } from "../audit/audit.interface";
+import { ENROLLMENT_STATUS, } from "../enrollment/enrollment.interface";
+import SSLService from "../sslCommerz/sslCommerz.service";
+import { PAYMENT_STATUS } from "./payment.interface";
+import PaymentRepository from "./payment.repository";
 const initPayment = async (enrollmentId) => {
     if (!enrollmentId) {
-        throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Invalid enrollment ID");
+        throw new AppError(StatusCodes.BAD_REQUEST, "Invalid enrollment ID");
     }
-    const payment = await payment_repository_1.default.findPaymentByEnrollmentId(enrollmentId);
+    const payment = await PaymentRepository.findPaymentByEnrollmentId(enrollmentId);
     if (!payment) {
-        throw new AppError_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "Payment not found");
+        throw new AppError(StatusCodes.NOT_FOUND, "Payment not found");
     }
-    if (payment.status === payment_interface_1.PAYMENT_STATUS.PAID) {
-        throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Payment already completed");
+    if (payment.status === PAYMENT_STATUS.PAID) {
+        throw new AppError(StatusCodes.BAD_REQUEST, "Payment already completed");
     }
-    const enrollment = await payment_repository_1.default.findEnrollmentWithUser(enrollmentId);
+    const enrollment = await PaymentRepository.findEnrollmentWithUser(enrollmentId);
     if (!enrollment) {
-        throw new AppError_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "Enrollment not found");
+        throw new AppError(StatusCodes.NOT_FOUND, "Enrollment not found");
     }
-    if (enrollment.status !== enrollment_interface_1.ENROLLMENT_STATUS.PENDING) {
-        throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Enrollment is not pending");
+    if (enrollment.status !== ENROLLMENT_STATUS.PENDING) {
+        throw new AppError(StatusCodes.BAD_REQUEST, "Enrollment is not pending");
     }
     const populatedEnrollment = enrollment;
     const user = populatedEnrollment.user;
     if (!user?.address || !user?.phone) {
-        throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "User profile is incomplete. Please update address and phone number.");
+        throw new AppError(StatusCodes.BAD_REQUEST, "User profile is incomplete. Please update address and phone number.");
     }
     const sslPayload = {
         address: user.address,
@@ -44,7 +39,7 @@ const initPayment = async (enrollmentId) => {
         amount: payment.amount,
         transactionId: payment.transactionId,
     };
-    const sslPayment = await sslCommerz_service_1.default.sslPaymentInit(sslPayload);
+    const sslPayment = await SSLService.sslPaymentInit(sslPayload);
     return {
         paymentUrl: sslPayment.GatewayPageURL,
     };
@@ -52,30 +47,30 @@ const initPayment = async (enrollmentId) => {
 const successPayment = async (query, body) => {
     const transactionId = (query.transactionId || "").trim();
     if (!transactionId) {
-        throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Invalid transactionId");
+        throw new AppError(StatusCodes.BAD_REQUEST, "Invalid transactionId");
     }
     const val_id = (body.val_id || "").trim();
     if (!val_id) {
-        throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Invalid val_id");
+        throw new AppError(StatusCodes.BAD_REQUEST, "Invalid val_id");
     }
-    await sslCommerz_service_1.default.validatePayment({
+    await SSLService.validatePayment({
         val_id,
         tran_id: transactionId,
     });
-    const session = await payment_repository_1.default.startTransaction();
+    const session = await PaymentRepository.startTransaction();
     try {
-        const updatedPayment = await payment_repository_1.default.updatePaymentStatus(transactionId, payment_interface_1.PAYMENT_STATUS.PAID, session);
+        const updatedPayment = await PaymentRepository.updatePaymentStatus(transactionId, PAYMENT_STATUS.PAID, session);
         if (!updatedPayment) {
-            throw new AppError_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "Payment not found");
+            throw new AppError(StatusCodes.NOT_FOUND, "Payment not found");
         }
-        const updatedEnrollment = await payment_repository_1.default.updateEnrollmentStatus(String(updatedPayment.enrollment), enrollment_interface_1.ENROLLMENT_STATUS.COMPLETE, session);
+        const updatedEnrollment = await PaymentRepository.updateEnrollmentStatus(String(updatedPayment.enrollment), ENROLLMENT_STATUS.COMPLETE, session);
         if (!updatedEnrollment) {
-            throw new AppError_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "Enrollment not found");
+            throw new AppError(StatusCodes.NOT_FOUND, "Enrollment not found");
         }
         const populatedEnrollment = updatedEnrollment;
         await session.commitTransaction();
         session.endSession();
-        await mail_queue_1.mailQueue.add("invoice", {
+        await mailQueue.add("invoice", {
             type: "invoice",
             payload: {
                 to: populatedEnrollment.user.email,
@@ -104,15 +99,15 @@ const successPayment = async (query, body) => {
 const failPayment = async (query) => {
     const transactionId = (query.transactionId || "").trim();
     if (!transactionId) {
-        throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Invalid transactionId");
+        throw new AppError(StatusCodes.BAD_REQUEST, "Invalid transactionId");
     }
-    const session = await payment_repository_1.default.startTransaction();
+    const session = await PaymentRepository.startTransaction();
     try {
-        const updatedPayment = await payment_repository_1.default.updatePaymentStatus(transactionId, payment_interface_1.PAYMENT_STATUS.FAILED, session);
+        const updatedPayment = await PaymentRepository.updatePaymentStatus(transactionId, PAYMENT_STATUS.FAILED, session);
         if (!updatedPayment) {
-            throw new AppError_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "Payment not found");
+            throw new AppError(StatusCodes.NOT_FOUND, "Payment not found");
         }
-        await payment_repository_1.default.updateEnrollmentStatus(String(updatedPayment.enrollment), enrollment_interface_1.ENROLLMENT_STATUS.FAILED, session);
+        await PaymentRepository.updateEnrollmentStatus(String(updatedPayment.enrollment), ENROLLMENT_STATUS.FAILED, session);
         await session.commitTransaction();
         session.endSession();
         return {
@@ -129,15 +124,15 @@ const failPayment = async (query) => {
 const cancelPayment = async (query) => {
     const transactionId = (query.transactionId || "").trim();
     if (!transactionId) {
-        throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Invalid transactionId");
+        throw new AppError(StatusCodes.BAD_REQUEST, "Invalid transactionId");
     }
-    const session = await payment_repository_1.default.startTransaction();
+    const session = await PaymentRepository.startTransaction();
     try {
-        const updatedPayment = await payment_repository_1.default.updatePaymentStatus(transactionId, payment_interface_1.PAYMENT_STATUS.CANCELLED, session);
+        const updatedPayment = await PaymentRepository.updatePaymentStatus(transactionId, PAYMENT_STATUS.CANCELLED, session);
         if (!updatedPayment) {
-            throw new AppError_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "Payment not found");
+            throw new AppError(StatusCodes.NOT_FOUND, "Payment not found");
         }
-        await payment_repository_1.default.updateEnrollmentStatus(String(updatedPayment.enrollment), enrollment_interface_1.ENROLLMENT_STATUS.CANCEL, session);
+        await PaymentRepository.updateEnrollmentStatus(String(updatedPayment.enrollment), ENROLLMENT_STATUS.CANCEL, session);
         await session.commitTransaction();
         session.endSession();
         return {
@@ -152,12 +147,12 @@ const cancelPayment = async (query) => {
     }
 };
 const getInvoiceDownloadUrl = async (paymentId) => {
-    const payment = await payment_repository_1.default.findPaymentById(paymentId);
+    const payment = await PaymentRepository.findPaymentById(paymentId);
     if (!payment) {
-        throw new AppError_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "Payment not found");
+        throw new AppError(StatusCodes.NOT_FOUND, "Payment not found");
     }
     if (!payment.invoiceUrl) {
-        throw new AppError_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "Invoice not found");
+        throw new AppError(StatusCodes.NOT_FOUND, "Invoice not found");
     }
     return payment.invoiceUrl;
 };
@@ -166,20 +161,20 @@ const handleIPN = async (body) => {
     const status = (body.status || "").trim();
     const valId = (body.val_id || "").trim();
     if (!transactionId) {
-        throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Missing tran_id in IPN");
+        throw new AppError(StatusCodes.BAD_REQUEST, "Missing tran_id in IPN");
     }
-    logger_1.default.info({
+    logger.info({
         message: "IPN received",
         transactionId,
         status,
     });
     if (status === "VALID" && valId) {
-        await sslCommerz_service_1.default.validatePayment({ val_id: valId, tran_id: transactionId });
-        const session = await payment_repository_1.default.startTransaction();
+        await SSLService.validatePayment({ val_id: valId, tran_id: transactionId });
+        const session = await PaymentRepository.startTransaction();
         try {
-            const updatedPayment = await payment_repository_1.default.updatePaymentStatus(transactionId, payment_interface_1.PAYMENT_STATUS.PAID, session);
+            const updatedPayment = await PaymentRepository.updatePaymentStatus(transactionId, PAYMENT_STATUS.PAID, session);
             if (updatedPayment) {
-                await payment_repository_1.default.updateEnrollmentStatus(String(updatedPayment.enrollment), enrollment_interface_1.ENROLLMENT_STATUS.COMPLETE, session);
+                await PaymentRepository.updateEnrollmentStatus(String(updatedPayment.enrollment), ENROLLMENT_STATUS.COMPLETE, session);
             }
             await session.commitTransaction();
             session.endSession();
@@ -193,11 +188,11 @@ const handleIPN = async (body) => {
         }
     }
     else if (status === "FAILED") {
-        const session = await payment_repository_1.default.startTransaction();
+        const session = await PaymentRepository.startTransaction();
         try {
-            const updatedPayment = await payment_repository_1.default.updatePaymentStatus(transactionId, payment_interface_1.PAYMENT_STATUS.FAILED, session);
+            const updatedPayment = await PaymentRepository.updatePaymentStatus(transactionId, PAYMENT_STATUS.FAILED, session);
             if (updatedPayment) {
-                await payment_repository_1.default.updateEnrollmentStatus(String(updatedPayment.enrollment), enrollment_interface_1.ENROLLMENT_STATUS.FAILED, session);
+                await PaymentRepository.updateEnrollmentStatus(String(updatedPayment.enrollment), ENROLLMENT_STATUS.FAILED, session);
             }
             await session.commitTransaction();
             session.endSession();
@@ -213,27 +208,27 @@ const handleIPN = async (body) => {
     return { received: true };
 };
 const refundPayment = async (paymentId, userId, reason) => {
-    const payment = await payment_repository_1.default.findPaymentWithEnrollment(paymentId);
+    const payment = await PaymentRepository.findPaymentWithEnrollment(paymentId);
     if (!payment) {
-        throw new AppError_1.default(http_status_codes_1.StatusCodes.NOT_FOUND, "Payment not found");
+        throw new AppError(StatusCodes.NOT_FOUND, "Payment not found");
     }
-    if (payment.status !== payment_interface_1.PAYMENT_STATUS.PAID) {
-        throw new AppError_1.default(http_status_codes_1.StatusCodes.BAD_REQUEST, "Only paid payments can be refunded");
+    if (payment.status !== PAYMENT_STATUS.PAID) {
+        throw new AppError(StatusCodes.BAD_REQUEST, "Only paid payments can be refunded");
     }
-    const session = await payment_repository_1.default.startTransaction();
+    const session = await PaymentRepository.startTransaction();
     try {
-        const updatedPayment = await payment_repository_1.default.updatePaymentStatus(payment.transactionId, payment_interface_1.PAYMENT_STATUS.REFUNDED, session);
+        const updatedPayment = await PaymentRepository.updatePaymentStatus(payment.transactionId, PAYMENT_STATUS.REFUNDED, session);
         if (updatedPayment) {
-            await payment_repository_1.default.updateEnrollmentStatus(String(updatedPayment.enrollment), enrollment_interface_1.ENROLLMENT_STATUS.CANCEL, session);
+            await PaymentRepository.updateEnrollmentStatus(String(updatedPayment.enrollment), ENROLLMENT_STATUS.CANCEL, session);
         }
         await session.commitTransaction();
         session.endSession();
-        await (0, auditLogger_1.default)({
-            action: audit_interface_1.AuditAction.UPDATE,
+        await auditLogger({
+            action: AuditAction.UPDATE,
             collectionName: "Payment",
             documentId: paymentId,
             performedBy: userId,
-            changes: { status: payment_interface_1.PAYMENT_STATUS.REFUNDED, reason },
+            changes: { status: PAYMENT_STATUS.REFUNDED, reason },
         });
         return {
             success: true,
@@ -257,4 +252,4 @@ const PaymentService = {
     handleIPN,
     refundPayment,
 };
-exports.default = PaymentService;
+export default PaymentService;

@@ -1,6 +1,4 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const constants_1 = require("../constants");
+import { excludeFields } from "../constants";
 class QueryBuilder {
     constructor(modelQuery, query) {
         this.modelQuery = modelQuery;
@@ -8,7 +6,7 @@ class QueryBuilder {
     }
     filter() {
         const filter = { ...this.query };
-        for (const field of constants_1.excludeFields) {
+        for (const field of excludeFields) {
             // eslint-disable-next-line  @typescript-eslint/no-dynamic-delete
             delete filter[field];
         }
@@ -76,4 +74,4 @@ class QueryBuilder {
         };
     }
 }
-exports.default = QueryBuilder;
+export default QueryBuilder;

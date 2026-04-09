@@ -58,7 +58,7 @@ const deleteImageFromCloudinary = async (url: string) => {
       );
     }
   } catch (err: unknown) {
-    logger.warn({ message: "Cloudinary cleanup failed", error: String(err) });
+    logger.warn({ msg: "Cloudinary cleanup failed", error: String(err) });
   }
 };
 

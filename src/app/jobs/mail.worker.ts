@@ -18,7 +18,7 @@ export const mailWorker = new Worker(
   async (job: Job<MailJobData>) => {
     const { type, payload } = job.data;
 
-    logger.info({ message: `Processing job ${job.id} of type ${type}` });
+    logger.info({ msg: `Processing job ${job.id} of type ${type}` });
 
     try {
       switch (type) {
@@ -87,10 +87,10 @@ export const mailWorker = new Worker(
         }
 
         default:
-          logger.warn({ message: `Unknown job type: ${type}` });
+          logger.warn({ msg: `Unknown job type: ${type}` });
       }
     } catch (error) {
-      logger.error({ message: `Failed to process job ${job.id}`, err: error });
+      logger.error({ msg: `Failed to process job ${job.id}`, err: error });
       throw error; // Let BullMQ handle retries
     }
   },
@@ -101,9 +101,9 @@ export const mailWorker = new Worker(
 );
 
 mailWorker.on("completed", (job) => {
-  logger.info({ message: `Job ${job.id} completed successfully` });
+  logger.info({ msg: `Job ${job.id} completed successfully` });
 });
 
 mailWorker.on("failed", (job, err) => {
-  logger.error({ message: `Job ${job?.id} failed`, err });
+  logger.error({ msg: `Job ${job?.id} failed`, err });
 });

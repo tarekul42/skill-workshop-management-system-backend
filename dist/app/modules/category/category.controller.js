@@ -1,69 +1,64 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const http_status_codes_1 = require("http-status-codes");
-const catchAsync_1 = __importDefault(require("../../utils/catchAsync"));
-const sendResponse_1 = __importDefault(require("../../utils/sendResponse"));
-const parseParams_1 = require("../../utils/parseParams");
-const category_service_1 = __importDefault(require("./category.service"));
-const createCategory = (0, catchAsync_1.default)(async (req, res) => {
+import { StatusCodes } from "http-status-codes";
+import catchAsync from "../../utils/catchAsync";
+import { parseStringParam } from "../../utils/parseParams";
+import sendResponse from "../../utils/sendResponse";
+import CategoryService from "./category.service";
+const createCategory = catchAsync(async (req, res) => {
     const payload = {
         ...req.body,
         ...(req.file?.path && { thumbnail: req.file.path }),
     };
-    const result = await category_service_1.default.createCategory(payload);
-    (0, sendResponse_1.default)(res, {
-        statusCode: http_status_codes_1.StatusCodes.CREATED,
+    const result = await CategoryService.createCategory(payload);
+    sendResponse(res, {
+        statusCode: StatusCodes.CREATED,
         success: true,
         message: "Category created successfully",
         data: result,
     });
 });
-const getSingleCategory = (0, catchAsync_1.default)(async (req, res) => {
-    const slug = (0, parseParams_1.parseStringParam)(req.params.slug, "slug");
-    const result = await category_service_1.default.getSingleCategory(slug);
-    (0, sendResponse_1.default)(res, {
-        statusCode: http_status_codes_1.StatusCodes.OK,
+const getSingleCategory = catchAsync(async (req, res) => {
+    const slug = parseStringParam(req.params.slug, "slug");
+    const result = await CategoryService.getSingleCategory(slug);
+    sendResponse(res, {
+        statusCode: StatusCodes.OK,
         success: true,
         message: "Category fetched successfully",
         data: result,
     });
 });
-const getAllCategories = (0, catchAsync_1.default)(async (req, res) => {
+const getAllCategories = catchAsync(async (req, res) => {
     const query = req.query;
-    const result = await category_service_1.default.getAllCategories(query);
-    (0, sendResponse_1.default)(res, {
-        statusCode: http_status_codes_1.StatusCodes.OK,
+    const result = await CategoryService.getAllCategories(query);
+    sendResponse(res, {
+        statusCode: StatusCodes.OK,
         success: true,
         message: "Categories fetched successfully",
         data: result.data,
         meta: result.meta,
     });
 });
-const updateCategory = (0, catchAsync_1.default)(async (req, res) => {
-    const id = (0, parseParams_1.parseStringParam)(req.params.id, "id");
+const updateCategory = catchAsync(async (req, res) => {
+    const id = parseStringParam(req.params.id, "id");
     const payload = {
         ...req.body,
         ...(req.file?.path && { thumbnail: req.file.path }),
     };
-    const result = await category_service_1.default.updateCategory(id, payload);
-    (0, sendResponse_1.default)(res, {
-        statusCode: http_status_codes_1.StatusCodes.OK,
+    const result = await CategoryService.updateCategory(id, payload);
+    sendResponse(res, {
+        statusCode: StatusCodes.OK,
         success: true,
         message: "Category updated successfully",
         data: result,
     });
 });
-const deleteCategory = (0, catchAsync_1.default)(async (req, res) => {
-    const id = (0, parseParams_1.parseStringParam)(req.params.id, "id");
-    const result = await category_service_1.default.deleteCategory(id);
-    (0, sendResponse_1.default)(res, {
-        statusCode: http_status_codes_1.StatusCodes.OK,
+const deleteCategory = catchAsync(async (req, res) => {
+    const id = parseStringParam(req.params.id, "id");
+    await CategoryService.deleteCategory(id);
+    sendResponse(res, {
+        statusCode: StatusCodes.OK,
         success: true,
         message: "Category deleted successfully",
-        data: result,
+        data: null,
     });
 });
 const CategoryController = {
@@ -73,4 +68,4 @@ const CategoryController = {
     updateCategory,
     deleteCategory,
 };
-exports.default = CategoryController;
+export default CategoryController;

@@ -1,71 +1,66 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const http_status_codes_1 = __importDefault(require("http-status-codes"));
-const catchAsync_1 = __importDefault(require("../../utils/catchAsync"));
-const sendResponse_1 = __importDefault(require("../../utils/sendResponse"));
-const parseParams_1 = require("../../utils/parseParams");
-const user_service_1 = __importDefault(require("./user.service"));
-const createUser = (0, catchAsync_1.default)(async (req, res) => {
-    const user = await user_service_1.default.createUser(req.body);
-    (0, sendResponse_1.default)(res, {
-        statusCode: http_status_codes_1.default.CREATED,
+import StatusCodes from "http-status-codes";
+import catchAsync from "../../utils/catchAsync";
+import { parseStringParam } from "../../utils/parseParams";
+import sendResponse from "../../utils/sendResponse";
+import UserServices from "./user.service";
+const createUser = catchAsync(async (req, res) => {
+    const user = await UserServices.createUser(req.body);
+    sendResponse(res, {
+        statusCode: StatusCodes.CREATED,
         success: true,
         message: "User created successfully",
         data: user,
     });
 });
-const getSingleUser = (0, catchAsync_1.default)(async (req, res) => {
-    const id = (0, parseParams_1.parseStringParam)(req.params.id, "id");
-    const result = await user_service_1.default.getSingleUser(id);
-    (0, sendResponse_1.default)(res, {
-        statusCode: http_status_codes_1.default.OK,
+const getSingleUser = catchAsync(async (req, res) => {
+    const id = parseStringParam(req.params.id, "id");
+    const result = await UserServices.getSingleUser(id);
+    sendResponse(res, {
+        statusCode: StatusCodes.OK,
         success: true,
         message: "User fetched successfully",
         data: result.data,
     });
 });
-const getMe = (0, catchAsync_1.default)(async (req, res) => {
+const getMe = catchAsync(async (req, res) => {
     const decodedToken = req.user;
-    const result = await user_service_1.default.getMe(decodedToken.userId);
-    (0, sendResponse_1.default)(res, {
-        statusCode: http_status_codes_1.default.OK,
+    const result = await UserServices.getMe(decodedToken.userId);
+    sendResponse(res, {
+        statusCode: StatusCodes.OK,
         success: true,
         message: "User fetched successfully",
         data: result.data,
     });
 });
-const getAllUsers = (0, catchAsync_1.default)(async (req, res) => {
+const getAllUsers = catchAsync(async (req, res) => {
     const query = req.query;
-    const result = await user_service_1.default.getAllUsers(query);
-    (0, sendResponse_1.default)(res, {
-        statusCode: http_status_codes_1.default.OK,
+    const result = await UserServices.getAllUsers(query);
+    sendResponse(res, {
+        statusCode: StatusCodes.OK,
         success: true,
         message: "Users fetched successfully",
         data: result.data,
         meta: result.meta,
     });
 });
-const updateUser = (0, catchAsync_1.default)(async (req, res) => {
-    const userId = (0, parseParams_1.parseStringParam)(req.params.id, "id");
+const updateUser = catchAsync(async (req, res) => {
+    const userId = parseStringParam(req.params.id, "id");
     const payload = req.body;
     const verifiedToken = req.user;
-    const user = await user_service_1.default.updateUser(userId, payload, verifiedToken);
-    (0, sendResponse_1.default)(res, {
-        statusCode: http_status_codes_1.default.OK,
+    const user = await UserServices.updateUser(userId, payload, verifiedToken);
+    sendResponse(res, {
+        statusCode: StatusCodes.OK,
         success: true,
         message: "User updated successfully",
         data: user,
     });
 });
-const deleteUser = (0, catchAsync_1.default)(async (req, res) => {
-    const userId = (0, parseParams_1.parseStringParam)(req.params.id, "id");
+const deleteUser = catchAsync(async (req, res) => {
+    const userId = parseStringParam(req.params.id, "id");
     const verifiedToken = req.user;
-    await user_service_1.default.deleteUser(userId, verifiedToken);
-    (0, sendResponse_1.default)(res, {
-        statusCode: http_status_codes_1.default.OK,
+    await UserServices.deleteUser(userId, verifiedToken);
+    sendResponse(res, {
+        statusCode: StatusCodes.OK,
         success: true,
         message: "User deleted successfully",
         data: null,
@@ -79,4 +74,4 @@ const UserControllers = {
     updateUser,
     deleteUser,
 };
-exports.default = UserControllers;
+export default UserControllers;

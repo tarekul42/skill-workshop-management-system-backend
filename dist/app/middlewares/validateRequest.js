@@ -1,5 +1,3 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
 const validateRequest = (zodSchema) => async (req, _res, next) => {
     try {
         if (!req.body) {
@@ -18,4 +16,4 @@ const validateRequest = (zodSchema) => async (req, _res, next) => {
         next(error);
     }
 };
-exports.default = validateRequest;
+export default validateRequest;
