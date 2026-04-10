@@ -281,8 +281,15 @@ const updateWorkshop = async (id: string, payload: Partial<IWorkshop>) => {
   }
   if (payload.startDate !== undefined) {
     if (typeof payload.startDate === "string") {
-      safePayload.startDate = new Date(payload.startDate);
+      const parsedStartDate = new Date(payload.startDate);
+      if (Number.isNaN(parsedStartDate.getTime())) {
+        throw new AppError(StatusCodes.BAD_REQUEST, "Invalid startDate format");
+      }
+      safePayload.startDate = parsedStartDate;
     } else if (payload.startDate instanceof Date) {
+      if (Number.isNaN(payload.startDate.getTime())) {
+        throw new AppError(StatusCodes.BAD_REQUEST, "Invalid startDate format");
+      }
       safePayload.startDate = payload.startDate;
     } else {
       throw new AppError(StatusCodes.BAD_REQUEST, "Invalid startDate format");
@@ -291,8 +298,15 @@ const updateWorkshop = async (id: string, payload: Partial<IWorkshop>) => {
 
   if (payload.endDate !== undefined) {
     if (typeof payload.endDate === "string") {
-      safePayload.endDate = new Date(payload.endDate);
+      const parsedEndDate = new Date(payload.endDate);
+      if (Number.isNaN(parsedEndDate.getTime())) {
+        throw new AppError(StatusCodes.BAD_REQUEST, "Invalid endDate format");
+      }
+      safePayload.endDate = parsedEndDate;
     } else if (payload.endDate instanceof Date) {
+      if (Number.isNaN(payload.endDate.getTime())) {
+        throw new AppError(StatusCodes.BAD_REQUEST, "Invalid endDate format");
+      }
       safePayload.endDate = payload.endDate;
     } else {
       throw new AppError(StatusCodes.BAD_REQUEST, "Invalid endDate format");
@@ -337,21 +351,48 @@ const updateWorkshop = async (id: string, payload: Partial<IWorkshop>) => {
   if (typeof payload.maxSeats === "number") {
     safePayload.maxSeats = payload.maxSeats;
   }
-  if (typeof payload.minAge === "number") {
+  if (payload.minAge !== undefined) {
+    if (typeof payload.minAge !== "number" || !Number.isFinite(payload.minAge)) {
+      throw new AppError(StatusCodes.BAD_REQUEST, "Invalid minAge format");
+    }
     safePayload.minAge = payload.minAge;
   }
   if (payload.category !== undefined) {
+    if (typeof payload.category !== "string") {
+      throw new AppError(StatusCodes.BAD_REQUEST, "Invalid category format");
+    }
     safePayload.category = payload.category;
   }
   if (payload.level !== undefined) {
+    if (typeof payload.level !== "string") {
+      throw new AppError(StatusCodes.BAD_REQUEST, "Invalid level format");
+    }
     safePayload.level = payload.level;
+  }
+
+  const incomingImages = payload.images;
+  if (
+    incomingImages !== undefined &&
+    (!Array.isArray(incomingImages) ||
+      !incomingImages.every((img) => typeof img === "string"))
+  ) {
+    throw new AppError(StatusCodes.BAD_REQUEST, "Invalid images format");
+  }
+
+  const incomingDeleteImages = payload.deleteImages;
+  if (
+    incomingDeleteImages !== undefined &&
+    (!Array.isArray(incomingDeleteImages) ||
+      !incomingDeleteImages.every((img) => typeof img === "string"))
+  ) {
+    throw new AppError(StatusCodes.BAD_REQUEST, "Invalid deleteImages format");
   }
 
   // Handle image updates (merging, deleting, and validating)
   const { finalImages, imagesToDelete } = processWorkshopImages(
     existingWorkshop.images || [],
-    payload.images,
-    payload.deleteImages,
+    incomingImages,
+    incomingDeleteImages,
   );
 
   if (payload.images || payload.deleteImages) {
