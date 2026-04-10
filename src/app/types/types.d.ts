@@ -8,6 +8,7 @@ declare global {
 
     interface Request {
       apiVersion?: number;
+      resetToken?: string;
     }
   }
 }

@@ -5,6 +5,7 @@ import AppError from "../../errorHelpers/AppError";
 import { mailQueue } from "../../jobs/mail.queue";
 import User from "../user/user.model";
 
+// 5 minutes — extended for user convenience; brute-force risk mitigated by 5-attempt limit
 const OTP_EXPIRATION = 5 * 60;
 
 const generateOtp = (length = 6) => {

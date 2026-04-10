@@ -180,18 +180,12 @@ const forgotPassword = catchAsync(async (req: Request, res: Response) => {
 const resetPassword = catchAsync(async (req: Request, res: Response) => {
   const newPassword = req.body.newPassword;
   const decodedToken = req.user as JwtPayload;
-
-  let accessToken = req.headers.authorization;
-  if (accessToken?.startsWith("Bearer ")) {
-    accessToken = accessToken.split(" ")[1];
-  } else {
-    accessToken = req.cookies.accessToken;
-  }
+  const resetToken = req.resetToken;
 
   await AuthServices.resetPassword(
     newPassword,
     decodedToken,
-    accessToken as string,
+    resetToken as string,
   );
 
   sendResponse(res, {

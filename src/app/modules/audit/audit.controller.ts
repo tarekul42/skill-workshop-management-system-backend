@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import catchAsync from "../../utils/catchAsync";
 import { parseStringParam } from "../../utils/parseParams";
+import sendResponse from "../../utils/sendResponse";
 import AuditService from "./audit.service";
 
 const getAuditLogs = catchAsync(async (req: Request, res: Response) => {
@@ -27,7 +28,8 @@ const getAuditLogs = catchAsync(async (req: Request, res: Response) => {
     endDate: endDate as string | undefined,
   });
 
-  res.status(StatusCodes.OK).json({
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
     success: true,
     message: "Audit logs retrieved successfully",
     data: result,
@@ -38,7 +40,8 @@ const getAuditLogById = catchAsync(async (req: Request, res: Response) => {
   const id = parseStringParam(req.params.id, "id");
   const log = await AuditService.getAuditLogById(id);
 
-  res.status(StatusCodes.OK).json({
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
     success: true,
     message: "Audit log retrieved successfully",
     data: log,

@@ -76,6 +76,7 @@ const checkResetToken = async (
 
     // Populate req.user for the controller
     req.user = verifiedToken;
+    req.resetToken = resetToken;
 
     next();
   } catch (err) {
