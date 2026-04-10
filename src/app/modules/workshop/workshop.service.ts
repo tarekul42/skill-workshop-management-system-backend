@@ -7,12 +7,36 @@ import logger from "../../utils/logger";
 import QueryBuilder from "../../utils/queryBuilder";
 import { ISoftDelete } from "../../utils/softDeletePlugin";
 import { AuditAction } from "../audit/audit.interface";
-import {
-  levelSearchableFields,
-  workshopSearchableFields,
-} from "./workshop.constant";
+import { levelSearchableFields, workshopSearchableFields } from "./workshop.constant";
 import { ILevel, IWorkshop } from "./workshop.interface";
 import { Level, WorkShop } from "./workshop.model";
+
+/**
+ * Invalidates all workshop list cache keys using Redis SCAN.
+ */
+const invalidateWorkshopCache = async () => {
+  const pattern = "workshops:list:*";
+  try {
+    const keys: string[] = [];
+    for await (const key of redisClient.scanIterator({
+      MATCH: pattern,
+      COUNT: 100,
+    })) {
+      if (Array.isArray(key)) {
+        keys.push(...key);
+      } else {
+        keys.push(key);
+      }
+    }
+
+    if (keys.length > 0) {
+      await redisClient.del(keys);
+      logger.info({ msg: `Invalidated ${keys.length} workshop cache keys` });
+    }
+  } catch (err) {
+    logger.error({ msg: "Failed to invalidate workshop cache", err });
+  }
+};
 
 const createLevel = async (payload: ILevel) => {
   if (!payload || typeof payload.name !== "string") {
@@ -150,6 +174,8 @@ const createWorkshop = async (payload: IWorkshop) => {
     documentId: workshop._id,
   });
 
+  await invalidateWorkshopCache();
+
   return workshop;
 };
 
@@ -167,11 +193,16 @@ const getSingleWorkshop = async (slug: string) => {
 
 const getAllWorkshops = async (query: Record<string, string>) => {
   const cacheKey = `workshops:list:${JSON.stringify(query)}`;
-  const cachedData = await redisClient.get(cacheKey);
 
-  if (cachedData) {
-    return JSON.parse(cachedData);
+  try {
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      return JSON.parse(cachedData);
+    }
+  } catch (err) {
+    logger.error({ msg: "Redis cache GET error", err });
   }
+
   const queryBuilder = new QueryBuilder(WorkShop.find(), query);
 
   const workshops = queryBuilder
@@ -191,9 +222,13 @@ const getAllWorkshops = async (query: Record<string, string>) => {
     meta,
   };
 
-  await redisClient.set(cacheKey, JSON.stringify(result), {
-    EX: 60, // cache for 60 seconds
-  });
+  try {
+    await redisClient.set(cacheKey, JSON.stringify(result), {
+      EX: 60, // cache for 60 seconds
+    });
+  } catch (err) {
+    logger.error({ msg: "Redis cache SET error", err });
+  }
 
   return result;
 };
@@ -338,10 +373,12 @@ const updateWorkshop = async (id: string, payload: Partial<IWorkshop>) => {
     const failures = results.filter((r) => r.status === "rejected");
     if (failures.length > 0) {
       logger.error({
-        message: `Failed to delete ${failures.length} images from Cloudinary`,
+        msg: `Failed to delete ${failures.length} images from Cloudinary`,
       });
     }
   }
+
+  await invalidateWorkshopCache();
 
   return updatedWorkshop;
 };
@@ -406,7 +443,13 @@ const deleteWorkshop = async (id: string) => {
     documentId: existingWorkshop._id,
   });
 
-  return await (existingWorkshop as unknown as ISoftDelete).softDelete();
+  const result = await (
+    existingWorkshop as unknown as ISoftDelete
+  ).softDelete();
+
+  await invalidateWorkshopCache();
+
+  return result;
 };
 
 const WorkshopService = {

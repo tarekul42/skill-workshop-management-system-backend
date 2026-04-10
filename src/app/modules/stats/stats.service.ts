@@ -9,8 +9,12 @@ import { WorkShop } from "../workshop/workshop.model";
 const getUsersStats = async () => {
   const CACHE_KEY = "stats:admin:users";
   const CACHE_TTL = 300;
-  const cached = await redisClient.get(CACHE_KEY);
-  if (cached) return JSON.parse(cached);
+  try {
+    const cached = await redisClient.get(CACHE_KEY);
+    if (cached) return JSON.parse(cached);
+  } catch {
+    // Falls through to DB operation
+  }
 
   const now = new Date();
   const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
@@ -73,15 +77,23 @@ const getUsersStats = async () => {
     newUsersInLastThirtyDays,
     usersByRole,
   };
-  await redisClient.set(CACHE_KEY, JSON.stringify(result), { EX: CACHE_TTL });
+  try {
+    await redisClient.set(CACHE_KEY, JSON.stringify(result), { EX: CACHE_TTL });
+  } catch {
+    // Falls through
+  }
   return result;
 };
 
 const getWorkshopStats = async () => {
   const CACHE_KEY = "stats:admin:workshops";
   const CACHE_TTL = 300;
-  const cached = await redisClient.get(CACHE_KEY);
-  if (cached) return JSON.parse(cached);
+  try {
+    const cached = await redisClient.get(CACHE_KEY);
+    if (cached) return JSON.parse(cached);
+  } catch {
+    // Falls through
+  }
 
   const totalWorkshopPromise = WorkShop.countDocuments();
 
@@ -209,15 +221,23 @@ const getWorkshopStats = async () => {
     totalWorkshopByCategory,
     totalHighestEnrolledWorkshop,
   };
-  await redisClient.set(CACHE_KEY, JSON.stringify(result), { EX: CACHE_TTL });
+  try {
+    await redisClient.set(CACHE_KEY, JSON.stringify(result), { EX: CACHE_TTL });
+  } catch {
+    // Falls through
+  }
   return result;
 };
 
 const getEnrollmentStats = async () => {
   const CACHE_KEY = "stats:admin:enrollments";
   const CACHE_TTL = 300;
-  const cached = await redisClient.get(CACHE_KEY);
-  if (cached) return JSON.parse(cached);
+  try {
+    const cached = await redisClient.get(CACHE_KEY);
+    if (cached) return JSON.parse(cached);
+  } catch {
+    // Falls through
+  }
 
   const now = new Date();
   const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
@@ -325,15 +345,23 @@ const getEnrollmentStats = async () => {
     enrollmentsLastThirtyDays,
     totalEnrollmentByUniqueUsers,
   };
-  await redisClient.set(CACHE_KEY, JSON.stringify(result), { EX: CACHE_TTL });
+  try {
+    await redisClient.set(CACHE_KEY, JSON.stringify(result), { EX: CACHE_TTL });
+  } catch {
+    // Falls through
+  }
   return result;
 };
 
 const getPaymentStats = async () => {
   const CACHE_KEY = "stats:admin:payments";
   const CACHE_TTL = 300;
-  const cached = await redisClient.get(CACHE_KEY);
-  if (cached) return JSON.parse(cached);
+  try {
+    const cached = await redisClient.get(CACHE_KEY);
+    if (cached) return JSON.parse(cached);
+  } catch {
+    // Falls through
+  }
 
   const totalPaymentPromise = Payment.countDocuments();
 
@@ -403,7 +431,11 @@ const getPaymentStats = async () => {
     avgPaymentAmount,
     paymentGatewayData,
   };
-  await redisClient.set(CACHE_KEY, JSON.stringify(result), { EX: CACHE_TTL });
+  try {
+    await redisClient.set(CACHE_KEY, JSON.stringify(result), { EX: CACHE_TTL });
+  } catch {
+    // Falls through
+  }
   return result;
 };
 

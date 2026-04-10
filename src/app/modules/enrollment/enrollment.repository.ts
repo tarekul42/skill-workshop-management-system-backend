@@ -12,7 +12,12 @@ import { ENROLLMENT_STATUS, IEnrollment } from "./enrollment.interface";
 import Enrollment from "./enrollment.model";
 
 const startTransaction = async () => {
-  const session = await Enrollment.startSession();
+  const session = await Enrollment.startSession({
+    defaultTransactionOptions: {
+      readConcern: { level: "snapshot" },
+      writeConcern: { w: "majority" },
+    },
+  });
   session.startTransaction();
   return session;
 };

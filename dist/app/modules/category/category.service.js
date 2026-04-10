@@ -107,7 +107,7 @@ const updateCategory = async (id, payload) => {
         catch (error) {
             // Log error but don't fail the request - category update already succeeded
             logger.error({
-                message: "Failed to delete old thumbnail from Cloudinary",
+                msg: "Failed to delete old thumbnail from Cloudinary",
                 err: error,
             });
         }

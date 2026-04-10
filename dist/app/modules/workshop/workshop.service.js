@@ -6,8 +6,35 @@ import auditLogger from "../../utils/auditLogger";
 import logger from "../../utils/logger";
 import QueryBuilder from "../../utils/queryBuilder";
 import { AuditAction } from "../audit/audit.interface";
-import { levelSearchableFields, workshopSearchableFields, } from "./workshop.constant";
+import { levelSearchableFields, workshopSearchableFields } from "./workshop.constant";
 import { Level, WorkShop } from "./workshop.model";
+/**
+ * Invalidates all workshop list cache keys using Redis SCAN.
+ */
+const invalidateWorkshopCache = async () => {
+    const pattern = "workshops:list:*";
+    try {
+        const keys = [];
+        for await (const key of redisClient.scanIterator({
+            MATCH: pattern,
+            COUNT: 100,
+        })) {
+            if (Array.isArray(key)) {
+                keys.push(...key);
+            }
+            else {
+                keys.push(key);
+            }
+        }
+        if (keys.length > 0) {
+            await redisClient.del(keys);
+            logger.info({ msg: `Invalidated ${keys.length} workshop cache keys` });
+        }
+    }
+    catch (err) {
+        logger.error({ msg: "Failed to invalidate workshop cache", err });
+    }
+};
 const createLevel = async (payload) => {
     if (!payload || typeof payload.name !== "string") {
         throw new AppError(StatusCodes.BAD_REQUEST, "Invalid level name");
@@ -107,6 +134,7 @@ const createWorkshop = async (payload) => {
         collectionName: "WorkShop",
         documentId: workshop._id,
     });
+    await invalidateWorkshopCache();
     return workshop;
 };
 const getSingleWorkshop = async (slug) => {
@@ -120,9 +148,14 @@ const getSingleWorkshop = async (slug) => {
 };
 const getAllWorkshops = async (query) => {
     const cacheKey = `workshops:list:${JSON.stringify(query)}`;
-    const cachedData = await redisClient.get(cacheKey);
-    if (cachedData) {
-        return JSON.parse(cachedData);
+    try {
+        const cachedData = await redisClient.get(cacheKey);
+        if (cachedData) {
+            return JSON.parse(cachedData);
+        }
+    }
+    catch (err) {
+        logger.error({ msg: "Redis cache GET error", err });
     }
     const queryBuilder = new QueryBuilder(WorkShop.find(), query);
     const workshops = queryBuilder
@@ -139,9 +172,14 @@ const getAllWorkshops = async (query) => {
         data,
         meta,
     };
-    await redisClient.set(cacheKey, JSON.stringify(result), {
-        EX: 60, // cache for 60 seconds
-    });
+    try {
+        await redisClient.set(cacheKey, JSON.stringify(result), {
+            EX: 60, // cache for 60 seconds
+        });
+    }
+    catch (err) {
+        logger.error({ msg: "Redis cache SET error", err });
+    }
     return result;
 };
 const updateWorkshop = async (id, payload) => {
@@ -250,10 +288,11 @@ const updateWorkshop = async (id, payload) => {
         const failures = results.filter((r) => r.status === "rejected");
         if (failures.length > 0) {
             logger.error({
-                message: `Failed to delete ${failures.length} images from Cloudinary`,
+                msg: `Failed to delete ${failures.length} images from Cloudinary`,
             });
         }
     }
+    await invalidateWorkshopCache();
     return updatedWorkshop;
 };
 /**
@@ -303,7 +342,9 @@ const deleteWorkshop = async (id) => {
         collectionName: "WorkShop",
         documentId: existingWorkshop._id,
     });
-    return await existingWorkshop.softDelete();
+    const result = await existingWorkshop.softDelete();
+    await invalidateWorkshopCache();
+    return result;
 };
 const WorkshopService = {
     createLevel,

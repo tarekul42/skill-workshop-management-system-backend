@@ -67,33 +67,20 @@ router.post(
  *       302:
  *         description: Redirects to frontend success page
  */
-router.post("/success", PaymentController.successPayment);
+router
+  .route("/success")
+  .get(PaymentController.successPayment)
+  .post(PaymentController.successPayment);
 
-/**
- * @openapi
- * /payment/fail:
- *   post:
- *     summary: Payment fail callback
- *     tags: [Payment]
- *     description: Called by payment gateway
- *     responses:
- *       302:
- *         description: Redirects to frontend fail page
- */
-router.post("/fail", PaymentController.failPayment);
+router
+  .route("/fail")
+  .get(PaymentController.failPayment)
+  .post(PaymentController.failPayment);
 
-/**
- * @openapi
- * /payment/cancel:
- *   post:
- *     summary: Payment cancel callback
- *     tags: [Payment]
- *     description: Called by payment gateway
- *     responses:
- *       302:
- *         description: Redirects to frontend cancel page
- */
-router.post("/cancel", PaymentController.cancelPayment);
+router
+  .route("/cancel")
+  .get(PaymentController.cancelPayment)
+  .post(PaymentController.cancelPayment);
 
 /**
  * @openapi
