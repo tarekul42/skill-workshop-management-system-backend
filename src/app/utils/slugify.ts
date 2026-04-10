@@ -37,8 +37,8 @@ export const generateUniqueSlug = async <T>(
   }
 
   if (counter >= 100) {
-    logger.warn({
-      message: "Slug generation limit reached",
+    logger.error({
+      msg: "Slug generation limit reached",
       baseSlug,
       model: model.modelName,
     });

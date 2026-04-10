@@ -296,13 +296,19 @@ The system implements multiple layers of security to protect data and ensuring s
 - **Rate Limiting**: Protects against brute-force and DDoS attacks via `express-rate-limit` with Redis storage.
   - **General Limiter**: 60 requests per minute.
   - **Auth Limiter**: 10 attempts per 15 minutes for login/refresh.
-  - **Admin Admin Limiter**: applied to Audit and other sensitive admin routes.
-- **Role-Based Access Control (RBAC)**: Strict permission checks for `STUDENT`, `ADMIN`, and `SUPER_ADMIN`.
+  - **Admin Limiter**: Applied to Audit and other sensitive admin routes.
+- **Role-Based Access Control (RBAC)**: Strict permission checks for `STUDENT`, `ADMIN`, and `SUPER_ADMIN` with centralized helper logic.
 - **Token Blacklisting**: Implemented a Redis-based blacklist to invalidate tokens upon logout or password changes, preventing session hijacking.
 - **Dedicated Reset Secret**: Decoupled password reset tokens from access tokens by using a dedicated secret (`RESET_PASSWORD_SECRET`).
 - **Metrics Protection**: Secured the Prometheus `/metrics` endpoint with a mandatory API key check.
 - **Redirect Validation**: Enforced an allowlist for OAuth redirects to prevent Open Redirect vulnerabilities.
 - **Improved Token Security**: Added unique `jti` claims to all JWTs and enforced strict cookie `maxAge` and `path` settings.
+- **Data Integrity & Consistency**:
+  - **Snapshot Isolation**: Enrollment transactions use MongoDB `snapshot` read concern to prevent race conditions.
+  - **Unique Constraints**: Partial unique indexes prevent duplicate active enrollments at the database level.
+  - **Collision-Safe IDs**: Cryptographically secure transaction ID generation using `crypto.randomBytes`.
+- **Cache Reliability**: Automated cache invalidation for workshop listings upon create, update, or delete operations.
+- **Enhanced Validation**: Strict length limits on unbounded string and array fields to prevent resource exhaustion attacks.
 
 ---
 

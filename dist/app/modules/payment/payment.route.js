@@ -47,39 +47,69 @@ router.post("/init-payment/:enrollmentId", authLimiter, checkAuth(UserRole.STUDE
 /**
  * @openapi
  * /payment/success:
+ *   get:
+ *     summary: Payment success callback
+ *     tags: [Payment]
+ *     description: Called by payment gateway via browser redirect
+ *     responses:
+ *       200:
+ *         description: Success page HTML
  *   post:
  *     summary: Payment success callback
  *     tags: [Payment]
- *     description: Called by payment gateway
+ *     description: Called by payment gateway via IPN or direct POST
  *     responses:
  *       302:
  *         description: Redirects to frontend success page
  */
-router.post("/success", PaymentController.successPayment);
+router
+    .route("/success")
+    .get(PaymentController.successPayment)
+    .post(PaymentController.successPayment);
 /**
  * @openapi
  * /payment/fail:
+ *   get:
+ *     summary: Payment fail callback
+ *     tags: [Payment]
+ *     description: Called by payment gateway via browser redirect
+ *     responses:
+ *       200:
+ *         description: Failure page HTML
  *   post:
  *     summary: Payment fail callback
  *     tags: [Payment]
- *     description: Called by payment gateway
+ *     description: Called by payment gateway via direct POST
  *     responses:
  *       302:
- *         description: Redirects to frontend fail page
+ *         description: Redirects to frontend failure page
  */
-router.post("/fail", PaymentController.failPayment);
+router
+    .route("/fail")
+    .get(PaymentController.failPayment)
+    .post(PaymentController.failPayment);
 /**
  * @openapi
  * /payment/cancel:
+ *   get:
+ *     summary: Payment cancel callback
+ *     tags: [Payment]
+ *     description: Called by payment gateway via browser redirect
+ *     responses:
+ *       200:
+ *         description: Cancellation page HTML
  *   post:
  *     summary: Payment cancel callback
  *     tags: [Payment]
- *     description: Called by payment gateway
+ *     description: Called by payment gateway via direct POST
  *     responses:
  *       302:
- *         description: Redirects to frontend cancel page
+ *         description: Redirects to frontend cancellation page
  */
-router.post("/cancel", PaymentController.cancelPayment);
+router
+    .route("/cancel")
+    .get(PaymentController.cancelPayment)
+    .post(PaymentController.cancelPayment);
 /**
  * @openapi
  * /payment/invoice/{paymentId}:

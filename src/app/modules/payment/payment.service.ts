@@ -247,7 +247,7 @@ const handleIPN = async (body: Record<string, string>) => {
   }
 
   logger.info({
-    message: "IPN received",
+    msg: "IPN received",
     transactionId,
     status,
   });

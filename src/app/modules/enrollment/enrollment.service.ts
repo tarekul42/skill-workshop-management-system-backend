@@ -146,6 +146,10 @@ const updateEnrollmentStatus = async (
     throw new AppError(StatusCodes.NOT_FOUND, "Enrollment not found");
   }
 
+  if (enrollment.isDeleted) {
+    throw new AppError(StatusCodes.GONE, "Enrollment has been deleted");
+  }
+
   const updatedEnrollment = await Enrollment.findOneAndUpdate(
     { _id: { $eq: new Types.ObjectId(enrollmentId) } },
     { status },
@@ -175,6 +179,10 @@ const cancelEnrollment = async (enrollmentId: string, userId: string) => {
 
   if (!enrollment) {
     throw new AppError(StatusCodes.NOT_FOUND, "Enrollment not found");
+  }
+
+  if (enrollment.isDeleted) {
+    throw new AppError(StatusCodes.GONE, "Enrollment has been deleted");
   }
 
   const populatedEnrollment = enrollment as unknown as IEnrollmentPopulated;

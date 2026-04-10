@@ -164,7 +164,7 @@ const handleIPN = async (body) => {
         throw new AppError(StatusCodes.BAD_REQUEST, "Missing tran_id in IPN");
     }
     logger.info({
-        message: "IPN received",
+        msg: "IPN received",
         transactionId,
         status,
     });

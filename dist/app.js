@@ -25,7 +25,7 @@ const app = express();
 // ──── Security Check ────
 if (envVariables.EXPRESS_SESSION_SECRET.length < 32) {
     logger.warn({
-        message: "Warning: EXPRESS_SESSION_SECRET should be at least 32 characters for security.",
+        msg: "Warning: EXPRESS_SESSION_SECRET should be at least 32 characters for security.",
     });
 }
 // ──── HTTP Request Logger ────
@@ -138,7 +138,7 @@ app.get("/metrics", async (req, res) => {
         res.end(await register.metrics());
     }
     catch (ex) {
-        logger.error(ex, "Error while collecting metrics");
+        logger.error({ msg: "Error while collecting metrics", err: ex });
         res.status(500).end("Internal server error");
     }
 });

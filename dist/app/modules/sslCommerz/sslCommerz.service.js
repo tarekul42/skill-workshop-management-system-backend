@@ -39,13 +39,13 @@ const sslPaymentInit = async (payload) => {
             ship_country: "N/A",
         };
         // Diagnostic logging for Bug #11 (Environment variable quotes)
-        logger.debug({
-            message: "SSL Store ID:",
-            val: envVariables.SSL.SSL_STORE_ID,
+        logger.info({
+            msg: "SSL Store ID:",
+            storeId: envVariables.SSL.SSL_STORE_ID,
         });
-        logger.debug({
-            message: "SSL API URL:",
-            val: envVariables.SSL.SSL_PAYMENT_API,
+        logger.info({
+            msg: "SSL API URL:",
+            apiUrl: envVariables.SSL.SSL_PAYMENT_API,
         });
         const formData = new URLSearchParams();
         Object.entries(data).forEach(([key, value]) => {

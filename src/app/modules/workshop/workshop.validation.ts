@@ -6,7 +6,10 @@ const createLevelZodSchema = z.object({
 
 const createWorkshopZodSchema = z.object({
   title: z.string().min(1, { message: "Title is required" }),
-  description: z.string().optional(),
+  description: z
+    .string()
+    .max(5000, { message: "Description cannot exceed 5000 characters" })
+    .optional(),
   location: z.string().optional(),
   price: z
     .number()
@@ -15,10 +18,22 @@ const createWorkshopZodSchema = z.object({
   startDate: z.string().optional(),
   endDate: z.string().optional(),
   level: z.string().min(1, { message: "Level is required" }),
-  whatYouLearn: z.array(z.string()).optional(),
-  prerequisites: z.array(z.string()).optional(),
-  benefits: z.array(z.string()).optional(),
-  syllabus: z.array(z.string()).optional(),
+   whatYouLearn: z
+    .array(z.string().max(200))
+    .max(20, { message: "Maximum 20 learning outcomes allowed" })
+    .optional(),
+  prerequisites: z
+    .array(z.string().max(200))
+    .max(20, { message: "Maximum 20 prerequisites allowed" })
+    .optional(),
+  benefits: z
+    .array(z.string().max(200))
+    .max(20, { message: "Maximum 20 benefits allowed" })
+    .optional(),
+  syllabus: z
+    .array(z.string().max(500))
+    .max(50, { message: "Maximum 50 syllabus items allowed" })
+    .optional(),
   maxSeats: z
     .number()
     .int()
@@ -34,7 +49,10 @@ const createWorkshopZodSchema = z.object({
 
 const updateWorkshopZodSchema = z.object({
   title: z.string().min(1, { message: "Title cannot be empty" }).optional(),
-  description: z.string().optional(),
+  description: z
+    .string()
+    .max(5000, { message: "Description cannot exceed 5000 characters" })
+    .optional(),
   location: z.string().optional(),
   price: z
     .number()
@@ -43,10 +61,22 @@ const updateWorkshopZodSchema = z.object({
   startDate: z.string().optional(),
   endDate: z.string().optional(),
   level: z.string().min(1, { message: "Level cannot be empty" }).optional(),
-  whatYouLearn: z.array(z.string()).optional(),
-  prerequisites: z.array(z.string()).optional(),
-  benefits: z.array(z.string()).optional(),
-  syllabus: z.array(z.string()).optional(),
+  whatYouLearn: z
+    .array(z.string().max(200))
+    .max(20, { message: "Maximum 20 learning outcomes allowed" })
+    .optional(),
+  prerequisites: z
+    .array(z.string().max(200))
+    .max(20, { message: "Maximum 20 prerequisites allowed" })
+    .optional(),
+  benefits: z
+    .array(z.string().max(200))
+    .max(20, { message: "Maximum 20 benefits allowed" })
+    .optional(),
+  syllabus: z
+    .array(z.string().max(500))
+    .max(50, { message: "Maximum 50 syllabus items allowed" })
+    .optional(),
   maxSeats: z
     .number()
     .int()
