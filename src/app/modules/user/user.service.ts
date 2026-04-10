@@ -6,6 +6,7 @@ import AppError from "../../errorHelpers/AppError";
 import auditLogger from "../../utils/auditLogger";
 import QueryBuilder from "../../utils/queryBuilder";
 import { AuditAction } from "../audit/audit.interface";
+import { ISoftDelete } from "../../utils/softDeletePlugin";
 import { userSearchableFields } from "./user.constant";
 import {
   IAuthProvider,
@@ -213,7 +214,7 @@ const deleteUser = async (userId: string, decodedToken: JwtPayload) => {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  await (user as any).softDelete();
+  await (user as unknown as ISoftDelete).softDelete();
 
   await auditLogger({
     action: AuditAction.DELETE,

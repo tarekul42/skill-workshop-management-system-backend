@@ -35,6 +35,11 @@ const workshopSchema = new Schema<IWorkshop>(
     syllabus: { type: [String], default: [] },
     maxSeats: { type: Number },
     minAge: { type: Number },
+    currentEnrollments: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
     category: {
       type: Schema.Types.ObjectId,
       ref: "Category",

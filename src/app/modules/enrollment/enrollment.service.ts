@@ -12,6 +12,7 @@ import {
 } from "./enrollment.interface";
 import Enrollment from "./enrollment.model";
 import EnrollmentRepository from "./enrollment.repository";
+import { WorkShop } from "../workshop/workshop.model";
 
 const createEnrollment = async (
   payload: Partial<IEnrollment>,
@@ -214,6 +215,14 @@ const cancelEnrollment = async (enrollmentId: string, userId: string) => {
     performedBy: userId,
     changes: { status: ENROLLMENT_STATUS.CANCEL },
   });
+
+  // Decrement the workshop's currentEnrollments counter
+  const enrollmentData = updatedEnrollment as unknown as IEnrollmentPopulated;
+  if (updatedEnrollment && updatedEnrollment.workshop) {
+    await WorkShop.findByIdAndUpdate(updatedEnrollment.workshop, {
+      $inc: { currentEnrollments: -1 },
+    });
+  }
 
   return updatedEnrollment;
 };

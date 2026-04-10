@@ -1,8 +1,10 @@
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 import { StatusCodes } from "http-status-codes";
 import jwt from "jsonwebtoken";
 import validator from "validator";
 import envVariables from "../../config/env";
+import { redisClient } from "../../config/redis.config";
 import AppError from "../../errorHelpers/AppError";
 import { mailQueue } from "../../jobs/mail.queue";
 import { invalidateToken } from "../../utils/tokenBlacklist";
@@ -34,6 +36,8 @@ const changePassword = async (oldPassword, newPassword, decodedToken, accessToke
     user.password = await bcrypt.hash(newPassword, Number(envVariables.BCRYPT_SALT_ROUND));
     await user.save();
     await invalidateToken(accessToken, envVariables.JWT_ACCESS_SECRET);
+    // Invalidate ALL refresh tokens so other sessions can't generate new access tokens
+    await redisClient.del(`refresh_token:${decodedToken.userId}`);
 };
 const setPassword = async (userId, plainPassword) => {
     const user = await User.findById(userId);
@@ -57,14 +61,11 @@ const setPassword = async (userId, plainPassword) => {
     await user.save();
 };
 const forgotPassword = async (email) => {
-    if (typeof email !== "string") {
-        throw new AppError(StatusCodes.BAD_REQUEST, "Invalid email");
-    }
-    if (email.length > 254) {
-        throw new AppError(StatusCodes.BAD_REQUEST, "Invalid email length");
-    }
-    if (!validator.isEmail(email)) {
-        throw new AppError(StatusCodes.BAD_REQUEST, "Invalid email format");
+    if (typeof email !== "string" ||
+        email.trim().length === 0 ||
+        email.length > 254 ||
+        !validator.isEmail(email)) {
+        return; // Silent return - don't reveal anything
     }
     const isUserExists = await User.findOne({ email: { $eq: email } });
     // Generic success message to prevent user enumeration
@@ -79,6 +80,7 @@ const forgotPassword = async (email) => {
         userId: isUserExists._id,
         email: isUserExists.email,
         role: isUserExists.role,
+        jti: crypto.randomUUID(),
     };
     const resetToken = jwt.sign(jwtPayload, envVariables.RESET_PASSWORD_SECRET, {
         expiresIn: "10m",
@@ -101,6 +103,8 @@ const resetPassword = async (newPassword, decodedToken, accessToken) => {
     user.password = await bcrypt.hash(newPassword, Number(envVariables.BCRYPT_SALT_ROUND));
     await user.save();
     await invalidateToken(accessToken, envVariables.RESET_PASSWORD_SECRET);
+    // Invalidate ALL refresh tokens to force re-authentication after password reset
+    await redisClient.del(`refresh_token:${decodedToken.userId}`);
 };
 const AuthServices = {
     getNewAccessToken,

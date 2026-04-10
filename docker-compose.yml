@@ -75,7 +75,9 @@ services:
       SMTP_USER: ${SMTP_USER}
       SMTP_PASS: ${SMTP_PASS}
       SMTP_FROM: ${SMTP_FROM}
-      CSRF_SECRET: ${CSRF_SECRET}
+      CSRF_SECRET: ${CSRF_SECRET:-change-me-in-production}
+      RESET_PASSWORD_SECRET: ${RESET_PASSWORD_SECRET:-change-me-in-production}
+      METRICS_API_KEY: ${METRICS_API_KEY:-change-me-in-production}
     depends_on:
       mongodb:
         condition: service_healthy

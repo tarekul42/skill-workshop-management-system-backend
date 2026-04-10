@@ -60,6 +60,7 @@ const verifyOtp = async (email: string, otp: string) => {
   }
 
   const redisKey = `otp:${normalizedEmail}`;
+  const attemptsKey = `otp_attempts:${normalizedEmail}`;
 
   const savedOtp = await redisClient.get(redisKey);
 
@@ -67,25 +68,26 @@ const verifyOtp = async (email: string, otp: string) => {
     throw new AppError(StatusCodes.NOT_FOUND, "OTP not found");
   }
 
-  const attemptsKey = `otp_attempts:${normalizedEmail}`;
-  const attempts = await redisClient.incr(attemptsKey);
-
-  if (attempts === 1) {
-    await redisClient.expire(attemptsKey, OTP_EXPIRATION);
-  }
-
-  if (attempts > 5) {
-    await redisClient.del([redisKey, attemptsKey]);
-    throw new AppError(
-      StatusCodes.TOO_MANY_REQUESTS,
-      "Too many failed attempts. Please request a new OTP.",
-    );
-  }
-
+  // Check OTP hash FIRST, only increment counter on failure
   if (savedOtp !== hashOtp(otp)) {
+    const attempts = await redisClient.incr(attemptsKey);
+
+    if (attempts === 1) {
+      await redisClient.expire(attemptsKey, OTP_EXPIRATION);
+    }
+
+    if (attempts > 5) {
+      await redisClient.del([redisKey, attemptsKey]);
+      throw new AppError(
+        StatusCodes.TOO_MANY_REQUESTS,
+        "Too many failed attempts. Please request a new OTP.",
+      );
+    }
+
     throw new AppError(StatusCodes.UNAUTHORIZED, "Invalid OTP");
   }
 
+  // OTP is correct — mark user as verified and clean up
   await Promise.all([
     User.updateOne(
       { email: { $eq: normalizedEmail } },

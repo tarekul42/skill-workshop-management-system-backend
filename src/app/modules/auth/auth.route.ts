@@ -3,7 +3,12 @@ import passport from "passport";
 import envVariables from "../../config/env";
 import checkAuth from "../../middlewares/checkAuth";
 import checkResetToken from "../../middlewares/checkResetToken";
+import validateRequest from "../../middlewares/validateRequest";
 import { authLimiter } from "../../utils/rateLimiter";
+import {
+  changePasswordZodSchema,
+  setPasswordZodSchema,
+} from "../user/user.validation";
 import { UserRole } from "../user/user.interface";
 import AuthControllers from "./auth.controller";
 
@@ -148,6 +153,7 @@ router.post(
   "/change-password",
   authLimiter,
   checkAuth(...Object.values(UserRole)),
+  validateRequest(changePasswordZodSchema),
   AuthControllers.changePassword,
 );
 
@@ -184,6 +190,7 @@ router.post(
   "/set-password",
   authLimiter,
   checkAuth(...Object.values(UserRole)),
+  validateRequest(setPasswordZodSchema),
   AuthControllers.setPassword,
 );
 /**

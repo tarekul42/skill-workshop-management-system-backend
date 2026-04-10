@@ -147,7 +147,7 @@ const deleteUser = async (userId, decodedToken) => {
         documentId: userId,
         performedBy: decodedToken.userId,
     });
-    return null;
+    return { data: null };
 };
 const UserServices = {
     createUser,

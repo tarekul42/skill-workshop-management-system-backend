@@ -56,20 +56,12 @@ const createEnrollmentWithPayment = async (
     throw new AppError(StatusCodes.BAD_REQUEST, "Workshop price is not set.");
   }
 
-  // Guard: Prevent duplicate active enrollment for this user + workshop & Enforce workshop capacity (maxSeats)
-  const [existingEnrollment, currentEnrollmentCount] = await Promise.all([
-    Enrollment.findOne({
-      user: { $eq: userId },
-      workshop: { $eq: workshopId },
-      status: { $in: ["PENDING", "COMPLETE"] },
-    }).session(session),
-    workshop.maxSeats != null
-      ? Enrollment.countDocuments({
-          workshop: { $eq: workshopId },
-          status: { $in: ["PENDING", "COMPLETE"] },
-        }).session(session)
-      : Promise.resolve(0),
-  ]);
+  // Guard: Prevent duplicate active enrollment for this user + workshop
+  const existingEnrollment = await Enrollment.findOne({
+    user: { $eq: userId },
+    workshop: { $eq: workshopId },
+    status: { $in: ["PENDING", "COMPLETE"] },
+  }).session(session);
 
   if (existingEnrollment) {
     throw new AppError(
@@ -78,8 +70,19 @@ const createEnrollmentWithPayment = async (
     );
   }
 
+  // Atomic capacity check using findOneAndUpdate
+  // This prevents TOCTOU race conditions under high concurrency
   if (workshop.maxSeats != null) {
-    if (currentEnrollmentCount >= workshop.maxSeats) {
+    const workshopWithCapacity = await WorkShop.findOneAndUpdate(
+      {
+        _id: workshopId,
+        currentEnrollments: { $lt: workshop.maxSeats },
+      },
+      { $inc: { currentEnrollments: 1 } },
+      { session, returnDocument: "after" },
+    );
+
+    if (!workshopWithCapacity) {
       throw new AppError(
         StatusCodes.BAD_REQUEST,
         "This workshop is fully booked. No seats available.",
