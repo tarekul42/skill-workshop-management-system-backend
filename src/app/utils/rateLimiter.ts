@@ -12,10 +12,7 @@ const createLimiter = (
   message: object,
   skipHealth = true,
 ) => {
-  if (
-    envVariables.NODE_ENV === "test" ||
-    envVariables.NODE_ENV === "development"
-  ) {
+  if (envVariables.NODE_ENV === "test") {
     return (req: Request, res: Response, next: NextFunction) => next();
   }
 

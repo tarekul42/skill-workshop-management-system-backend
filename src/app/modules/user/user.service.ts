@@ -222,7 +222,7 @@ const deleteUser = async (userId: string, decodedToken: JwtPayload) => {
     performedBy: decodedToken.userId as string,
   });
 
-  return null;
+  return { data: null };
 };
 
 const UserServices = {

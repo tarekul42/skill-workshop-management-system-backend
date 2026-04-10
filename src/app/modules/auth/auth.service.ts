@@ -100,16 +100,13 @@ const setPassword = async (userId: string, plainPassword: string) => {
   await user.save();
 };
 const forgotPassword = async (email: string) => {
-  if (typeof email !== "string") {
-    throw new AppError(StatusCodes.BAD_REQUEST, "Invalid email");
-  }
-
-  if (email.length > 254) {
-    throw new AppError(StatusCodes.BAD_REQUEST, "Invalid email length");
-  }
-
-  if (!validator.isEmail(email)) {
-    throw new AppError(StatusCodes.BAD_REQUEST, "Invalid email format");
+  if (
+    typeof email !== "string" ||
+    email.trim().length === 0 ||
+    email.length > 254 ||
+    !validator.isEmail(email)
+  ) {
+    return; // Silent return - don't reveal anything
   }
 
   const isUserExists = await User.findOne({ email: { $eq: email } });
