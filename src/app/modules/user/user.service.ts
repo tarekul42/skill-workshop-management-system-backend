@@ -213,7 +213,6 @@ const deleteUser = async (userId: string, decodedToken: JwtPayload) => {
     );
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   await (user as unknown as ISoftDelete).softDelete();
 
   await auditLogger({

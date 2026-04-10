@@ -173,7 +173,7 @@ const deleteCategory = async (id: string) => {
     );
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   await (existingCategory as unknown as ISoftDelete).softDelete();
   return null;
 };
