@@ -40,14 +40,14 @@ const createUser = async (payload) => {
     return user;
 };
 const getSingleUser = async (id) => {
-    const user = await User.findById(id);
+    const user = await User.findOne({ _id: { $eq: id } });
     if (!user) {
         throw new AppError(StatusCodes.NOT_FOUND, "User not found");
     }
     return { data: user };
 };
 const getMe = async (userId) => {
-    const user = await User.findById(userId);
+    const user = await User.findOne({ _id: { $eq: userId } });
     return {
         data: user,
     };
@@ -70,7 +70,7 @@ const getAllUsers = async (query) => {
     };
 };
 const updateUser = async (userId, payload, decodedToken) => {
-    const user = await User.findById(userId);
+    const user = await User.findOne({ _id: { $eq: userId } });
     if (!user) {
         throw new AppError(StatusCodes.NOT_FOUND, "User not found");
     }
@@ -132,14 +132,13 @@ const deleteUser = async (userId, decodedToken) => {
     if (!isAdmin) {
         throw new AppError(StatusCodes.FORBIDDEN, "Only admins can delete users");
     }
-    const user = await User.findById(userId);
+    const user = await User.findOne({ _id: { $eq: userId } });
     if (!user) {
         throw new AppError(StatusCodes.NOT_FOUND, "User not found");
     }
     if (user.role === UserRole.SUPER_ADMIN) {
         throw new AppError(StatusCodes.FORBIDDEN, "Cannot delete a SUPER_ADMIN account");
     }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await user.softDelete();
     await auditLogger({
         action: AuditAction.DELETE,

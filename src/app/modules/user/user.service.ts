@@ -62,7 +62,7 @@ const createUser = async (payload: Partial<IUser>) => {
 };
 
 const getSingleUser = async (id: string) => {
-  const user = await User.findById(id);
+  const user = await User.findOne({ _id: { $eq: id } });
 
   if (!user) {
     throw new AppError(StatusCodes.NOT_FOUND, "User not found");
@@ -72,7 +72,7 @@ const getSingleUser = async (id: string) => {
 };
 
 const getMe = async (userId: string) => {
-  const user = await User.findById(userId);
+  const user = await User.findOne({ _id: { $eq: userId } });
   return {
     data: user,
   };
@@ -104,7 +104,7 @@ const updateUser = async (
   payload: Partial<IUser>,
   decodedToken: JwtPayload,
 ) => {
-  const user = await User.findById(userId);
+  const user = await User.findOne({ _id: { $eq: userId } });
 
   if (!user) {
     throw new AppError(StatusCodes.NOT_FOUND, "User not found");
@@ -200,7 +200,7 @@ const deleteUser = async (userId: string, decodedToken: JwtPayload) => {
     throw new AppError(StatusCodes.FORBIDDEN, "Only admins can delete users");
   }
 
-  const user = await User.findById(userId);
+  const user = await User.findOne({ _id: { $eq: userId } });
 
   if (!user) {
     throw new AppError(StatusCodes.NOT_FOUND, "User not found");

@@ -36,7 +36,7 @@ const createCategory = async (payload: ICategory) => {
 };
 
 const getSingleCategory = async (slug: string) => {
-  const category = await Category.findOne({ slug });
+  const category = await Category.findOne({ slug: { $eq: slug } });
   return {
     data: category,
   };
@@ -64,7 +64,7 @@ const getAllCategories = async (query: Record<string, string>) => {
 };
 
 const updateCategory = async (id: string, payload: Partial<ICategory>) => {
-  const existingCategory = await Category.findById(id);
+  const existingCategory = await Category.findOne({ _id: { $eq: id } });
   if (!existingCategory) {
     throw new AppError(StatusCodes.NOT_FOUND, "Category not found");
   }
@@ -155,7 +155,7 @@ const updateCategory = async (id: string, payload: Partial<ICategory>) => {
 };
 
 const deleteCategory = async (id: string) => {
-  const existingCategory = await Category.findById(id);
+  const existingCategory = await Category.findOne({ _id: { $eq: id } });
   if (!existingCategory) {
     throw new AppError(StatusCodes.NOT_FOUND, "Category not found");
   }

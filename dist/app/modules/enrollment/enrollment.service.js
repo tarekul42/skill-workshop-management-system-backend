@@ -139,7 +139,6 @@ const cancelEnrollment = async (enrollmentId, userId) => {
         changes: { status: ENROLLMENT_STATUS.CANCEL },
     });
     // Decrement the workshop's currentEnrollments counter
-    const enrollmentData = updatedEnrollment;
     if (updatedEnrollment && updatedEnrollment.workshop) {
         await WorkShop.findByIdAndUpdate(updatedEnrollment.workshop, {
             $inc: { currentEnrollments: -1 },

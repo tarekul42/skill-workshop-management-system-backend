@@ -25,7 +25,7 @@ const createCategory = async (payload) => {
     return category;
 };
 const getSingleCategory = async (slug) => {
-    const category = await Category.findOne({ slug });
+    const category = await Category.findOne({ slug: { $eq: slug } });
     return {
         data: category,
     };
@@ -48,7 +48,7 @@ const getAllCategories = async (query) => {
     };
 };
 const updateCategory = async (id, payload) => {
-    const existingCategory = await Category.findById(id);
+    const existingCategory = await Category.findOne({ _id: { $eq: id } });
     if (!existingCategory) {
         throw new AppError(StatusCodes.NOT_FOUND, "Category not found");
     }
@@ -115,7 +115,7 @@ const updateCategory = async (id, payload) => {
     return updatedCategory;
 };
 const deleteCategory = async (id) => {
-    const existingCategory = await Category.findById(id);
+    const existingCategory = await Category.findOne({ _id: { $eq: id } });
     if (!existingCategory) {
         throw new AppError(StatusCodes.NOT_FOUND, "Category not found");
     }
@@ -127,7 +127,6 @@ const deleteCategory = async (id) => {
     if (workshopCount > 0) {
         throw new AppError(StatusCodes.BAD_REQUEST, `Cannot delete category: ${workshopCount} workshop(s) are still using it. Reassign or delete them first.`);
     }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await existingCategory.softDelete();
     return null;
 };

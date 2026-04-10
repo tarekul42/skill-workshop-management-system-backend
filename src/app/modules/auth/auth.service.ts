@@ -28,7 +28,7 @@ const changePassword = async (
   decodedToken: JwtPayload,
   accessToken: string,
 ) => {
-  const user = await User.findById(decodedToken.userId);
+  const user = await User.findOne({ _id: { $eq: decodedToken.userId } });
 
   if (!user) {
     throw new AppError(StatusCodes.NOT_FOUND, "User not found");
@@ -68,7 +68,7 @@ const changePassword = async (
 };
 
 const setPassword = async (userId: string, plainPassword: string) => {
-  const user = await User.findById(userId);
+  const user = await User.findOne({ _id: { $eq: userId } });
 
   if (!user) throw new AppError(StatusCodes.NOT_FOUND, "User not found");
 
@@ -156,7 +156,7 @@ const resetPassword = async (
   decodedToken: JwtPayload,
   accessToken: string,
 ) => {
-  const user = await User.findById(decodedToken.userId);
+  const user = await User.findOne({ _id: { $eq: decodedToken.userId } });
 
   if (!user) {
     throw new AppError(StatusCodes.NOT_FOUND, "User not found");

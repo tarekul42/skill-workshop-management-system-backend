@@ -61,7 +61,7 @@ const createLevel = async (payload: ILevel) => {
 };
 
 const getSingleLevel = async (id: string) => {
-  const level = await Level.findById(id);
+  const level = await Level.findOne({ _id: { $eq: id } });
 
   if (!level) {
     throw new AppError(StatusCodes.NOT_FOUND, "Level not found");
@@ -94,7 +94,7 @@ const getAllLevels = async (query: Record<string, string>) => {
 };
 
 const updateLevel = async (id: string, payload: Partial<ILevel>) => {
-  const existingLevel = await Level.findById(id);
+  const existingLevel = await Level.findOne({ _id: { $eq: id } });
 
   if (!existingLevel) {
     throw new AppError(StatusCodes.NOT_FOUND, "Level not found");
@@ -120,9 +120,13 @@ const updateLevel = async (id: string, payload: Partial<ILevel>) => {
     updateData.name = payload.name;
   }
 
-  const updatedLevel = await Level.findByIdAndUpdate(id, updateData, {
-    returnDocument: "after",
-  });
+  const updatedLevel = await Level.findOneAndUpdate(
+    { _id: { $eq: id } },
+    updateData,
+    {
+      returnDocument: "after",
+    },
+  );
 
   await auditLogger({
     action: AuditAction.UPDATE,
@@ -135,7 +139,7 @@ const updateLevel = async (id: string, payload: Partial<ILevel>) => {
 };
 
 const deleteLevel = async (id: string) => {
-  const existingLevel = await Level.findById(id);
+  const existingLevel = await Level.findOne({ _id: { $eq: id } });
 
   if (!existingLevel) {
     throw new AppError(StatusCodes.NOT_FOUND, "Level not found");
@@ -234,7 +238,7 @@ const getAllWorkshops = async (query: Record<string, string>) => {
 };
 
 const updateWorkshop = async (id: string, payload: Partial<IWorkshop>) => {
-  const existingWorkshop = await WorkShop.findById(id);
+  const existingWorkshop = await WorkShop.findOne({ _id: { $eq: id } });
 
   if (!existingWorkshop) {
     throw new AppError(StatusCodes.NOT_FOUND, "Workshop not found");
@@ -354,9 +358,13 @@ const updateWorkshop = async (id: string, payload: Partial<IWorkshop>) => {
     safePayload.images = finalImages;
   }
 
-  const updatedWorkshop = await WorkShop.findByIdAndUpdate(id, safePayload, {
-    returnDocument: "after",
-  });
+  const updatedWorkshop = await WorkShop.findOneAndUpdate(
+    { _id: { $eq: id } },
+    safePayload,
+    {
+      returnDocument: "after",
+    },
+  );
 
   await auditLogger({
     action: AuditAction.UPDATE,
@@ -432,7 +440,7 @@ const processWorkshopImages = (
 };
 
 const deleteWorkshop = async (id: string) => {
-  const existingWorkshop = await WorkShop.findById(id);
+  const existingWorkshop = await WorkShop.findOne({ _id: { $eq: id } });
 
   if (!existingWorkshop) {
     throw new AppError(StatusCodes.NOT_FOUND, "Workshop not found");

@@ -19,7 +19,7 @@ const getNewAccessToken = async (refreshToken) => {
     return tokens;
 };
 const changePassword = async (oldPassword, newPassword, decodedToken, accessToken) => {
-    const user = await User.findById(decodedToken.userId);
+    const user = await User.findOne({ _id: { $eq: decodedToken.userId } });
     if (!user) {
         throw new AppError(StatusCodes.NOT_FOUND, "User not found");
     }
@@ -40,7 +40,7 @@ const changePassword = async (oldPassword, newPassword, decodedToken, accessToke
     await redisClient.del(`refresh_token:${decodedToken.userId}`);
 };
 const setPassword = async (userId, plainPassword) => {
-    const user = await User.findById(userId);
+    const user = await User.findOne({ _id: { $eq: userId } });
     if (!user)
         throw new AppError(StatusCodes.NOT_FOUND, "User not found");
     if (user.password &&
@@ -96,7 +96,7 @@ const forgotPassword = async (email) => {
     });
 };
 const resetPassword = async (newPassword, decodedToken, accessToken) => {
-    const user = await User.findById(decodedToken.userId);
+    const user = await User.findOne({ _id: { $eq: decodedToken.userId } });
     if (!user) {
         throw new AppError(StatusCodes.NOT_FOUND, "User not found");
     }

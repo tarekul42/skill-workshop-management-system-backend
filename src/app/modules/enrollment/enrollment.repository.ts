@@ -23,11 +23,11 @@ const startTransaction = async () => {
 };
 
 const findUserById = async (userId: string, session: ClientSession) => {
-  return await User.findById(userId).session(session);
+  return await User.findOne({ _id: { $eq: userId } }).session(session);
 };
 
 const findWorkshopById = async (workshopId: string, session: ClientSession) => {
-  return await WorkShop.findById(workshopId)
+  return await WorkShop.findOne({ _id: { $eq: workshopId } })
     .select("price maxSeats")
     .session(session);
 };
@@ -75,7 +75,7 @@ const createEnrollmentWithPayment = async (
   if (workshop.maxSeats != null) {
     const workshopWithCapacity = await WorkShop.findOneAndUpdate(
       {
-        _id: workshopId,
+        _id: { $eq: workshopId },
         currentEnrollments: { $lt: workshop.maxSeats },
       },
       { $inc: { currentEnrollments: 1 } },
@@ -122,8 +122,8 @@ const createEnrollmentWithPayment = async (
     { session },
   );
 
-  const updatedEnrollment = await Enrollment.findByIdAndUpdate(
-    enrollment._id,
+  const updatedEnrollment = await Enrollment.findOneAndUpdate(
+    { _id: { $eq: enrollment._id } },
     { payment: payment._id },
     { returnDocument: "after", runValidators: true, session },
   )
