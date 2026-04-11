@@ -111,14 +111,63 @@ router.get("/health-check", (_req: Request, res: Response) => {
  *     description: >
  *       Returns detailed health information including Redis memory usage,
  *       database connection latency, and mail queue length.
+ *       Requires ADMIN or SUPER_ADMIN role.
  *     tags: [Health]
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: Detailed health status
  *         content:
  *           application/json:
  *             schema:
- *               $ref: "#/components/schemas/BaseResponse"
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   enum: [healthy, degraded]
+ *                   example: healthy
+ *                 timestamp:
+ *                   type: string
+ *                   format: date-time
+ *                 uptime:
+ *                   type: number
+ *                   description: Server uptime in seconds
+ *                 responseTimeMs:
+ *                   type: integer
+ *                   description: Time taken to compute health check (ms)
+ *                 redis:
+ *                   type: object
+ *                   properties:
+ *                     memoryBytes:
+ *                       type: integer
+ *                       nullable: true
+ *                       description: Redis used memory in bytes
+ *                     connected:
+ *                       type: boolean
+ *                 database:
+ *                   type: object
+ *                   properties:
+ *                     connected:
+ *                       type: boolean
+ *                     latencyMs:
+ *                       type: number
+ *                       nullable: true
+ *                       description: MongoDB ping latency in milliseconds
+ *                 queue:
+ *                   type: object
+ *                   properties:
+ *                     name:
+ *                       type: string
+ *                       example: mail
+ *                     length:
+ *                       type: integer
+ *                       nullable: true
+ *                       description: Total jobs across waiting, active, delayed, and failed states
+ *       401:
+ *         $ref: "#/components/responses/UnauthorizedError"
+ *       403:
+ *         $ref: "#/components/responses/ForbiddenError"
  */
 router.get("/dashboard", checkAuth(UserRole.ADMIN, UserRole.SUPER_ADMIN), async (_req: Request, res: Response) => {
   const startedAt = Date.now();

@@ -73,6 +73,49 @@ router.use(adminCrudLimiter);
  *     responses:
  *       200:
  *         description: Audit logs retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       _id:
+ *                         type: string
+ *                       action:
+ *                         type: string
+ *                         enum: [CREATE, UPDATE, DELETE]
+ *                       collectionName:
+ *                         type: string
+ *                       documentId:
+ *                         type: string
+ *                       performedBy:
+ *                         type: string
+ *                         nullable: true
+ *                       changes:
+ *                         type: object
+ *                         description: Key-value pairs of field changes
+ *                       ipAddress:
+ *                         type: string
+ *                         nullable: true
+ *                       userAgent:
+ *                         type: string
+ *                         nullable: true
+ *                       createdAt:
+ *                         type: string
+ *                         format: date-time
+ *       401:
+ *         $ref: "#/components/responses/UnauthorizedError"
+ *       403:
+ *         $ref: "#/components/responses/ForbiddenError"
  */
 router.get(
   "/",
@@ -99,8 +142,50 @@ router.get(
  *     responses:
  *       200:
  *         description: Audit log retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     _id:
+ *                       type: string
+ *                     action:
+ *                       type: string
+ *                       enum: [CREATE, UPDATE, DELETE]
+ *                     collectionName:
+ *                       type: string
+ *                     documentId:
+ *                       type: string
+ *                     performedBy:
+ *                       type: string
+ *                       nullable: true
+ *                     changes:
+ *                       type: object
+ *                     ipAddress:
+ *                       type: string
+ *                       nullable: true
+ *                     userAgent:
+ *                       type: string
+ *                       nullable: true
+ *                     createdAt:
+ *                       type: string
+ *                       format: date-time
+ *       401:
+ *         $ref: "#/components/responses/UnauthorizedError"
  *       404:
  *         description: Audit log not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: "#/components/schemas/ErrorResponse"
  */
 router.get(
   "/:id",

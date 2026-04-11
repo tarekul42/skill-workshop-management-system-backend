@@ -210,10 +210,54 @@ router.post(
  *   post:
  *     summary: SSLCommerz IPN (Instant Payment Notification)
  *     tags: [Payment]
- *     description: Called asynchronously by SSLCommerz to notify payment status changes
+ *     description: Called asynchronously by SSLCommerz to notify payment status changes. Receives form-encoded data with transaction details.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/x-www-form-urlencoded:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               val_id:
+ *                 type: string
+ *                 description: SSLCommerz validation ID
+ *               tran_id:
+ *                 type: string
+ *                 description: Transaction ID
+ *               status:
+ *                 type: string
+ *                 description: Transaction status (VALID, VALIDATED, FAILED)
+ *               amount:
+ *                 type: string
+ *                 description: Payment amount
+ *               currency:
+ *                 type: string
+ *                 description: Currency code (BDT)
+ *               card_type:
+ *                 type: string
+ *                 description: Payment card type
+ *               store_amount:
+ *                 type: string
+ *                 description: Amount received by store
+ *             required:
+ *               - val_id
+ *               - tran_id
+ *               - status
  *     responses:
  *       200:
  *         description: IPN processed successfully
+ *       400:
+ *         description: Invalid IPN payload
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: "#/components/schemas/ErrorResponse"
+ *       500:
+ *         description: Internal server error while processing IPN
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: "#/components/schemas/ErrorResponse"
  */
 router.post("/ipn", PaymentController.handleIPN);
 

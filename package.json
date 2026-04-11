@@ -9,7 +9,10 @@
     "lint": "bun x eslint ./src",
     "build": "tsc -p tsconfig.build.json && cp -r src/app/utils/templates dist/app/utils/",
     "start": "bun dist/server.js",
-    "docker:up": "docker compose up --build"
+    "docker:up": "docker compose up --build",
+    "seed": "bun run src/seed.ts",
+    "seed:fresh": "bun run src/seed.ts --fresh",
+    "seed:clear": "bun run src/seed.ts --clear"
   },
   "keywords": [],
   "author": "Tarekul Islam Rifat",
