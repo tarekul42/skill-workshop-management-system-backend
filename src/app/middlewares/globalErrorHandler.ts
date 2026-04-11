@@ -13,10 +13,10 @@ import logger from "../utils/logger";
 
 const globalErrorHandler = (
   err: unknown,
-  req: Request,
+  _req: Request,
   res: Response,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  next: NextFunction,
+  _next: NextFunction,
 ) => {
   logger.error(err, "Global error caught");
 

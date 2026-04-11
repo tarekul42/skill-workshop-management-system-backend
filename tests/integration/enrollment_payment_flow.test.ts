@@ -1,4 +1,13 @@
-import { describe, expect, it, beforeAll, afterAll, mock, spyOn } from "bun:test";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import {
+  afterAll,
+  beforeAll,
+  describe,
+  expect,
+  it,
+  mock,
+  spyOn,
+} from "bun:test";
 
 // Mock CSRF Protection BEFORE importing app or router
 mock.module("../../src/app/config/csrf.config", () => ({
@@ -11,29 +20,35 @@ import request from "supertest";
 import app from "../../src/app";
 import envVariables from "../../src/app/config/env";
 import { connectRedis, redisClient } from "../../src/app/config/redis.config";
-import User from "../../src/app/modules/user/user.model";
 import { Category } from "../../src/app/modules/category/category.model";
+import User from "../../src/app/modules/user/user.model";
 import { Level, WorkShop } from "../../src/app/modules/workshop/workshop.model";
 
+import { MongoMemoryReplSet } from "mongodb-memory-server";
+import { ENROLLMENT_STATUS } from "../../src/app/modules/enrollment/enrollment.interface";
 import Enrollment from "../../src/app/modules/enrollment/enrollment.model";
+import { PAYMENT_STATUS } from "../../src/app/modules/payment/payment.interface";
 import Payment from "../../src/app/modules/payment/payment.model";
 import { generateToken } from "../../src/app/utils/jwt";
-import { MongoMemoryReplSet } from 'mongodb-memory-server';
-import { ENROLLMENT_STATUS } from "../../src/app/modules/enrollment/enrollment.interface";
-import { PAYMENT_STATUS } from "../../src/app/modules/payment/payment.interface";
 
 // Using require to mock modules since Bun's import mocking can be tricky sometimes
 // But since we are testing via HTTP (supertest), we need to spy on the exact instances used by the app.
-// Another approach is to mock the module BEFORE importing app. 
-import * as sslServiceModule from "../../src/app/modules/sslCommerz/sslCommerz.service";
+// Another approach is to mock the module BEFORE importing app.
 import { mailQueue } from "../../src/app/jobs/mail.queue";
+import * as sslServiceModule from "../../src/app/modules/sslCommerz/sslCommerz.service";
 
 // Create spies on the actual imported modules that the app uses.
-const sslInitSpy = spyOn(sslServiceModule.default, "sslPaymentInit").mockResolvedValue({
+const sslInitSpy = spyOn(
+  sslServiceModule.default,
+  "sslPaymentInit",
+).mockResolvedValue({
   GatewayPageURL: "http://dummy-sslcommerz-gateway.com/pay",
 } as any);
 
-const validatePaymentSpy = spyOn(sslServiceModule.default, "validatePayment").mockResolvedValue(true as any);
+const validatePaymentSpy = spyOn(
+  sslServiceModule.default,
+  "validatePayment",
+).mockResolvedValue(true as any);
 
 // Spy on mailQueue to verify invoice jobs without actually pushing to BullMQ
 const mailQueueSpy = spyOn(mailQueue, "add").mockResolvedValue({} as any);
@@ -57,7 +72,7 @@ describe("Integration: Enrollment -> Payment Flow", () => {
     mongoServer = await MongoMemoryReplSet.create({ replSet: { count: 1 } });
     const uri = mongoServer.getUri();
     await mongoose.connect(uri);
-    
+
     // Connect Redis (Assuming local redis or mocked via other means. If connection fails, it might log an error but shouldn't crash if we are lucky. Wait, I should mock redis client connection).
     spyOn(redisClient, "connect").mockResolvedValue({} as any);
     spyOn(redisClient, "get").mockResolvedValue(null);
@@ -79,7 +94,7 @@ describe("Integration: Enrollment -> Payment Flow", () => {
       phone: "1234567890",
       address: "123 Test St",
       isVerified: true,
-      isActive: "ACTIVE"
+      isActive: "ACTIVE",
     });
     userId = student._id.toString();
 
@@ -87,7 +102,7 @@ describe("Integration: Enrollment -> Payment Flow", () => {
     userToken = generateToken(
       { userId: userId, email: student.email, role: student.role },
       envVariables.JWT_ACCESS_SECRET,
-      envVariables.JWT_ACCESS_EXPIRES
+      envVariables.JWT_ACCESS_EXPIRES,
     );
 
     // 2. Create Category and Level
@@ -147,12 +162,13 @@ describe("Integration: Enrollment -> Payment Flow", () => {
         studentCount: 1,
       });
 
+    // eslint-disable-next-line no-console
     console.log("Enrollment Response:", JSON.stringify(response.body, null, 2));
 
     expect(response.status).toBe(201);
     expect(response.body.success).toBe(true);
-    expect(response.body.data.enrollment.status).toBe("PENDING"); 
-    
+    expect(response.body.data.enrollment.status).toBe("PENDING");
+
     enrollmentId = response.body.data.enrollment._id;
   });
 
@@ -164,7 +180,9 @@ describe("Integration: Enrollment -> Payment Flow", () => {
 
     expect(response.status).toBe(200);
     expect(response.body.success).toBe(true);
-    expect(response.body.data.paymentUrl).toBe("http://dummy-sslcommerz-gateway.com/pay");
+    expect(response.body.data.paymentUrl).toBe(
+      "http://dummy-sslcommerz-gateway.com/pay",
+    );
     expect(sslInitSpy).toHaveBeenCalled();
 
     // Fetch payment to get the transaction ID for the next step

@@ -21,7 +21,10 @@ const checkAuth =
       if (accessToken.startsWith("Bearer ")) {
         const parts = accessToken.split(" ");
         if (parts.length !== 2 || !parts[1]) {
-          throw new AppError(StatusCodes.UNAUTHORIZED, "Malformed authorization header");
+          throw new AppError(
+            StatusCodes.UNAUTHORIZED,
+            "Malformed authorization header",
+          );
         }
         accessToken = parts[1];
       }

@@ -19,7 +19,8 @@ const createLimiter = (
   return rateLimit({
     standardHeaders: true,
     legacyHeaders: false,
-    keyGenerator: (req: Request) => `${ipKeyGenerator(req.ip || "")}:${req.path}`,
+    keyGenerator: (req: Request) =>
+      `${ipKeyGenerator(req.ip || "")}:${req.path}`,
     store: new RedisStore({
       sendCommand: async (...args: string[]) => {
         try {

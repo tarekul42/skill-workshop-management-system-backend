@@ -139,7 +139,11 @@ const updateWorkshop = catchAsync(async (req: Request, res: Response) => {
     ...(files?.length && { images: files.map((file) => file.path) }),
   };
 
-  const result = await WorkshopService.updateWorkshop(id, payload, req.user as Express.User);
+  const result = await WorkshopService.updateWorkshop(
+    id,
+    payload,
+    req.user as Express.User,
+  );
 
   sendResponse(res, {
     statusCode: StatusCodes.OK,

@@ -1,6 +1,5 @@
 import { Model, Types } from "mongoose";
 
-
 /**
  * Generates a unique slug for a given Mongoose model.
  *
@@ -37,7 +36,9 @@ export const generateUniqueSlug = async <T>(
   }
 
   if (counter >= 100) {
-    throw new Error(`Could not generate a unique slug for "${baseSlug}" after 100 attempts`);
+    throw new Error(
+      `Could not generate a unique slug for "${baseSlug}" after 100 attempts`,
+    );
   }
 
   return slug;

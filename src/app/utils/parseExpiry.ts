@@ -36,7 +36,9 @@ export const parseExpiryToSeconds = (expiryString: string): number => {
   }
 
   if (result <= 0) {
-    throw new Error(`Invalid expiry value: ${expiryString}. Expiry must result in a positive number of seconds.`);
+    throw new Error(
+      `Invalid expiry value: ${expiryString}. Expiry must result in a positive number of seconds.`,
+    );
   }
   return result;
 };

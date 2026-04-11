@@ -1,14 +1,14 @@
-import { describe, expect, it } from 'bun:test';
-import request from 'supertest';
-import app from '../../src/app';
+import { describe, expect, it } from "bun:test";
+import request from "supertest";
+import app from "../../src/app";
 
-describe('Password Reset Flow Fix', () => {
-  it('should not require oldPassword for /auth/reset-password', async () => {
+describe("Password Reset Flow Fix", () => {
+  it("should not require oldPassword for /auth/reset-password", async () => {
     // 1. Hit the reset-password endpoint with no oldPassword
     const response = await request(app)
-      .post('/api/v1/auth/reset-password')
+      .post("/api/v1/auth/reset-password")
       .send({
-        newPassword: 'NewSecurePassword123!',
+        newPassword: "NewSecurePassword123!",
       });
 
     // We expect a 401 or 403 depending on auth middleware, because we have no token.
@@ -17,4 +17,3 @@ describe('Password Reset Flow Fix', () => {
     expect([401, 403, 500]).toContain(response.status);
   });
 });
-

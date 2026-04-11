@@ -7,8 +7,8 @@ import { UserRole } from "../user/user.interface";
 import WorkshopController from "./workshop.controller";
 import {
   createLevelZodSchema,
-  updateLevelZodSchema,
   createWorkshopZodSchema,
+  updateLevelZodSchema,
   updateWorkshopZodSchema,
 } from "./workshop.validation";
 

@@ -100,7 +100,9 @@ const getWorkshopStats = async () => {
     // Falls through
   }
 
-  const totalWorkshopPromise = WorkShop.countDocuments({ isDeleted: { $ne: true } });
+  const totalWorkshopPromise = WorkShop.countDocuments({
+    isDeleted: { $ne: true },
+  });
 
   const toalWorkshopByLevelPromise = WorkShop.aggregate([
     // stage-1: Connect Level model - lookup stage

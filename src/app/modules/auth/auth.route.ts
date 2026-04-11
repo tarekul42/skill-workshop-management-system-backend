@@ -5,13 +5,13 @@ import checkAuth from "../../middlewares/checkAuth";
 import checkResetToken from "../../middlewares/checkResetToken";
 import validateRequest from "../../middlewares/validateRequest";
 import { authLimiter } from "../../utils/rateLimiter";
+import { UserRole } from "../user/user.interface";
 import {
   changePasswordZodSchema,
-  setPasswordZodSchema,
-  resetPasswordZodSchema,
   forgotPasswordZodSchema,
+  resetPasswordZodSchema,
+  setPasswordZodSchema,
 } from "../user/user.validation";
-import { UserRole } from "../user/user.interface";
 import AuthControllers from "./auth.controller";
 
 const router = Router();

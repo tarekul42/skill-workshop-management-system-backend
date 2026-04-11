@@ -5,8 +5,8 @@ import envVariables from "../../config/env";
 import AppError from "../../errorHelpers/AppError";
 import auditLogger from "../../utils/auditLogger";
 import QueryBuilder from "../../utils/queryBuilder";
-import { AuditAction } from "../audit/audit.interface";
 import { ISoftDelete } from "../../utils/softDeletePlugin";
+import { AuditAction } from "../audit/audit.interface";
 import { userSearchableFields } from "./user.constant";
 import {
   IAuthProvider,

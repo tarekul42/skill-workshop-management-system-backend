@@ -55,7 +55,12 @@ const router = express.Router();
  *       500:
  *         $ref: "#/components/responses/InternalServerError"
  */
-router.post("/send", strictLimiter, validateRequest(sendOtpZodSchema), OTPController.sendOtp);
+router.post(
+  "/send",
+  strictLimiter,
+  validateRequest(sendOtpZodSchema),
+  OTPController.sendOtp,
+);
 
 /**
  * @openapi
@@ -97,7 +102,12 @@ router.post("/send", strictLimiter, validateRequest(sendOtpZodSchema), OTPContro
  *       500:
  *         $ref: "#/components/responses/InternalServerError"
  */
-router.post("/verify", strictLimiter, validateRequest(verifyOtpZodSchema), OTPController.verifyOtp);
+router.post(
+  "/verify",
+  strictLimiter,
+  validateRequest(verifyOtpZodSchema),
+  OTPController.verifyOtp,
+);
 
 const OTPRoutes = router;
 

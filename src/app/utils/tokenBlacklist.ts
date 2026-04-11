@@ -52,7 +52,10 @@ export const isTokenBlacklisted = async (token: string) => {
     const result = await redisClient.get(`blacklist:${tokenHash}`);
     return !!result;
   } catch (error) {
-    logger.error({ msg: "Redis unavailable for token blacklist check — failing open", err: error });
+    logger.error({
+      msg: "Redis unavailable for token blacklist check — failing open",
+      err: error,
+    });
     return false;
   }
 };

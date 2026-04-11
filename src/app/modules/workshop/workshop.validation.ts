@@ -22,7 +22,7 @@ const createWorkshopZodSchema = z.object({
   startDate: z.string().optional(),
   endDate: z.string().optional(),
   level: z.string().min(1, { message: "Level is required" }),
-   whatYouLearn: z
+  whatYouLearn: z
     .array(z.string().max(200))
     .max(20, { message: "Maximum 20 learning outcomes allowed" })
     .optional(),
@@ -101,7 +101,7 @@ const updateWorkshopZodSchema = z.object({
 
 export {
   createLevelZodSchema,
-  updateLevelZodSchema,
   createWorkshopZodSchema,
+  updateLevelZodSchema,
   updateWorkshopZodSchema,
 };

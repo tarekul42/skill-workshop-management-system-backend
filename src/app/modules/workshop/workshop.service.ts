@@ -1,4 +1,5 @@
 import { StatusCodes } from "http-status-codes";
+import { JwtPayload } from "jsonwebtoken";
 import { deleteImageFromCloudinary } from "../../config/cloudinary.config";
 import { redisClient } from "../../config/redis.config";
 import AppError from "../../errorHelpers/AppError";
@@ -8,8 +9,10 @@ import QueryBuilder from "../../utils/queryBuilder";
 import { ISoftDelete } from "../../utils/softDeletePlugin";
 import { AuditAction } from "../audit/audit.interface";
 import { isAdminRole } from "../user/user.interface";
-import { JwtPayload } from "jsonwebtoken";
-import { levelSearchableFields, workshopSearchableFields } from "./workshop.constant";
+import {
+  levelSearchableFields,
+  workshopSearchableFields,
+} from "./workshop.constant";
 import { ILevel, IWorkshop } from "./workshop.interface";
 import { Level, WorkShop } from "./workshop.model";
 
@@ -147,7 +150,7 @@ const deleteLevel = async (id: string) => {
   if (linkedWorkshops > 0) {
     throw new AppError(
       StatusCodes.CONFLICT,
-      `Cannot delete level because it is referenced by ${linkedWorkshops} workshop(s)`
+      `Cannot delete level because it is referenced by ${linkedWorkshops} workshop(s)`,
     );
   }
 
@@ -249,22 +252,22 @@ const updateWorkshop = async (
   currentUser: JwtPayload,
 ) => {
   const existingWorkshop = await WorkShop.findById(id);
- 
+
   if (!existingWorkshop) {
     throw new AppError(StatusCodes.NOT_FOUND, "Workshop not found");
   }
- 
+
   // Ownership check
   const isAdmin = isAdminRole(currentUser.role);
   const isOwner = existingWorkshop.createdBy?.toString() === currentUser.userId;
- 
+
   if (!isAdmin && !isOwner) {
     throw new AppError(
       StatusCodes.FORBIDDEN,
       "You are not authorized to update this workshop",
     );
   }
- 
+
   const title = payload.title;
 
   if (title && typeof title !== "string") {
@@ -462,22 +465,22 @@ const processWorkshopImages = (
 
 const deleteWorkshop = async (id: string, currentUser: JwtPayload) => {
   const existingWorkshop = await WorkShop.findById(id);
- 
+
   if (!existingWorkshop) {
     throw new AppError(StatusCodes.NOT_FOUND, "Workshop not found");
   }
- 
+
   // Ownership check
   const isAdmin = isAdminRole(currentUser.role);
   const isOwner = existingWorkshop.createdBy?.toString() === currentUser.userId;
- 
+
   if (!isAdmin && !isOwner) {
     throw new AppError(
       StatusCodes.FORBIDDEN,
       "You are not authorized to delete this workshop",
     );
   }
- 
+
   await auditLogger({
     action: AuditAction.DELETE,
     collectionName: "WorkShop",

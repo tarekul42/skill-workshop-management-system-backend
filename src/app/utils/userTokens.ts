@@ -37,7 +37,10 @@ const createUserTokens = async (user: Partial<IUser>) => {
       EX: parseExpiryToSeconds(envVariables.JWT_REFRESH_EXPIRES),
     });
   } catch (error) {
-    logger.error({ msg: "Redis unavailable — refresh token not stored", err: error });
+    logger.error({
+      msg: "Redis unavailable — refresh token not stored",
+      err: error,
+    });
   }
 
   return { accessToken, refreshToken };
@@ -54,8 +57,14 @@ const createNewAccessToken = async (refreshToken: string) => {
   try {
     storedHashedToken = await redisClient.get(`refresh_token:${userId}`);
   } catch (error) {
-    logger.error({ msg: "Redis unavailable — cannot verify refresh token", err: error });
-    throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, "Authentication service temporarily unavailable");
+    logger.error({
+      msg: "Redis unavailable — cannot verify refresh token",
+      err: error,
+    });
+    throw new AppError(
+      StatusCodes.INTERNAL_SERVER_ERROR,
+      "Authentication service temporarily unavailable",
+    );
   }
 
   if (!storedHashedToken || storedHashedToken !== hashToken(refreshToken)) {
@@ -68,7 +77,10 @@ const createNewAccessToken = async (refreshToken: string) => {
   try {
     await redisClient.del(`refresh_token:${userId}`);
   } catch (error) {
-    logger.error({ msg: "Redis unavailable — cannot delete old refresh token", err: error });
+    logger.error({
+      msg: "Redis unavailable — cannot delete old refresh token",
+      err: error,
+    });
   }
 
   const isUserExists = await User.findOne({ email: verifiedPayload.email });
@@ -115,7 +127,10 @@ const createNewAccessToken = async (refreshToken: string) => {
       EX: parseExpiryToSeconds(envVariables.JWT_REFRESH_EXPIRES),
     });
   } catch (error) {
-    logger.error({ msg: "Redis unavailable — new refresh token not stored", err: error });
+    logger.error({
+      msg: "Redis unavailable — new refresh token not stored",
+      err: error,
+    });
   }
 
   return { accessToken, refreshToken: newRefreshToken };
