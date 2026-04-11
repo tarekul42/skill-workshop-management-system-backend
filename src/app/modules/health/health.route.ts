@@ -3,6 +3,8 @@ import mongoose from "mongoose";
 import { redisClient } from "../../config/redis.config";
 import { mailQueue } from "../../jobs/mail.queue";
 import { healthLimiter } from "../../utils/rateLimiter";
+import checkAuth from "../../middlewares/checkAuth";
+import { UserRole } from "../user/user.interface";
 
 const router = express.Router();
 
@@ -118,7 +120,7 @@ router.get("/health-check", (_req: Request, res: Response) => {
  *             schema:
  *               $ref: "#/components/schemas/BaseResponse"
  */
-router.get("/dashboard", async (_req: Request, res: Response) => {
+router.get("/dashboard", checkAuth(UserRole.ADMIN, UserRole.SUPER_ADMIN), async (_req: Request, res: Response) => {
   const startedAt = Date.now();
 
   let redisMemoryBytes: number | null = null;

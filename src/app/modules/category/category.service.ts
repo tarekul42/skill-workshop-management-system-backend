@@ -3,6 +3,7 @@ import { deleteImageFromCloudinary } from "../../config/cloudinary.config";
 import AppError from "../../errorHelpers/AppError";
 import logger from "../../utils/logger";
 import QueryBuilder from "../../utils/queryBuilder";
+import { ISoftDelete } from "../../utils/softDeletePlugin";
 import { WorkShop } from "../workshop/workshop.model";
 import { categorySearchableFields } from "./category.constant";
 import { ICategory } from "./category.interface";
@@ -172,8 +173,7 @@ const deleteCategory = async (id: string) => {
     );
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  await (existingCategory as any).softDelete();
+  await (existingCategory as unknown as ISoftDelete).softDelete();
   return null;
 };
 

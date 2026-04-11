@@ -3,7 +3,9 @@ import passport from "passport";
 import envVariables from "../../config/env";
 import checkAuth from "../../middlewares/checkAuth";
 import checkResetToken from "../../middlewares/checkResetToken";
+import validateRequest from "../../middlewares/validateRequest";
 import { authLimiter } from "../../utils/rateLimiter";
+import { changePasswordZodSchema, setPasswordZodSchema, } from "../user/user.validation";
 import { UserRole } from "../user/user.interface";
 import AuthControllers from "./auth.controller";
 const router = Router();
@@ -139,7 +141,7 @@ router.post("/logout", authLimiter, AuthControllers.logout);
  *       403:
  *         $ref: "#/components/responses/ForbiddenError"
  */
-router.post("/change-password", authLimiter, checkAuth(...Object.values(UserRole)), AuthControllers.changePassword);
+router.post("/change-password", authLimiter, checkAuth(...Object.values(UserRole)), validateRequest(changePasswordZodSchema), AuthControllers.changePassword);
 /**
  * @openapi
  * /auth/set-password:
@@ -169,7 +171,7 @@ router.post("/change-password", authLimiter, checkAuth(...Object.values(UserRole
  *       401:
  *         $ref: "#/components/responses/UnauthorizedError"
  */
-router.post("/set-password", authLimiter, checkAuth(...Object.values(UserRole)), AuthControllers.setPassword);
+router.post("/set-password", authLimiter, checkAuth(...Object.values(UserRole)), validateRequest(setPasswordZodSchema), AuthControllers.setPassword);
 /**
  * @openapi
  * /auth/forgot-password:

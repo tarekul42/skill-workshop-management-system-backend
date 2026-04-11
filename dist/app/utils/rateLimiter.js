@@ -3,8 +3,7 @@ import { RedisStore } from "rate-limit-redis";
 import { redisClient } from "../config/redis.config";
 import envVariables from "../config/env";
 const createLimiter = (prefix, windowMs, max, message, skipHealth = true) => {
-    if (envVariables.NODE_ENV === "test" ||
-        envVariables.NODE_ENV === "development") {
+    if (envVariables.NODE_ENV === "test") {
         return (req, res, next) => next();
     }
     return rateLimit({

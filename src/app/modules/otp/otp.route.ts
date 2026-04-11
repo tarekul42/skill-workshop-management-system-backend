@@ -38,7 +38,7 @@ const router = express.Router();
  *       400:
  *         $ref: "#/components/responses/BadRequestError"
  */
-router.post("/send", OTPController.sendOtp);
+router.post("/send", strictLimiter, OTPController.sendOtp);
 
 /**
  * @openapi

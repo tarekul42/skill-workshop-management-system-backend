@@ -20,24 +20,29 @@ const getUsersStats = async () => {
   const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
   const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
-  const totalUsersPromise = User.countDocuments();
+  const totalUsersPromise = User.countDocuments({ isDeleted: { $ne: true } });
 
   const totalActiveUsersPromise = User.countDocuments({
     isActive: IsActive.ACTIVE,
+    isDeleted: { $ne: true },
   });
   const totalInactiveUsersPromise = User.countDocuments({
     isActive: IsActive.INACTIVE,
+    isDeleted: { $ne: true },
   });
   const totalBlockedUsersPromise = User.countDocuments({
     isActive: IsActive.BLOCKED,
+    isDeleted: { $ne: true },
   });
 
   const newUsersInLastSevenDaysPromise = User.countDocuments({
     createdAt: { $gte: sevenDaysAgo },
+    isDeleted: { $ne: true },
   });
 
   const newUsersInLastThirtyDaysPromise = User.countDocuments({
     createdAt: { $gte: thirtyDaysAgo },
+    isDeleted: { $ne: true },
   });
 
   const usersByRolePromise = User.aggregate([
@@ -95,7 +100,7 @@ const getWorkshopStats = async () => {
     // Falls through
   }
 
-  const totalWorkshopPromise = WorkShop.countDocuments();
+  const totalWorkshopPromise = WorkShop.countDocuments({ isDeleted: { $ne: true } });
 
   const toalWorkshopByLevelPromise = WorkShop.aggregate([
     // stage-1: Connect Level model - lookup stage
@@ -243,7 +248,9 @@ const getEnrollmentStats = async () => {
   const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
   const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
-  const totalEnrollmentPromise = Enrollment.countDocuments();
+  const totalEnrollmentPromise = Enrollment.countDocuments({
+    isDeleted: { $ne: true },
+  });
 
   const totalEnrollmentByStatusPromise = Enrollment.aggregate([
     // stage-1: group stage
@@ -307,10 +314,12 @@ const getEnrollmentStats = async () => {
 
   const enrollmentsLastSevenDaysPromise = Enrollment.countDocuments({
     createdAt: { $gte: sevenDaysAgo },
+    isDeleted: { $ne: true },
   });
 
   const enrollmentsLastThirtyDaysPromise = Enrollment.countDocuments({
     createdAt: { $gte: thirtyDaysAgo },
+    isDeleted: { $ne: true },
   });
 
   const totalEnrollmentByUniqueUsersPromise = Enrollment.aggregate([

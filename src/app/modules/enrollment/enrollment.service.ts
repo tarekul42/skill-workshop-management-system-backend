@@ -12,6 +12,7 @@ import {
 } from "./enrollment.interface";
 import Enrollment from "./enrollment.model";
 import EnrollmentRepository from "./enrollment.repository";
+import { WorkShop } from "../workshop/workshop.model";
 
 const createEnrollment = async (
   payload: Partial<IEnrollment>,
@@ -206,6 +207,13 @@ const cancelEnrollment = async (enrollmentId: string, userId: string) => {
     { status: ENROLLMENT_STATUS.CANCEL },
     { returnDocument: "after", runValidators: true },
   );
+
+  // Decrement the workshop's currentEnrollments counter
+  if (updatedEnrollment && updatedEnrollment.workshop) {
+    await WorkShop.findByIdAndUpdate(updatedEnrollment.workshop, {
+      $inc: { currentEnrollments: -1 },
+    });
+  }
 
   await auditLogger({
     action: AuditAction.UPDATE,

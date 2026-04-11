@@ -21,6 +21,7 @@ interface IWorkshop {
   syllabus?: string[];
   maxSeats?: number;
   minAge?: number;
+  currentEnrollments?: number;
   deleteImages?: string[];
   category: Types.ObjectId;
   level: Types.ObjectId;
