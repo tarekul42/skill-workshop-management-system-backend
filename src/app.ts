@@ -48,8 +48,7 @@ for (const secret of requiredSecrets) {
   }
   if (secret.value.length < 16 && envVariables.NODE_ENV !== "production") {
     logger.warn({
-      msg: `${secret.name} should be at least 16 characters.`,
-      currentLength: secret.value.length,
+      msg: `${secret.name} is below the recommended minimum length.`,
     });
   }
 }
