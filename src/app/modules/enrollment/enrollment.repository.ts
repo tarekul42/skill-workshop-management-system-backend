@@ -21,11 +21,6 @@ const startTransaction = async () => {
   session.startTransaction();
   return session;
 };
-
-const findUserById = async (userId: string, session: ClientSession) => {
-  return await User.findById(userId).session(session);
-};
-
 const findWorkshopById = async (workshopId: string, session: ClientSession) => {
   return await WorkShop.findById(workshopId)
     .select("price maxSeats")
@@ -39,7 +34,7 @@ const createEnrollmentWithPayment = async (
 ) => {
   const transactionId = getTransactionId();
 
-  const user = await findUserById(userId, session);
+  const user = await User.findById(userId).session(session);
   if (!user?.phone || !user.address) {
     throw new AppError(
       StatusCodes.BAD_REQUEST,

@@ -33,7 +33,10 @@ const app = express();
 
 // ──── Security Check ────
 const requiredSecrets = [
-  { name: "EXPRESS_SESSION_SECRET", value: envVariables.EXPRESS_SESSION_SECRET },
+  {
+    name: "EXPRESS_SESSION_SECRET",
+    value: envVariables.EXPRESS_SESSION_SECRET,
+  },
   { name: "JWT_ACCESS_SECRET", value: envVariables.JWT_ACCESS_SECRET },
   { name: "JWT_REFRESH_SECRET", value: envVariables.JWT_REFRESH_SECRET },
   { name: "CSRF_SECRET", value: envVariables.CSRF_SECRET },
@@ -81,37 +84,44 @@ app.use((req, res, next) => {
 
 // ──── Security Headers ────
 // contentSecurityPolicy is configured to allow swagger-ui-express assets
-const helmetOptions = envVariables.NODE_ENV === "production"
-  ? {}
-  : {
-      contentSecurityPolicy: {
-        directives: {
-          defaultSrc: ["'self'"],
-          scriptSrc: [
-            "'self'",
-            "'unsafe-inline'",
-            "'unsafe-eval'",
-            "https://vercel.live",
-            "https://cdnjs.cloudflare.com",
-          ],
-          styleSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com"],
-          imgSrc: ["'self'", "data:", "validator.swagger.io"],
-          connectSrc: [
-            "'self'",
-            "https://vercel.live",
-            "https://cdnjs.cloudflare.com",
-          ],
-          frameSrc: ["'self'", "https://vercel.live"],
+const helmetOptions =
+  envVariables.NODE_ENV === "production"
+    ? {}
+    : {
+        contentSecurityPolicy: {
+          directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: [
+              "'self'",
+              "'unsafe-inline'",
+              "'unsafe-eval'",
+              "https://vercel.live",
+              "https://cdnjs.cloudflare.com",
+            ],
+            styleSrc: [
+              "'self'",
+              "'unsafe-inline'",
+              "https://cdnjs.cloudflare.com",
+            ],
+            imgSrc: ["'self'", "data:", "validator.swagger.io"],
+            connectSrc: [
+              "'self'",
+              "https://vercel.live",
+              "https://cdnjs.cloudflare.com",
+            ],
+            frameSrc: ["'self'", "https://vercel.live"],
+          },
         },
-      },
-    };
+      };
 
 app.use(helmet(helmetOptions));
 
 app.set("trust proxy", 1);
 
 // ──── CORS ────
-const allowedOrigins = envVariables.FRONTEND_URL.split(",").map((s) => s.trim());
+const allowedOrigins = envVariables.FRONTEND_URL.split(",").map((s) =>
+  s.trim(),
+);
 
 app.use(
   cors({
@@ -175,7 +185,9 @@ if (envVariables.NODE_ENV !== "production") {
   );
 } else {
   app.get("/api-docs", (_req, res) => {
-    res.status(404).json({ message: "API documentation is not available in production" });
+    res
+      .status(404)
+      .json({ message: "API documentation is not available in production" });
   });
 }
 

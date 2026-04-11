@@ -1,7 +1,7 @@
-import path from "path";
 import { Request } from "express";
 import multer from "multer";
 import { CloudinaryStorage } from "multer-storage-cloudinary";
+import path from "path";
 import { cloudinaryUpload } from "./cloudinary.config";
 
 const storage = new CloudinaryStorage({
@@ -31,8 +31,6 @@ const storage = new CloudinaryStorage({
   },
 });
 
-
-
 const fileFilter = (
   req: Request,
   file: Express.Multer.File,
@@ -42,11 +40,15 @@ const fileFilter = (
   const allowedExtensions = [".jpg", ".jpeg", ".png", ".webp"];
   const ext = path.extname(file.originalname).toLowerCase();
 
-  if (allowedMimeTypes.includes(file.mimetype) && allowedExtensions.includes(ext)) {
+  if (
+    allowedMimeTypes.includes(file.mimetype) &&
+    allowedExtensions.includes(ext)
+  ) {
     cb(null, true);
   } else {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    cb(new Error(`Invalid file type. Allowed: ${allowedExtensions.join(", ")}`) as any, false);
+    cb(
+      new Error(`Invalid file type. Allowed: ${allowedExtensions.join(", ")}`),
+    );
   }
 };
 

@@ -83,6 +83,7 @@ const createWorkshop = catchAsync(async (req: Request, res: Response) => {
     images: ((req.files as Express.Multer.File[]) ?? []).map(
       (file) => file.path,
     ),
+    createdBy: (req.user as Express.User).userId,
   };
 
   const result = await WorkshopService.createWorkshop(payload);
@@ -138,7 +139,11 @@ const updateWorkshop = catchAsync(async (req: Request, res: Response) => {
     ...(files?.length && { images: files.map((file) => file.path) }),
   };
 
-  const result = await WorkshopService.updateWorkshop(id, payload);
+  const result = await WorkshopService.updateWorkshop(
+    id,
+    payload,
+    req.user as Express.User,
+  );
 
   sendResponse(res, {
     statusCode: StatusCodes.OK,
@@ -151,7 +156,7 @@ const updateWorkshop = catchAsync(async (req: Request, res: Response) => {
 const deleteWorkshop = catchAsync(async (req: Request, res: Response) => {
   const id = parseStringParam(req.params.id, "id");
 
-  await WorkshopService.deleteWorkshop(id);
+  await WorkshopService.deleteWorkshop(id, req.user as Express.User);
 
   sendResponse(res, {
     statusCode: StatusCodes.OK,

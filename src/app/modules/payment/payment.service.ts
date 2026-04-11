@@ -10,8 +10,8 @@ import {
 } from "../enrollment/enrollment.interface";
 import { ISSLCommerz } from "../sslCommerz/sslCommerz.interface";
 import SSLService from "../sslCommerz/sslCommerz.service";
-import { PAYMENT_STATUS } from "./payment.interface";
 import { UserRole } from "../user/user.interface";
+import { PAYMENT_STATUS } from "./payment.interface";
 import PaymentRepository from "./payment.repository";
 
 const initPayment = async (enrollmentId: string, userId: string) => {
@@ -46,12 +46,18 @@ const initPayment = async (enrollmentId: string, userId: string) => {
 
   const enrollmentUser = populatedEnrollment.user;
   if (!enrollmentUser || !enrollmentUser._id) {
-    throw new AppError(StatusCodes.NOT_FOUND, "User associated with enrollment not found");
+    throw new AppError(
+      StatusCodes.NOT_FOUND,
+      "User associated with enrollment not found",
+    );
   }
 
   const enrollmentUserId = String(enrollmentUser._id);
   if (enrollmentUserId !== userId) {
-    throw new AppError(StatusCodes.FORBIDDEN, "You can only initiate payment for your own enrollment");
+    throw new AppError(
+      StatusCodes.FORBIDDEN,
+      "You can only initiate payment for your own enrollment",
+    );
   }
 
   if (!user?.address || !user?.phone) {
@@ -234,18 +240,28 @@ const cancelPayment = async (query: Record<string, string>) => {
   }
 };
 
-const getInvoiceDownloadUrl = async (paymentId: string, userId: string, userRole: string) => {
+const getInvoiceDownloadUrl = async (
+  paymentId: string,
+  userId: string,
+  userRole: string,
+) => {
   const payment = await PaymentRepository.findPaymentById(paymentId);
 
   if (!payment) {
     throw new AppError(StatusCodes.NOT_FOUND, "Payment not found");
   }
 
-  const isAdmin = userRole === UserRole.ADMIN || userRole === UserRole.SUPER_ADMIN;
+  const isAdmin =
+    userRole === UserRole.ADMIN || userRole === UserRole.SUPER_ADMIN;
   if (!isAdmin) {
-    const enrollment = await PaymentRepository.findEnrollmentWithUser(String(payment.enrollment));
+    const enrollment = await PaymentRepository.findEnrollmentWithUser(
+      String(payment.enrollment),
+    );
     if (!enrollment || String(enrollment.user) !== userId) {
-      throw new AppError(StatusCodes.FORBIDDEN, "You can only access your own invoices");
+      throw new AppError(
+        StatusCodes.FORBIDDEN,
+        "You can only access your own invoices",
+      );
     }
   }
 

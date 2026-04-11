@@ -7,8 +7,8 @@ import { UserRole } from "../user/user.interface";
 import WorkshopController from "./workshop.controller";
 import {
   createLevelZodSchema,
-  updateLevelZodSchema,
   createWorkshopZodSchema,
+  updateLevelZodSchema,
   updateWorkshopZodSchema,
 } from "./workshop.validation";
 
@@ -384,7 +384,7 @@ router.get("/:slug", WorkshopController.getSingleWorkshop);
 router.post(
   "/create",
   adminCrudLimiter,
-  checkAuth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
+  checkAuth(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.INSTRUCTOR),
   multerUpload.array("files", 10),
   validateRequest(createWorkshopZodSchema),
   WorkshopController.createWorkshop,
@@ -482,7 +482,7 @@ router.post(
 router.patch(
   "/:id",
   adminCrudLimiter,
-  checkAuth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
+  checkAuth(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.INSTRUCTOR),
   multerUpload.array("files"),
   validateRequest(updateWorkshopZodSchema),
   WorkshopController.updateWorkshop,
@@ -523,7 +523,7 @@ router.patch(
 router.delete(
   "/:id",
   adminCrudLimiter,
-  checkAuth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
+  checkAuth(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.INSTRUCTOR),
   WorkshopController.deleteWorkshop,
 );
 

@@ -2,8 +2,8 @@ import express, { Request, Response } from "express";
 import mongoose from "mongoose";
 import { redisClient } from "../../config/redis.config";
 import { mailQueue } from "../../jobs/mail.queue";
-import { healthLimiter } from "../../utils/rateLimiter";
 import checkAuth from "../../middlewares/checkAuth";
+import { healthLimiter } from "../../utils/rateLimiter";
 import { UserRole } from "../user/user.interface";
 
 const router = express.Router();
@@ -189,76 +189,80 @@ router.get("/health-check", (_req: Request, res: Response) => {
  *       500:
  *         $ref: "#/components/responses/InternalServerError"
  */
-router.get("/dashboard", checkAuth(UserRole.ADMIN, UserRole.SUPER_ADMIN), async (_req: Request, res: Response) => {
-  const startedAt = Date.now();
+router.get(
+  "/dashboard",
+  checkAuth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
+  async (_req: Request, res: Response) => {
+    const startedAt = Date.now();
 
-  let redisMemoryBytes: number | null = null;
-  let dbLatencyMs: number | null = null;
-  let queueLength: number | null;
+    let redisMemoryBytes: number | null = null;
+    let dbLatencyMs: number | null = null;
+    let queueLength: number | null;
 
-  // Redis memory usage
-  try {
-    if (redisClient.isOpen) {
-      const info = await redisClient.info("memory");
-      const match = info.match(/used_memory:(\d+)/);
-      if (match) {
-        redisMemoryBytes = Number(match[1]);
+    // Redis memory usage
+    try {
+      if (redisClient.isOpen) {
+        const info = await redisClient.info("memory");
+        const match = info.match(/used_memory:(\d+)/);
+        if (match) {
+          redisMemoryBytes = Number(match[1]);
+        }
       }
+    } catch {
+      redisMemoryBytes = null;
     }
-  } catch {
-    redisMemoryBytes = null;
-  }
 
-  // DB connection latency
-  try {
-    if (mongoose.connection.readyState === 1 && mongoose.connection.db) {
-      const start = process.hrtime();
-      await mongoose.connection.db.admin().ping();
-      const diff = process.hrtime(start);
-      dbLatencyMs = diff[0] * 1000 + diff[1] / 1e6;
+    // DB connection latency
+    try {
+      if (mongoose.connection.readyState === 1 && mongoose.connection.db) {
+        const start = process.hrtime();
+        await mongoose.connection.db.admin().ping();
+        const diff = process.hrtime(start);
+        dbLatencyMs = diff[0] * 1000 + diff[1] / 1e6;
+      }
+    } catch {
+      dbLatencyMs = null;
     }
-  } catch {
-    dbLatencyMs = null;
-  }
 
-  // Queue length
-  try {
-    const [waiting, active, delayed, failed] = await Promise.all([
-      mailQueue.getWaitingCount(),
-      mailQueue.getActiveCount(),
-      mailQueue.getDelayedCount(),
-      mailQueue.getFailedCount(),
-    ]);
+    // Queue length
+    try {
+      const [waiting, active, delayed, failed] = await Promise.all([
+        mailQueue.getWaitingCount(),
+        mailQueue.getActiveCount(),
+        mailQueue.getDelayedCount(),
+        mailQueue.getFailedCount(),
+      ]);
 
-    queueLength =
-      (waiting ?? 0) + (active ?? 0) + (delayed ?? 0) + (failed ?? 0);
-  } catch {
-    queueLength = null;
-  }
+      queueLength =
+        (waiting ?? 0) + (active ?? 0) + (delayed ?? 0) + (failed ?? 0);
+    } catch {
+      queueLength = null;
+    }
 
-  const overallStatus =
-    redisMemoryBytes !== null && dbLatencyMs !== null && queueLength !== null
-      ? "healthy"
-      : "degraded";
+    const overallStatus =
+      redisMemoryBytes !== null && dbLatencyMs !== null && queueLength !== null
+        ? "healthy"
+        : "degraded";
 
-  res.status(200).json({
-    status: overallStatus,
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
-    responseTimeMs: Date.now() - startedAt,
-    redis: {
-      memoryBytes: redisMemoryBytes,
-      connected: redisClient.isOpen,
-    },
-    database: {
-      connected: mongoose.connection.readyState === 1,
-      latencyMs: dbLatencyMs,
-    },
-    queue: {
-      name: mailQueue.name,
-      length: queueLength,
-    },
-  });
-});
+    res.status(200).json({
+      status: overallStatus,
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      responseTimeMs: Date.now() - startedAt,
+      redis: {
+        memoryBytes: redisMemoryBytes,
+        connected: redisClient.isOpen,
+      },
+      database: {
+        connected: mongoose.connection.readyState === 1,
+        latencyMs: dbLatencyMs,
+      },
+      queue: {
+        name: mailQueue.name,
+        length: queueLength,
+      },
+    });
+  },
+);
 
 export const HealthRoutes = router;

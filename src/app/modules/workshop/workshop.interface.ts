@@ -25,6 +25,7 @@ interface IWorkshop {
   deleteImages?: string[];
   category: Types.ObjectId;
   level: Types.ObjectId;
+  createdBy: Types.ObjectId;
   isDeleted?: boolean;
   deletedAt?: Date;
 }

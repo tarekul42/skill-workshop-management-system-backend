@@ -263,12 +263,12 @@ System metrics are exposed for Prometheus scraping at the `/metrics` endpoint. T
 
 ### Health (`/api/v1/health`)
 
-| Method | Endpoint                | Description            | Access |
-| ------ | ----------------------- | ---------------------- | ------ |
-| GET    | `/health/`              | Root health endpoint   | Public |
-| GET    | `/health/ping`          | Simple health ping     | Public |
-| GET    | `/health/check-version` | Get API version        | Public |
-| GET    | `/health/health-check`  | Detailed health status | Public |
+| Method | Endpoint                | Description                                        | Access |
+| ------ | ----------------------- | -------------------------------------------------- | ------ |
+| GET    | `/health/`              | Root health endpoint                               | Public |
+| GET    | `/health/ping`          | Simple health ping                                 | Public |
+| GET    | `/health/check-version` | Get API version                                    | Public |
+| GET    | `/health/health-check`  | Detailed health status                             | Public |
 | GET    | `/health/dashboard`     | Infrastructure health dashboard (Redis, DB, queue) | Admin  |
 
 ### Audit (`/api/v1/audit`)
@@ -280,8 +280,8 @@ System metrics are exposed for Prometheus scraping at the `/metrics` endpoint. T
 
 ### Infrastructure & Misc
 
-| Method | Endpoint             | Description                 | Access |
-| ------ | -------------------- | --------------------------- | ------ |
+| Method | Endpoint             | Description                 | Access  |
+| ------ | -------------------- | --------------------------- | ------- |
 | GET    | `/metrics`           | Prometheus metrics scraping | API Key |
 | GET    | `/api/v1/csrf-token` | Generate new CSRF token     | Public  |
 

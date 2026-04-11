@@ -32,7 +32,7 @@ Thumbs.db
 # Testing
 coverage/
 .nyc_output/
-tests/
+# tests/
 
 # Temp
 tmp/

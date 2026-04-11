@@ -91,10 +91,10 @@ const forgotPasswordZodSchema = z.object({
 });
 
 export {
-  createUserZodSchema,
-  updateUserZodSchema,
   changePasswordZodSchema,
-  setPasswordZodSchema,
-  resetPasswordZodSchema,
+  createUserZodSchema,
   forgotPasswordZodSchema,
+  resetPasswordZodSchema,
+  setPasswordZodSchema,
+  updateUserZodSchema,
 };

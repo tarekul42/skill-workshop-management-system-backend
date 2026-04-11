@@ -5,6 +5,7 @@ import auditLogger from "../../utils/auditLogger";
 import QueryBuilder from "../../utils/queryBuilder";
 import { AuditAction } from "../audit/audit.interface";
 import { isAdminRole } from "../user/user.interface";
+import { WorkShop } from "../workshop/workshop.model";
 import {
   ENROLLMENT_STATUS,
   IEnrollment,
@@ -12,7 +13,6 @@ import {
 } from "./enrollment.interface";
 import Enrollment from "./enrollment.model";
 import EnrollmentRepository from "./enrollment.repository";
-import { WorkShop } from "../workshop/workshop.model";
 
 const createEnrollment = async (
   payload: Partial<IEnrollment>,
