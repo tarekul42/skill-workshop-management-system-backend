@@ -67,6 +67,12 @@ const router = Router();
  *                     data: { $ref: "#/components/schemas/User" }
  *       400:
  *         $ref: "#/components/responses/BadRequestError"
+ *       429:
+ *         $ref: "#/components/responses/TooManyRequestsError"
+ *       500:
+ *         $ref: "#/components/responses/InternalServerError"
+ *       409:
+ *         $ref: "#/components/responses/ConflictError"
  */
 router.post(
   "/register",
@@ -96,6 +102,12 @@ router.post(
  *                     data: { $ref: "#/components/schemas/User" }
  *       401:
  *         $ref: "#/components/responses/UnauthorizedError"
+ *       429:
+ *         $ref: "#/components/responses/TooManyRequestsError"
+ *       500:
+ *         $ref: "#/components/responses/InternalServerError"
+ *       403:
+ *         $ref: "#/components/responses/ForbiddenError"
  */
 router.get(
   "/me",
@@ -142,6 +154,10 @@ router.get(
  *         $ref: "#/components/responses/UnauthorizedError"
  *       403:
  *         $ref: "#/components/responses/ForbiddenError"
+ *       429:
+ *         $ref: "#/components/responses/TooManyRequestsError"
+ *       500:
+ *         $ref: "#/components/responses/InternalServerError"
  */
 router.get(
   "/all-users",
@@ -179,6 +195,12 @@ router.get(
  *         $ref: "#/components/responses/UnauthorizedError"
  *       404:
  *         $ref: "#/components/responses/NotFoundError"
+ *       429:
+ *         $ref: "#/components/responses/TooManyRequestsError"
+ *       500:
+ *         $ref: "#/components/responses/InternalServerError"
+ *       403:
+ *         $ref: "#/components/responses/ForbiddenError"
  */
 router.get(
   "/:id",
@@ -236,6 +258,14 @@ router.get(
  *         $ref: "#/components/responses/BadRequestError"
  *       401:
  *         $ref: "#/components/responses/UnauthorizedError"
+ *       429:
+ *         $ref: "#/components/responses/TooManyRequestsError"
+ *       500:
+ *         $ref: "#/components/responses/InternalServerError"
+ *       403:
+ *         $ref: "#/components/responses/ForbiddenError"
+ *       404:
+ *         $ref: "#/components/responses/NotFoundError"
  */
 router.patch(
   "/:id",
@@ -272,6 +302,10 @@ router.patch(
  *         $ref: "#/components/responses/ForbiddenError"
  *       404:
  *         $ref: "#/components/responses/NotFoundError"
+ *       429:
+ *         $ref: "#/components/responses/TooManyRequestsError"
+ *       500:
+ *         $ref: "#/components/responses/InternalServerError"
  */
 router.delete(
   "/:id",

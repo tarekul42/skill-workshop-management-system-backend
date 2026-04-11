@@ -1,3 +1,4 @@
+import path from "path";
 import { Request } from "express";
 import multer from "multer";
 import { CloudinaryStorage } from "multer-storage-cloudinary";
@@ -30,16 +31,22 @@ const storage = new CloudinaryStorage({
   },
 });
 
+
+
 const fileFilter = (
   req: Request,
   file: Express.Multer.File,
   cb: multer.FileFilterCallback,
 ) => {
   const allowedMimeTypes = ["image/jpeg", "image/png", "image/webp"];
-  if (allowedMimeTypes.includes(file.mimetype)) {
+  const allowedExtensions = [".jpg", ".jpeg", ".png", ".webp"];
+  const ext = path.extname(file.originalname).toLowerCase();
+
+  if (allowedMimeTypes.includes(file.mimetype) && allowedExtensions.includes(ext)) {
     cb(null, true);
   } else {
-    cb(new Error("Invalid file type. Only JPEG, PNG, and WebP are allowed."));
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    cb(new Error(`Invalid file type. Allowed: ${allowedExtensions.join(", ")}`) as any, false);
   }
 };
 

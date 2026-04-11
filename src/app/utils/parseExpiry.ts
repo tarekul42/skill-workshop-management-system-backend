@@ -12,20 +12,31 @@ export const parseExpiryToSeconds = (expiryString: string): number => {
     throw new Error(`Invalid expiry string: ${expiryString}`);
   }
 
+  let result: number;
   switch (unit) {
     case "s":
-      return value;
+      result = value;
+      break;
     case "m":
-      return value * 60;
+      result = value * 60;
+      break;
     case "h":
-      return value * 3600;
+      result = value * 3600;
+      break;
     case "d":
-      return value * 86400;
+      result = value * 86400;
+      break;
     default:
       // If no unit is provided, assume it's already in seconds if it's a numeric string
       if (!isNaN(Number(expiryString))) {
-        return parseInt(expiryString, 10);
+        result = parseInt(expiryString, 10);
+        break;
       }
       throw new Error(`Invalid expiry unit: ${unit} in ${expiryString}`);
   }
+
+  if (result <= 0) {
+    throw new Error(`Invalid expiry value: ${expiryString}. Expiry must result in a positive number of seconds.`);
+  }
+  return result;
 };

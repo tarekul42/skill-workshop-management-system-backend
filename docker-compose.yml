@@ -16,14 +16,14 @@ services:
   redis:
     image: redis:7-alpine
     container_name: skill-workshop-redis
-    command: redis-server --requirepass ${REDIS_PASSWORD:-default_redis_password}
+    command: redis-server --requirepass ${REDIS_PASSWORD:?REDIS_PASSWORD is required}
     # ports:
     #   - "6381:6379"
     volumes:
       - redis_data:/data
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-default_redis_password}", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -41,7 +41,7 @@ services:
       DATABASE_URL: ${DATABASE_URL:-mongodb://mongodb:27017/skill-workshop-management-system}
       REDIS_HOST: ${REDIS_HOST:-redis}
       REDIS_PORT: ${REDIS_PORT:-6379}
-      REDIS_PASSWORD: ${REDIS_PASSWORD:-default_redis_password}
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?REDIS_PASSWORD is required}
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
       JWT_ACCESS_EXPIRES: ${JWT_ACCESS_EXPIRES}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
@@ -75,9 +75,9 @@ services:
       SMTP_USER: ${SMTP_USER}
       SMTP_PASS: ${SMTP_PASS}
       SMTP_FROM: ${SMTP_FROM}
-      CSRF_SECRET: ${CSRF_SECRET:-change-me-in-production}
-      RESET_PASSWORD_SECRET: ${RESET_PASSWORD_SECRET:-change-me-in-production}
-      METRICS_API_KEY: ${METRICS_API_KEY:-change-me-in-production}
+      CSRF_SECRET: ${CSRF_SECRET:?CSRF_SECRET is required}
+      RESET_PASSWORD_SECRET: ${RESET_PASSWORD_SECRET:?RESET_PASSWORD_SECRET is required}
+      METRICS_API_KEY: ${METRICS_API_KEY:?METRICS_API_KEY is required}
     depends_on:
       mongodb:
         condition: service_healthy

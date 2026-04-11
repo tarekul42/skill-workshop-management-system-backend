@@ -58,6 +58,14 @@ const router = Router();
  *         $ref: "#/components/responses/BadRequestError"
  *       401:
  *         $ref: "#/components/responses/UnauthorizedError"
+ *       429:
+ *         $ref: "#/components/responses/TooManyRequestsError"
+ *       500:
+ *         $ref: "#/components/responses/InternalServerError"
+ *       403:
+ *         $ref: "#/components/responses/ForbiddenError"
+ *       409:
+ *         $ref: "#/components/responses/ConflictError"
  */
 router.post(
   "/create",
@@ -87,6 +95,10 @@ router.post(
  *                     data:
  *                       type: array
  *                       items: { $ref: "#/components/schemas/Category" }
+ *       429:
+ *         $ref: "#/components/responses/TooManyRequestsError"
+ *       500:
+ *         $ref: "#/components/responses/InternalServerError"
  */
 router.get("/", CategoryController.getAllCategories);
 
@@ -115,6 +127,10 @@ router.get("/", CategoryController.getAllCategories);
  *                     data: { $ref: "#/components/schemas/Category" }
  *       404:
  *         $ref: "#/components/responses/NotFoundError"
+ *       429:
+ *         $ref: "#/components/responses/TooManyRequestsError"
+ *       500:
+ *         $ref: "#/components/responses/InternalServerError"
  */
 router.get("/:slug", CategoryController.getSingleCategory);
 
@@ -160,6 +176,14 @@ router.get("/:slug", CategoryController.getSingleCategory);
  *         $ref: "#/components/responses/BadRequestError"
  *       401:
  *         $ref: "#/components/responses/UnauthorizedError"
+ *       429:
+ *         $ref: "#/components/responses/TooManyRequestsError"
+ *       500:
+ *         $ref: "#/components/responses/InternalServerError"
+ *       403:
+ *         $ref: "#/components/responses/ForbiddenError"
+ *       404:
+ *         $ref: "#/components/responses/NotFoundError"
  */
 router.patch(
   "/:id",
@@ -195,6 +219,12 @@ router.patch(
  *         $ref: "#/components/responses/UnauthorizedError"
  *       404:
  *         $ref: "#/components/responses/NotFoundError"
+ *       429:
+ *         $ref: "#/components/responses/TooManyRequestsError"
+ *       500:
+ *         $ref: "#/components/responses/InternalServerError"
+ *       403:
+ *         $ref: "#/components/responses/ForbiddenError"
  */
 router.delete(
   "/:id",

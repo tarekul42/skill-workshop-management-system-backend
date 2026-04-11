@@ -141,6 +141,14 @@ const deleteLevel = async (id: string) => {
     throw new AppError(StatusCodes.NOT_FOUND, "Level not found");
   }
 
+  const linkedWorkshops = await WorkShop.countDocuments({ level: id });
+  if (linkedWorkshops > 0) {
+    throw new AppError(
+      StatusCodes.CONFLICT,
+      `Cannot delete level because it is referenced by ${linkedWorkshops} workshop(s)`
+    );
+  }
+
   await auditLogger({
     action: AuditAction.DELETE,
     collectionName: "Level",
@@ -325,10 +333,14 @@ const updateWorkshop = async (id: string, payload: Partial<IWorkshop>) => {
     safePayload.prerequisites = sanitizedPrerequisites;
   }
   if (Array.isArray(payload.benefits)) {
-    safePayload.benefits = payload.benefits;
+    safePayload.benefits = payload.benefits.filter(
+      (item): item is string => typeof item === "string",
+    );
   }
   if (Array.isArray(payload.syllabus)) {
-    safePayload.syllabus = payload.syllabus;
+    safePayload.syllabus = payload.syllabus.filter(
+      (item): item is string => typeof item === "string",
+    );
   }
   if (typeof payload.maxSeats === "number") {
     safePayload.maxSeats = payload.maxSeats;

@@ -1,5 +1,5 @@
 import { Model, Types } from "mongoose";
-import logger from "./logger";
+
 
 /**
  * Generates a unique slug for a given Mongoose model.
@@ -37,11 +37,7 @@ export const generateUniqueSlug = async <T>(
   }
 
   if (counter >= 100) {
-    logger.error({
-      msg: "Slug generation limit reached",
-      baseSlug,
-      model: model.modelName,
-    });
+    throw new Error(`Could not generate a unique slug for "${baseSlug}" after 100 attempts`);
   }
 
   return slug;

@@ -1,6 +1,8 @@
 import express from "express";
+import validateRequest from "../../middlewares/validateRequest";
 import { strictLimiter } from "../../utils/rateLimiter";
 import OTPController from "./otp.controller";
+import { sendOtpZodSchema, verifyOtpZodSchema } from "./otp.validation";
 
 const router = express.Router();
 
@@ -35,6 +37,10 @@ const router = express.Router();
  *               phone:
  *                 type: string
  *                 description: User's phone number (Bangladesh format)
+ *             required:
+ *               - email
+ *             # Note: Swagger 3.0 cannot express "oneOf" in requestBody.
+ *             # The server validates that at least one of email/phone is present.
  *     responses:
  *       200:
  *         description: OTP sent successfully
@@ -45,20 +51,11 @@ const router = express.Router();
  *       400:
  *         $ref: "#/components/responses/BadRequestError"
  *       429:
- *         description: Too Many Requests — rate limit exceeded
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: false
- *                 message:
- *                   type: string
- *                   example: "Too many requests, please try again later."
+ *         $ref: "#/components/responses/TooManyRequestsError"
+ *       500:
+ *         $ref: "#/components/responses/InternalServerError"
  */
-router.post("/send", strictLimiter, OTPController.sendOtp);
+router.post("/send", strictLimiter, validateRequest(sendOtpZodSchema), OTPController.sendOtp);
 
 /**
  * @openapi
@@ -96,20 +93,11 @@ router.post("/send", strictLimiter, OTPController.sendOtp);
  *       400:
  *         $ref: "#/components/responses/BadRequestError"
  *       429:
- *         description: Too Many Requests — rate limit exceeded
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: false
- *                 message:
- *                   type: string
- *                   example: "Too many requests, please try again later."
+ *         $ref: "#/components/responses/TooManyRequestsError"
+ *       500:
+ *         $ref: "#/components/responses/InternalServerError"
  */
-router.post("/verify", strictLimiter, OTPController.verifyOtp);
+router.post("/verify", strictLimiter, validateRequest(verifyOtpZodSchema), OTPController.verifyOtp);
 
 const OTPRoutes = router;
 

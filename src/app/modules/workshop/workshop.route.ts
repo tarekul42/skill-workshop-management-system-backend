@@ -7,6 +7,7 @@ import { UserRole } from "../user/user.interface";
 import WorkshopController from "./workshop.controller";
 import {
   createLevelZodSchema,
+  updateLevelZodSchema,
   createWorkshopZodSchema,
   updateWorkshopZodSchema,
 } from "./workshop.validation";
@@ -42,6 +43,10 @@ const router = express.Router();
  *                     data:
  *                       type: array
  *                       items: { $ref: "#/components/schemas/Level" }
+ *       429:
+ *         $ref: "#/components/responses/TooManyRequestsError"
+ *       500:
+ *         $ref: "#/components/responses/InternalServerError"
  */
 router.get("/levels", WorkshopController.getAllLevels);
 
@@ -70,6 +75,10 @@ router.get("/levels", WorkshopController.getAllLevels);
  *                     data: { $ref: "#/components/schemas/Level" }
  *       404:
  *         $ref: "#/components/responses/NotFoundError"
+ *       429:
+ *         $ref: "#/components/responses/TooManyRequestsError"
+ *       500:
+ *         $ref: "#/components/responses/InternalServerError"
  */
 router.get("/levels/:id", WorkshopController.getSingleLevel);
 
@@ -105,6 +114,14 @@ router.get("/levels/:id", WorkshopController.getSingleLevel);
  *                     data: { $ref: "#/components/schemas/Level" }
  *       401:
  *         $ref: "#/components/responses/UnauthorizedError"
+ *       429:
+ *         $ref: "#/components/responses/TooManyRequestsError"
+ *       500:
+ *         $ref: "#/components/responses/InternalServerError"
+ *       403:
+ *         $ref: "#/components/responses/ForbiddenError"
+ *       409:
+ *         $ref: "#/components/responses/ConflictError"
  */
 router.post(
   "/create-level",
@@ -152,12 +169,20 @@ router.post(
  *         $ref: "#/components/responses/BadRequestError"
  *       401:
  *         $ref: "#/components/responses/UnauthorizedError"
+ *       429:
+ *         $ref: "#/components/responses/TooManyRequestsError"
+ *       500:
+ *         $ref: "#/components/responses/InternalServerError"
+ *       403:
+ *         $ref: "#/components/responses/ForbiddenError"
+ *       404:
+ *         $ref: "#/components/responses/NotFoundError"
  */
 router.patch(
   "/levels/:id",
   adminCrudLimiter,
   checkAuth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
-  validateRequest(createLevelZodSchema),
+  validateRequest(updateLevelZodSchema),
   WorkshopController.updateLevel,
 );
 
@@ -186,6 +211,12 @@ router.patch(
  *         $ref: "#/components/responses/UnauthorizedError"
  *       404:
  *         $ref: "#/components/responses/NotFoundError"
+ *       429:
+ *         $ref: "#/components/responses/TooManyRequestsError"
+ *       500:
+ *         $ref: "#/components/responses/InternalServerError"
+ *       403:
+ *         $ref: "#/components/responses/ForbiddenError"
  */
 router.delete(
   "/levels/:id",
@@ -227,6 +258,10 @@ router.delete(
  *                     data:
  *                       type: array
  *                       items: { $ref: "#/components/schemas/Workshop" }
+ *       429:
+ *         $ref: "#/components/responses/TooManyRequestsError"
+ *       500:
+ *         $ref: "#/components/responses/InternalServerError"
  */
 router.get("/", WorkshopController.getAllWorkshops);
 
@@ -255,6 +290,10 @@ router.get("/", WorkshopController.getAllWorkshops);
  *                     data: { $ref: "#/components/schemas/Workshop" }
  *       404:
  *         $ref: "#/components/responses/NotFoundError"
+ *       429:
+ *         $ref: "#/components/responses/TooManyRequestsError"
+ *       500:
+ *         $ref: "#/components/responses/InternalServerError"
  */
 router.get("/:slug", WorkshopController.getSingleWorkshop);
 
@@ -333,11 +372,19 @@ router.get("/:slug", WorkshopController.getSingleWorkshop);
  *         $ref: "#/components/responses/BadRequestError"
  *       401:
  *         $ref: "#/components/responses/UnauthorizedError"
+ *       429:
+ *         $ref: "#/components/responses/TooManyRequestsError"
+ *       500:
+ *         $ref: "#/components/responses/InternalServerError"
+ *       403:
+ *         $ref: "#/components/responses/ForbiddenError"
+ *       409:
+ *         $ref: "#/components/responses/ConflictError"
  */
 router.post(
   "/create",
   adminCrudLimiter,
-  checkAuth(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.INSTRUCTOR),
+  checkAuth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
   multerUpload.array("files", 10),
   validateRequest(createWorkshopZodSchema),
   WorkshopController.createWorkshop,
@@ -423,11 +470,19 @@ router.post(
  *         $ref: "#/components/responses/BadRequestError"
  *       401:
  *         $ref: "#/components/responses/UnauthorizedError"
+ *       429:
+ *         $ref: "#/components/responses/TooManyRequestsError"
+ *       500:
+ *         $ref: "#/components/responses/InternalServerError"
+ *       403:
+ *         $ref: "#/components/responses/ForbiddenError"
+ *       404:
+ *         $ref: "#/components/responses/NotFoundError"
  */
 router.patch(
   "/:id",
   adminCrudLimiter,
-  checkAuth(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.INSTRUCTOR),
+  checkAuth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
   multerUpload.array("files"),
   validateRequest(updateWorkshopZodSchema),
   WorkshopController.updateWorkshop,
@@ -458,11 +513,17 @@ router.patch(
  *         $ref: "#/components/responses/UnauthorizedError"
  *       404:
  *         $ref: "#/components/responses/NotFoundError"
+ *       429:
+ *         $ref: "#/components/responses/TooManyRequestsError"
+ *       500:
+ *         $ref: "#/components/responses/InternalServerError"
+ *       403:
+ *         $ref: "#/components/responses/ForbiddenError"
  */
 router.delete(
   "/:id",
   adminCrudLimiter,
-  checkAuth(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.INSTRUCTOR),
+  checkAuth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
   WorkshopController.deleteWorkshop,
 );
 

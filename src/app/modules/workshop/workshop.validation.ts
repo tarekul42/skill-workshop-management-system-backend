@@ -4,6 +4,10 @@ const createLevelZodSchema = z.object({
   name: z.string().min(1, { message: "Level name is required" }),
 });
 
+const updateLevelZodSchema = z.object({
+  name: z.string().min(1, { message: "Level name cannot be empty" }).optional(),
+});
+
 const createWorkshopZodSchema = z.object({
   title: z.string().min(1, { message: "Title is required" }),
   description: z
@@ -97,6 +101,7 @@ const updateWorkshopZodSchema = z.object({
 
 export {
   createLevelZodSchema,
+  updateLevelZodSchema,
   createWorkshopZodSchema,
   updateWorkshopZodSchema,
 };

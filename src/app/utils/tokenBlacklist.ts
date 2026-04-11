@@ -35,7 +35,7 @@ export const invalidateToken = async (token: string, secret: string) => {
     }
   } catch (_error) {
     // If token is already invalid/expired, we don't need to do anything
-    logger.error(_error);
+    logger.debug(_error, "Token already invalid/expired, skipping blacklist");
     return;
   }
 };
@@ -47,7 +47,12 @@ export const invalidateToken = async (token: string, secret: string) => {
  * @returns True if blacklisted, false otherwise.
  */
 export const isTokenBlacklisted = async (token: string) => {
-  const tokenHash = getTokenHash(token);
-  const result = await redisClient.get(`blacklist:${tokenHash}`);
-  return !!result;
+  try {
+    const tokenHash = getTokenHash(token);
+    const result = await redisClient.get(`blacklist:${tokenHash}`);
+    return !!result;
+  } catch (error) {
+    logger.error({ msg: "Redis unavailable for token blacklist check — failing open", err: error });
+    return false;
+  }
 };
