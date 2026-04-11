@@ -1,5 +1,5 @@
 import type { NextFunction, Request, Response } from "express";
-import { rateLimit } from "express-rate-limit";
+import { ipKeyGenerator, rateLimit } from "express-rate-limit";
 import { RedisStore } from "rate-limit-redis";
 import { redisClient } from "../config/redis.config";
 
@@ -19,7 +19,7 @@ const createLimiter = (
   return rateLimit({
     standardHeaders: true,
     legacyHeaders: false,
-    keyGenerator: (req: Request) => `${req.ip}:${req.path}`,
+    keyGenerator: (req: Request) => `${ipKeyGenerator(req.ip || "")}:${req.path}`,
     store: new RedisStore({
       sendCommand: async (...args: string[]) => {
         if (!redisClient.isOpen) {

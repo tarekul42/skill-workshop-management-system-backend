@@ -27,7 +27,60 @@ const router = express.Router();
  *         content:
  *           application/json:
  *             schema:
- *               $ref: "#/components/schemas/BaseResponse"
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     totalEnrollment:
+ *                       type: integer
+ *                     totalEnrollmentByStatus:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           _id:
+ *                             type: string
+ *                             enum: [PENDING, CANCEL, COMPLETE, FAILED]
+ *                           count:
+ *                             type: integer
+ *                     enrollmentsPerWorkshop:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           _id:
+ *                             type: string
+ *                           enrollmentCount:
+ *                             type: integer
+ *                           workshop:
+ *                             type: object
+ *                             properties:
+ *                               title:
+ *                                 type: string
+ *                               slug:
+ *                                 type: string
+ *                     avgGuestCountPerEnrollment:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           _id:
+ *                             type: string
+ *                             nullable: true
+ *                           avgStudentCount:
+ *                             type: number
+ *                     enrollmentsLastSevenDays:
+ *                       type: integer
+ *                     enrollmentsLastThirtyDays:
+ *                       type: integer
+ *                     totalEnrollmentByUniqueUsers:
+ *                       type: integer
  *       401:
  *         $ref: "#/components/responses/UnauthorizedError"
  *       403:
@@ -54,7 +107,57 @@ router.get(
  *         content:
  *           application/json:
  *             schema:
- *               $ref: "#/components/schemas/BaseResponse"
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     totalPayment:
+ *                       type: integer
+ *                     totalPaymentByStatus:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           _id:
+ *                             type: string
+ *                             enum: [PAID, UNPAID, CANCELLED, FAILED, REFUNDED]
+ *                           count:
+ *                             type: integer
+ *                     totalRevenue:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           _id:
+ *                             type: string
+ *                             nullable: true
+ *                           totalRevenue:
+ *                             type: number
+ *                     avgPaymentAmount:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           _id:
+ *                             type: string
+ *                             nullable: true
+ *                           avgPaymentAmount:
+ *                             type: number
+ *                     paymentGatewayData:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           _id:
+ *                             type: string
+ *                           count:
+ *                             type: integer
  *       401:
  *         $ref: "#/components/responses/UnauthorizedError"
  *       403:
@@ -81,7 +184,38 @@ router.get(
  *         content:
  *           application/json:
  *             schema:
- *               $ref: "#/components/schemas/BaseResponse"
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     totalUsers:
+ *                       type: integer
+ *                     totalActiveUsers:
+ *                       type: integer
+ *                     totalInActiveUsers:
+ *                       type: integer
+ *                     totalBlockedUsers:
+ *                       type: integer
+ *                     newUsersInLastSevenDays:
+ *                       type: integer
+ *                     newUsersInLastThirtyDays:
+ *                       type: integer
+ *                     usersByRole:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           _id:
+ *                             type: string
+ *                             enum: [SUPER_ADMIN, ADMIN, INSTRUCTOR, STUDENT]
+ *                           count:
+ *                             type: integer
  *       401:
  *         $ref: "#/components/responses/UnauthorizedError"
  *       403:
@@ -108,7 +242,62 @@ router.get(
  *         content:
  *           application/json:
  *             schema:
- *               $ref: "#/components/schemas/BaseResponse"
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     totalWorkshop:
+ *                       type: integer
+ *                     totalWorkshopByLevel:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           _id:
+ *                             type: string
+ *                           count:
+ *                             type: integer
+ *                     avgWorkshopPrice:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           _id:
+ *                             type: string
+ *                             nullable: true
+ *                           avgPrice:
+ *                             type: number
+ *                     totalWorkshopByCategory:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           _id:
+ *                             type: string
+ *                           count:
+ *                             type: integer
+ *                     totalHighestEnrolledWorkshop:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           _id:
+ *                             type: string
+ *                           enrollmentCount:
+ *                             type: integer
+ *                           workshop:
+ *                             type: object
+ *                             properties:
+ *                               title:
+ *                                 type: string
+ *                               slug:
+ *                                 type: string
  *       401:
  *         $ref: "#/components/responses/UnauthorizedError"
  *       403:

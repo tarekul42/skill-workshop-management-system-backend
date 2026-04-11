@@ -1,96 +1,156 @@
 {
   "info": {
-    "name": "Skill Workshop Management System API - V2 Complete",
+    "_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "name": "Skill Workshop Management System API",
+    "description": "Complete API collection for the Skill Workshop Management System backend. Covers Auth, User, Category, Workshop (Levels), Enrollment, Payment, OTP, Stats, Audit, and Health endpoints.\n\n## Quick Start\n1. Set `base_url` to your local server (default: http://localhost:5000/api/v1)\n2. Run the \"0. Setup - Get CSRF Token\" request first\n3. Run \"1. Auth / Login\" to get access tokens (auto-saved)\n4. All protected endpoints use `{{admin_access_token}}` or `{{user_access_token}`\n\n## Variables\n- `base_url` — API base URL\n- `admin_email` / `admin_password` — Admin credentials\n- `user_email` / `user_password` — Regular user credentials\n- `admin_access_token` / `user_access_token` — Auto-populated after login\n- `csrf_token` — Auto-populated from setup",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
     {
       "key": "base_url",
-      "value": "http://localhost:5000/api/v1"
+      "value": "http://localhost:5000/api/v1",
+      "type": "string"
     },
     {
       "key": "admin_email",
-      "value": "superadmin@email.com"
+      "value": "admin@example.com",
+      "type": "string"
     },
     {
       "key": "admin_password",
-      "value": "Super10@email"
+      "value": "Admin@123",
+      "type": "string"
     },
     {
       "key": "user_email",
-      "value": "onekportehobe24@gmail.com"
+      "value": "student@example.com",
+      "type": "string"
     },
     {
       "key": "user_password",
-      "value": "Onek24@porte"
+      "value": "Student@123",
+      "type": "string"
     },
     {
       "key": "admin_access_token",
-      "value": ""
+      "value": "",
+      "type": "string"
     },
     {
       "key": "user_access_token",
-      "value": ""
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "csrf_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "category_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "level_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "workshop_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "enrollment_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "payment_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "user_id",
+      "value": "",
+      "type": "string"
     }
   ],
   "item": [
     {
-      "name": "Audit",
+      "name": "0. Setup",
+      "description": "Initial setup requests — get CSRF token required for state-changing operations.",
       "item": [
         {
-          "name": "GET /",
+          "name": "Get CSRF Token",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "{{admin_access_token}}"
-              }
-            ],
+            "header": [],
             "url": {
-              "raw": "{{base_url}}/audit",
-              "host": ["{{base_url}}"],
-              "path": ["audit"]
+              "raw": "{{base_url}}/csrf-token",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "csrf-token"
+              ]
+            },
+            "description": "Fetches a CSRF token from the server. Required for POST/PUT/PATCH/DELETE requests."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.csrfToken) {",
+                  "    pm.collectionVariables.set('csrf_token', jsonData.csrfToken);",
+                  "    console.log('CSRF Token saved:', jsonData.csrfToken);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
             }
-          }
+          ]
         },
         {
-          "name": "GET /:id",
+          "name": "Health Check",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "{{admin_access_token}}"
-              }
-            ],
+            "header": [],
             "url": {
-              "raw": "{{base_url}}/audit/:id",
-              "host": ["{{base_url}}"],
-              "path": ["audit", ":id"]
-            }
+              "raw": "{{base_url}}/health/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "health"
+              ]
+            },
+            "description": "Root health endpoint — confirms the backend is running."
           }
         }
       ]
     },
     {
-      "name": "Auth",
+      "name": "1. Auth",
+      "description": "Authentication endpoints: login, logout, refresh token, change password, forgot/reset password, and Google OAuth.",
       "item": [
         {
-          "name": "POST /login",
+          "name": "POST /login (Admin)",
           "request": {
             "method": "POST",
             "header": [
               {
-                "key": "Authorization",
-                "value": "{{admin_access_token}}"
+                "key": "x-csrf-token",
+                "value": "{{csrf_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
               }
             ],
-            "url": {
-              "raw": "{{base_url}}/auth/login",
-              "host": ["{{base_url}}"],
-              "path": ["auth", "login"]
-            },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"{{admin_email}}\",\n  \"password\": \"{{admin_password}}\"\n}",
@@ -99,7 +159,18 @@
                   "language": "json"
                 }
               }
-            }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Login with email and password. Returns accessToken, refreshToken (in cookie), and user data.\n\nThe accessToken is auto-saved as `admin_access_token`.\n\nPassword rules: min 6 chars, 1 uppercase, 1 number, 1 special character."
           },
           "event": [
             {
@@ -107,8 +178,66 @@
               "script": {
                 "exec": [
                   "var jsonData = pm.response.json();",
-                  "if(jsonData.data && jsonData.data.accessToken) {",
-                  "    pm.collectionVariables.set(\"admin_access_token\", jsonData.data.accessToken);",
+                  "pm.test('Login successful', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "if (jsonData.data && jsonData.data.accessToken) {",
+                  "    pm.collectionVariables.set('admin_access_token', 'Bearer ' + jsonData.data.accessToken);",
+                  "    console.log('Admin access token saved');",
+                  "}",
+                  "if (jsonData.data && jsonData.data.user && jsonData.data.user._id) {",
+                  "    pm.collectionVariables.set('user_id', jsonData.data.user._id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /login (Student)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-csrf-token",
+                "value": "{{csrf_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{user_email}}\",\n  \"password\": \"{{user_password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Login as a regular student user. Token is auto-saved as `user_access_token`."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.data && jsonData.data.accessToken) {",
+                  "    pm.collectionVariables.set('user_access_token', 'Bearer ' + jsonData.data.accessToken);",
+                  "    console.log('User access token saved');",
                   "}"
                 ],
                 "type": "text/javascript"
@@ -122,15 +251,10 @@
             "method": "POST",
             "header": [
               {
-                "key": "Authorization",
-                "value": "{{admin_access_token}}"
+                "key": "x-csrf-token",
+                "value": "{{csrf_token}}"
               }
             ],
-            "url": {
-              "raw": "{{base_url}}/auth/refresh-token",
-              "host": ["{{base_url}}"],
-              "path": ["auth", "refresh-token"]
-            },
             "body": {
               "mode": "raw",
               "raw": "{}",
@@ -139,8 +263,34 @@
                   "language": "json"
                 }
               }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/refresh-token",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "refresh-token"
+              ]
+            },
+            "description": "Refresh the access token using the refresh token stored in cookies. No body required — the refresh token is sent automatically via cookies."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.data && jsonData.data.accessToken) {",
+                  "    pm.collectionVariables.set('admin_access_token', 'Bearer ' + jsonData.data.accessToken);",
+                  "    console.log('Token refreshed');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
             }
-          }
+          ]
         },
         {
           "name": "POST /logout",
@@ -150,13 +300,12 @@
               {
                 "key": "Authorization",
                 "value": "{{admin_access_token}}"
+              },
+              {
+                "key": "x-csrf-token",
+                "value": "{{csrf_token}}"
               }
             ],
-            "url": {
-              "raw": "{{base_url}}/auth/logout",
-              "host": ["{{base_url}}"],
-              "path": ["auth", "logout"]
-            },
             "body": {
               "mode": "raw",
               "raw": "{}",
@@ -165,7 +314,18 @@
                   "language": "json"
                 }
               }
-            }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/logout",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "logout"
+              ]
+            },
+            "description": "Logout the current user. Blacklists the refresh token and clears cookies."
           }
         },
         {
@@ -176,22 +336,36 @@
               {
                 "key": "Authorization",
                 "value": "{{admin_access_token}}"
+              },
+              {
+                "key": "x-csrf-token",
+                "value": "{{csrf_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
               }
             ],
-            "url": {
-              "raw": "{{base_url}}/auth/change-password",
-              "host": ["{{base_url}}"],
-              "path": ["auth", "change-password"]
-            },
             "body": {
               "mode": "raw",
-              "raw": "{}",
+              "raw": "{\n  \"oldPassword\": \"Admin@123\",\n  \"newPassword\": \"NewAdmin@456\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
                 }
               }
-            }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/change-password",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "change-password"
+              ]
+            },
+            "description": "Change the authenticated user's password. Requires both old and new password.\n\nNew password rules: min 6 chars, 1 uppercase, 1 number, 1 special character.\n\n**Role**: Any authenticated user (SUPER_ADMIN, ADMIN, INSTRUCTOR, STUDENT)"
           }
         },
         {
@@ -202,22 +376,36 @@
               {
                 "key": "Authorization",
                 "value": "{{admin_access_token}}"
+              },
+              {
+                "key": "x-csrf-token",
+                "value": "{{csrf_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
               }
             ],
-            "url": {
-              "raw": "{{base_url}}/auth/set-password",
-              "host": ["{{base_url}}"],
-              "path": ["auth", "set-password"]
-            },
             "body": {
               "mode": "raw",
-              "raw": "{}",
+              "raw": "{\n  \"password\": \"MyPassword@123\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
                 }
               }
-            }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/set-password",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "set-password"
+              ]
+            },
+            "description": "Set a password for users who registered via Google OAuth (social auth users without a password).\n\nPassword rules: min 6 chars, 1 uppercase, 1 number, 1 special character.\n\n**Role**: Any authenticated user"
           }
         },
         {
@@ -226,24 +414,34 @@
             "method": "POST",
             "header": [
               {
-                "key": "Authorization",
-                "value": "{{admin_access_token}}"
+                "key": "x-csrf-token",
+                "value": "{{csrf_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
               }
             ],
-            "url": {
-              "raw": "{{base_url}}/auth/forgot-password",
-              "host": ["{{base_url}}"],
-              "path": ["auth", "forgot-password"]
-            },
             "body": {
               "mode": "raw",
-              "raw": "{}",
+              "raw": "{\n  \"email\": \"{{admin_email}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
                 }
               }
-            }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/forgot-password",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "forgot-password"
+              ]
+            },
+            "description": "Request a password reset email. Sends a reset token to the user's email address.\n\nNo authentication required."
           }
         },
         {
@@ -252,721 +450,92 @@
             "method": "POST",
             "header": [
               {
-                "key": "Authorization",
-                "value": "{{admin_access_token}}"
+                "key": "x-csrf-token",
+                "value": "{{csrf_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
               }
             ],
-            "url": {
-              "raw": "{{base_url}}/auth/reset-password",
-              "host": ["{{base_url}}"],
-              "path": ["auth", "reset-password"]
-            },
             "body": {
               "mode": "raw",
-              "raw": "{}",
+              "raw": "{\n  \"newPassword\": \"ResetPass@789\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
                 }
               }
-            }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/reset-password?token=YOUR_RESET_TOKEN",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "reset-password"
+              ],
+              "query": [
+                {
+                  "key": "token",
+                  "value": "YOUR_RESET_TOKEN",
+                  "description": "The reset token received via email (provided by checkResetToken middleware)"
+                }
+              ]
+            },
+            "description": "Reset password using a token received from /forgot-password.\n\nThe `token` query parameter is the reset token sent to the user's email.\n\nNo authentication required — the token serves as identification."
           }
         },
         {
           "name": "GET /google",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "{{admin_access_token}}"
-              }
-            ],
+            "header": [],
             "url": {
-              "raw": "{{base_url}}/auth/google",
-              "host": ["{{base_url}}"],
-              "path": ["auth", "google"]
-            }
+              "raw": "{{base_url}}/auth/google?redirect=http://localhost:3000",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "google"
+              ],
+              "query": [
+                {
+                  "key": "redirect",
+                  "value": "http://localhost:3000",
+                  "description": "URL to redirect after successful Google login"
+                }
+              ]
+            },
+            "description": "Initiate Google OAuth login. Redirects to Google's consent screen.\n\n**Note**: This endpoint is designed for browser-based flow. Testing in Postman will return a redirect URL."
           }
         },
         {
           "name": "GET /google/callback",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "{{admin_access_token}}"
-              }
-            ],
+            "header": [],
             "url": {
               "raw": "{{base_url}}/auth/google/callback",
-              "host": ["{{base_url}}"],
-              "path": ["auth", "google", "callback"]
-            }
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "google",
+                "callback"
+              ]
+            },
+            "description": "Google OAuth callback endpoint. Handles the response from Google after authentication.\n\n**Note**: This is typically called by the browser, not directly via Postman."
           }
         }
       ]
     },
     {
-      "name": "Category",
-      "item": [
-        {
-          "name": "POST /create",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "{{admin_access_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/category/create",
-              "host": ["{{base_url}}"],
-              "path": ["category", "create"]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          }
-        },
-        {
-          "name": "GET /",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "{{admin_access_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/category",
-              "host": ["{{base_url}}"],
-              "path": ["category"]
-            }
-          }
-        },
-        {
-          "name": "GET /:slug",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "{{admin_access_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/category/:slug",
-              "host": ["{{base_url}}"],
-              "path": ["category", ":slug"]
-            }
-          }
-        },
-        {
-          "name": "PATCH /:id",
-          "request": {
-            "method": "PATCH",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "{{admin_access_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/category/:id",
-              "host": ["{{base_url}}"],
-              "path": ["category", ":id"]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          }
-        },
-        {
-          "name": "DELETE /:id",
-          "request": {
-            "method": "DELETE",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "{{admin_access_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/category/:id",
-              "host": ["{{base_url}}"],
-              "path": ["category", ":id"]
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "Enrollment",
-      "item": [
-        {
-          "name": "POST /",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "{{admin_access_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/enrollment",
-              "host": ["{{base_url}}"],
-              "path": ["enrollment"]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          }
-        },
-        {
-          "name": "GET /",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "{{admin_access_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/enrollment",
-              "host": ["{{base_url}}"],
-              "path": ["enrollment"]
-            }
-          }
-        },
-        {
-          "name": "GET /my-enrollments",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "{{admin_access_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/enrollment/my-enrollments",
-              "host": ["{{base_url}}"],
-              "path": ["enrollment", "my-enrollments"]
-            }
-          }
-        },
-        {
-          "name": "GET /:enrollmentId",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "{{admin_access_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/enrollment/:enrollmentId",
-              "host": ["{{base_url}}"],
-              "path": ["enrollment", ":enrollmentId"]
-            }
-          }
-        },
-        {
-          "name": "PATCH /:enrollmentId/status",
-          "request": {
-            "method": "PATCH",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "{{admin_access_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/enrollment/:enrollmentId/status",
-              "host": ["{{base_url}}"],
-              "path": ["enrollment", ":enrollmentId", "status"]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          }
-        },
-        {
-          "name": "DELETE /:enrollmentId",
-          "request": {
-            "method": "DELETE",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "{{admin_access_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/enrollment/:enrollmentId",
-              "host": ["{{base_url}}"],
-              "path": ["enrollment", ":enrollmentId"]
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "Health",
-      "item": [
-        {
-          "name": "GET /",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "{{admin_access_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/health",
-              "host": ["{{base_url}}"],
-              "path": ["health"]
-            }
-          }
-        },
-        {
-          "name": "GET /ping",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "{{admin_access_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/health/ping",
-              "host": ["{{base_url}}"],
-              "path": ["health", "ping"]
-            }
-          }
-        },
-        {
-          "name": "GET /check-version",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "{{admin_access_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/health/check-version",
-              "host": ["{{base_url}}"],
-              "path": ["health", "check-version"]
-            }
-          }
-        },
-        {
-          "name": "GET /health-check",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "{{admin_access_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/health/health-check",
-              "host": ["{{base_url}}"],
-              "path": ["health", "health-check"]
-            }
-          }
-        },
-        {
-          "name": "GET /dashboard",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "{{admin_access_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/health/dashboard",
-              "host": ["{{base_url}}"],
-              "path": ["health", "dashboard"]
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "Otp",
-      "item": [
-        {
-          "name": "POST /send",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "{{admin_access_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/otp/send",
-              "host": ["{{base_url}}"],
-              "path": ["otp", "send"]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          }
-        },
-        {
-          "name": "POST /verify",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "{{admin_access_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/otp/verify",
-              "host": ["{{base_url}}"],
-              "path": ["otp", "verify"]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "Payment",
-      "item": [
-        {
-          "name": "POST /init-payment/:enrollmentId",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "{{admin_access_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/payment/init-payment/:enrollmentId",
-              "host": ["{{base_url}}"],
-              "path": ["payment", "init-payment", ":enrollmentId"]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          }
-        },
-        {
-          "name": "POST /success",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "{{admin_access_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/payment/success",
-              "host": ["{{base_url}}"],
-              "path": ["payment", "success"]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          }
-        },
-        {
-          "name": "POST /fail",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "{{admin_access_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/payment/fail",
-              "host": ["{{base_url}}"],
-              "path": ["payment", "fail"]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          }
-        },
-        {
-          "name": "POST /cancel",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "{{admin_access_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/payment/cancel",
-              "host": ["{{base_url}}"],
-              "path": ["payment", "cancel"]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          }
-        },
-        {
-          "name": "GET /invoice/:paymentId",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "{{admin_access_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/payment/invoice/:paymentId",
-              "host": ["{{base_url}}"],
-              "path": ["payment", "invoice", ":paymentId"]
-            }
-          }
-        },
-        {
-          "name": "POST /validate-payment",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "{{admin_access_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/payment/validate-payment",
-              "host": ["{{base_url}}"],
-              "path": ["payment", "validate-payment"]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          }
-        },
-        {
-          "name": "POST /ipn",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "{{admin_access_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/payment/ipn",
-              "host": ["{{base_url}}"],
-              "path": ["payment", "ipn"]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          }
-        },
-        {
-          "name": "POST /refund",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "{{admin_access_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/payment/refund",
-              "host": ["{{base_url}}"],
-              "path": ["payment", "refund"]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "Stats",
-      "item": [
-        {
-          "name": "GET /enrollment",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "{{admin_access_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/stats/enrollment",
-              "host": ["{{base_url}}"],
-              "path": ["stats", "enrollment"]
-            }
-          }
-        },
-        {
-          "name": "GET /payment",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "{{admin_access_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/stats/payment",
-              "host": ["{{base_url}}"],
-              "path": ["stats", "payment"]
-            }
-          }
-        },
-        {
-          "name": "GET /users",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "{{admin_access_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/stats/users",
-              "host": ["{{base_url}}"],
-              "path": ["stats", "users"]
-            }
-          }
-        },
-        {
-          "name": "GET /workshops",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "{{admin_access_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/stats/workshops",
-              "host": ["{{base_url}}"],
-              "path": ["stats", "workshops"]
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "User",
+      "name": "2. User",
+      "description": "User management endpoints: registration, profile, listing, updating, and soft-delete.\n\n**Role legend**:\n- ADMIN, SUPER_ADMIN: Full access\n- All roles: Own profile (GET /me, PATCH /:id own resource)",
       "item": [
         {
           "name": "POST /register",
@@ -974,24 +543,34 @@
             "method": "POST",
             "header": [
               {
-                "key": "Authorization",
-                "value": "{{admin_access_token}}"
+                "key": "x-csrf-token",
+                "value": "{{csrf_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
               }
             ],
-            "url": {
-              "raw": "{{base_url}}/user/register",
-              "host": ["{{base_url}}"],
-              "path": ["user", "register"]
-            },
             "body": {
               "mode": "raw",
-              "raw": "{}",
+              "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"JohnDoe@123\",\n  \"phone\": \"01712345678\",\n  \"age\": 25,\n  \"address\": \"123 Main St, Dhaka\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
                 }
               }
-            }
+            },
+            "url": {
+              "raw": "{{base_url}}/user/register",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "user",
+                "register"
+              ]
+            },
+            "description": "Register a new user. No authentication required.\n\n**Required fields**: name (2-50 chars), email, password\n\n**Password rules**: min 6 chars, 1 uppercase, 1 number, 1 special char (!@#$%^&*)\n\n**Phone**: Must be valid Bangladesh format: +8801XXXXXXXXX or 01XXXXXXXXX\n\n**Default role**: STUDENT"
           }
         },
         {
@@ -1006,9 +585,15 @@
             ],
             "url": {
               "raw": "{{base_url}}/user/me",
-              "host": ["{{base_url}}"],
-              "path": ["user", "me"]
-            }
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "user",
+                "me"
+              ]
+            },
+            "description": "Get the current authenticated user's profile.\n\n**Role**: Any authenticated user (SUPER_ADMIN, ADMIN, INSTRUCTOR, STUDENT)"
           }
         },
         {
@@ -1022,10 +607,33 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/user/all-users",
-              "host": ["{{base_url}}"],
-              "path": ["user", "all-users"]
-            }
+              "raw": "{{base_url}}/user/all-users?page=1&limit=10&searchTerm=john",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "user",
+                "all-users"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number for pagination"
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Items per page"
+                },
+                {
+                  "key": "searchTerm",
+                  "value": "john",
+                  "description": "Search by name, email, or address"
+                }
+              ]
+            },
+            "description": "Get all users with pagination and search.\n\n**Role**: ADMIN or SUPER_ADMIN only\n\n**Query params**: page, limit, searchTerm"
           }
         },
         {
@@ -1040,35 +648,266 @@
             ],
             "url": {
               "raw": "{{base_url}}/user/:id",
-              "host": ["{{base_url}}"],
-              "path": ["user", ":id"]
-            }
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "user",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{user_id}}"
+                }
+              ]
+            },
+            "description": "Get a single user by ID.\n\n**Role**: ADMIN or SUPER_ADMIN only"
           }
         },
         {
-          "name": "PATCH /:id",
+          "name": "PATCH /:id (Update User)",
           "request": {
             "method": "PATCH",
             "header": [
               {
                 "key": "Authorization",
                 "value": "{{admin_access_token}}"
+              },
+              {
+                "key": "x-csrf-token",
+                "value": "{{csrf_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
               }
             ],
-            "url": {
-              "raw": "{{base_url}}/user/:id",
-              "host": ["{{base_url}}"],
-              "path": ["user", ":id"]
-            },
             "body": {
               "mode": "raw",
-              "raw": "{}",
+              "raw": "{\n  \"name\": \"John Updated\",\n  \"phone\": \"01812345678\",\n  \"age\": 26,\n  \"address\": \"456 New St, Chittagong\",\n  \"isActive\": \"ACTIVE\",\n  \"role\": \"STUDENT\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
                 }
               }
+            },
+            "url": {
+              "raw": "{{base_url}}/user/:id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "user",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{user_id}}"
+                }
+              ]
+            },
+            "description": "Update a user by ID.\n\n**Role**: Any authenticated user (can update own profile). ADMIN/SUPER_ADMIN can update anyone.\n\n**Updatable fields**: name, phone, age, address, isActive, isVerified, role, isDeleted, password\n\n**isActive values**: ACTIVE, INACTIVE, BLOCKED\n**role values**: SUPER_ADMIN, ADMIN, INSTRUCTOR, STUDENT"
+          }
+        },
+        {
+          "name": "DELETE /:id (Soft Delete)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{admin_access_token}}"
+              },
+              {
+                "key": "x-csrf-token",
+                "value": "{{csrf_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/user/:id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "user",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{user_id}}"
+                }
+              ]
+            },
+            "description": "Soft-delete a user by ID. The user is marked as deleted but not removed from the database.\n\n**Role**: ADMIN or SUPER_ADMIN only"
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Category",
+      "description": "Category CRUD endpoints. Categories group workshops into topics.\n\n**Role legend**:\n- Create/Update/Delete: ADMIN, SUPER_ADMIN\n- Read: Public (no auth required)",
+      "item": [
+        {
+          "name": "POST /create",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{admin_access_token}}"
+              },
+              {
+                "key": "x-csrf-token",
+                "value": "{{csrf_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "multipart/form-data"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "name",
+                  "value": "Web Development",
+                  "type": "text"
+                },
+                {
+                  "key": "description",
+                  "value": "Learn modern web development technologies including HTML, CSS, JavaScript, React, and Node.js.",
+                  "type": "text"
+                },
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "",
+                  "description": "Category thumbnail image (uploaded to Cloudinary)"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/category/create",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "category",
+                "create"
+              ]
+            },
+            "description": "Create a new category with an optional thumbnail image.\n\n**Role**: ADMIN or SUPER_ADMIN\n\n**Content-Type**: multipart/form-data\n\n**Fields**: name (required), description (optional), file (optional — thumbnail image)"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.data && jsonData.data._id) {",
+                  "    pm.collectionVariables.set('category_id', jsonData.data._id);",
+                  "    console.log('Category ID saved:', jsonData.data._id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
             }
+          ]
+        },
+        {
+          "name": "GET / (All Categories)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/category",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "category"
+              ]
+            },
+            "description": "Get all categories. No authentication required.\n\nReturns all active categories with their thumbnails."
+          }
+        },
+        {
+          "name": "GET /:slug",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/category/web-development",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "category",
+                "web-development"
+              ]
+            },
+            "description": "Get a single category by its slug. No authentication required.\n\nReplace `web-development` with the actual category slug."
+          }
+        },
+        {
+          "name": "PATCH /:id (Update)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{admin_access_token}}"
+              },
+              {
+                "key": "x-csrf-token",
+                "value": "{{csrf_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "multipart/form-data"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "name",
+                  "value": "Web Development Pro",
+                  "type": "text"
+                },
+                {
+                  "key": "description",
+                  "value": "Advanced web development workshops covering full-stack technologies.",
+                  "type": "text"
+                },
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "",
+                  "description": "New thumbnail image (replaces old one)"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/category/:id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "category",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{category_id}}"
+                }
+              ]
+            },
+            "description": "Update a category by ID with optional new thumbnail.\n\n**Role**: ADMIN or SUPER_ADMIN\n\n**Content-Type**: multipart/form-data"
           }
         },
         {
@@ -1079,52 +918,78 @@
               {
                 "key": "Authorization",
                 "value": "{{admin_access_token}}"
+              },
+              {
+                "key": "x-csrf-token",
+                "value": "{{csrf_token}}"
               }
             ],
             "url": {
-              "raw": "{{base_url}}/user/:id",
-              "host": ["{{base_url}}"],
-              "path": ["user", ":id"]
-            }
+              "raw": "{{base_url}}/category/:id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "category",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{category_id}}"
+                }
+              ]
+            },
+            "description": "Soft-delete a category by ID.\n\n**Role**: ADMIN or SUPER_ADMIN"
           }
         }
       ]
     },
     {
-      "name": "Workshop",
+      "name": "4. Workshop - Levels",
+      "description": "Workshop level management (e.g., Beginner, Intermediate, Advanced).\n\n**Role**: Create/Update/Delete requires ADMIN or SUPER_ADMIN. Read is public.",
       "item": [
         {
-          "name": "GET /levels",
+          "name": "GET /levels (All)",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "{{admin_access_token}}"
-              }
-            ],
+            "header": [],
             "url": {
               "raw": "{{base_url}}/workshop/levels",
-              "host": ["{{base_url}}"],
-              "path": ["workshop", "levels"]
-            }
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "workshop",
+                "levels"
+              ]
+            },
+            "description": "Get all workshop levels. No authentication required."
           }
         },
         {
           "name": "GET /levels/:id",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "{{admin_access_token}}"
-              }
-            ],
+            "header": [],
             "url": {
               "raw": "{{base_url}}/workshop/levels/:id",
-              "host": ["{{base_url}}"],
-              "path": ["workshop", "levels", ":id"]
-            }
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "workshop",
+                "levels",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{level_id}}"
+                }
+              ]
+            },
+            "description": "Get a single level by ID. No authentication required."
           }
         },
         {
@@ -1135,23 +1000,52 @@
               {
                 "key": "Authorization",
                 "value": "{{admin_access_token}}"
+              },
+              {
+                "key": "x-csrf-token",
+                "value": "{{csrf_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
               }
             ],
-            "url": {
-              "raw": "{{base_url}}/workshop/create-level",
-              "host": ["{{base_url}}"],
-              "path": ["workshop", "create-level"]
-            },
             "body": {
               "mode": "raw",
-              "raw": "{}",
+              "raw": "{\n  \"name\": \"Intermediate\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
                 }
               }
+            },
+            "url": {
+              "raw": "{{base_url}}/workshop/create-level",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "workshop",
+                "create-level"
+              ]
+            },
+            "description": "Create a new workshop level.\n\n**Role**: ADMIN or SUPER_ADMIN\n\n**Example values**: Beginner, Intermediate, Advanced"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.data && jsonData.data._id) {",
+                  "    pm.collectionVariables.set('level_id', jsonData.data._id);",
+                  "    console.log('Level ID saved:', jsonData.data._id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
             }
-          }
+          ]
         },
         {
           "name": "PATCH /levels/:id",
@@ -1161,22 +1055,43 @@
               {
                 "key": "Authorization",
                 "value": "{{admin_access_token}}"
+              },
+              {
+                "key": "x-csrf-token",
+                "value": "{{csrf_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
               }
             ],
-            "url": {
-              "raw": "{{base_url}}/workshop/levels/:id",
-              "host": ["{{base_url}}"],
-              "path": ["workshop", "levels", ":id"]
-            },
             "body": {
               "mode": "raw",
-              "raw": "{}",
+              "raw": "{\n  \"name\": \"Advanced\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
                 }
               }
-            }
+            },
+            "url": {
+              "raw": "{{base_url}}/workshop/levels/:id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "workshop",
+                "levels",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{level_id}}"
+                }
+              ]
+            },
+            "description": "Update a level by ID.\n\n**Role**: ADMIN or SUPER_ADMIN"
           }
         },
         {
@@ -1187,47 +1102,88 @@
               {
                 "key": "Authorization",
                 "value": "{{admin_access_token}}"
+              },
+              {
+                "key": "x-csrf-token",
+                "value": "{{csrf_token}}"
               }
             ],
             "url": {
               "raw": "{{base_url}}/workshop/levels/:id",
-              "host": ["{{base_url}}"],
-              "path": ["workshop", "levels", ":id"]
-            }
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "workshop",
+                "levels",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{level_id}}"
+                }
+              ]
+            },
+            "description": "Delete a level by ID.\n\n**Role**: ADMIN or SUPER_ADMIN"
           }
-        },
+        }
+      ]
+    },
+    {
+      "name": "5. Workshop",
+      "description": "Workshop CRUD endpoints. Workshops are the core entity — they belong to a category and have a level.\n\n**Role**: Create/Update/Delete requires ADMIN, SUPER_ADMIN, or INSTRUCTOR. Read is public.",
+      "item": [
         {
-          "name": "GET /",
+          "name": "GET / (All Workshops)",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "{{admin_access_token}}"
-              }
-            ],
+            "header": [],
             "url": {
-              "raw": "{{base_url}}/workshop",
-              "host": ["{{base_url}}"],
-              "path": ["workshop"]
-            }
+              "raw": "{{base_url}}/workshop?page=1&limit=10&searchTerm=react",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "workshop"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number"
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Items per page"
+                },
+                {
+                  "key": "searchTerm",
+                  "value": "react",
+                  "description": "Search in workshop title"
+                }
+              ]
+            },
+            "description": "Get all workshops with pagination and search. No authentication required."
           }
         },
         {
           "name": "GET /:slug",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "{{admin_access_token}}"
-              }
-            ],
+            "header": [],
             "url": {
-              "raw": "{{base_url}}/workshop/:slug",
-              "host": ["{{base_url}}"],
-              "path": ["workshop", ":slug"]
-            }
+              "raw": "{{base_url}}/workshop/react-fundamentals",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "workshop",
+                "react-fundamentals"
+              ]
+            },
+            "description": "Get a single workshop by its slug. No authentication required."
           }
         },
         {
@@ -1238,48 +1194,161 @@
               {
                 "key": "Authorization",
                 "value": "{{admin_access_token}}"
+              },
+              {
+                "key": "x-csrf-token",
+                "value": "{{csrf_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "multipart/form-data"
               }
             ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "title",
+                  "value": "React Fundamentals Workshop",
+                  "type": "text"
+                },
+                {
+                  "key": "description",
+                  "value": "A comprehensive workshop covering React.js fundamentals including components, hooks, state management, and routing. Perfect for beginners who want to build modern web applications.",
+                  "type": "text"
+                },
+                {
+                  "key": "location",
+                  "value": "Dhaka, Bangladesh",
+                  "type": "text"
+                },
+                {
+                  "key": "price",
+                  "value": "2500",
+                  "type": "text"
+                },
+                {
+                  "key": "startDate",
+                  "value": "2026-05-01",
+                  "type": "text"
+                },
+                {
+                  "key": "endDate",
+                  "value": "2026-05-15",
+                  "type": "text"
+                },
+                {
+                  "key": "level",
+                  "value": "{{level_id}}",
+                  "type": "text"
+                },
+                {
+                  "key": "maxSeats",
+                  "value": "30",
+                  "type": "text"
+                },
+                {
+                  "key": "minAge",
+                  "value": "18",
+                  "type": "text"
+                },
+                {
+                  "key": "category",
+                  "value": "{{category_id}}",
+                  "type": "text"
+                },
+                {
+                  "key": "files",
+                  "type": "file",
+                  "src": [],
+                  "description": "Workshop images (up to 10 files, uploaded to Cloudinary)"
+                }
+              ]
+            },
             "url": {
               "raw": "{{base_url}}/workshop/create",
-              "host": ["{{base_url}}"],
-              "path": ["workshop", "create"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "workshop",
+                "create"
+              ]
             },
-            "body": {
-              "mode": "raw",
-              "raw": "{}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
+            "description": "Create a new workshop.\n\n**Role**: ADMIN, SUPER_ADMIN, or INSTRUCTOR\n\n**Content-Type**: multipart/form-data\n\n**Required fields**: title, level, category\n\n**Optional fields**: description (max 5000 chars), location, price, startDate, endDate, whatYouLearn (array, max 20), prerequisites (array, max 20), benefits (array, max 20), syllabus (array, max 50), maxSeats (min 1), minAge, files (up to 10 images)"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.data && jsonData.data._id) {",
+                  "    pm.collectionVariables.set('workshop_id', jsonData.data._id);",
+                  "    console.log('Workshop ID saved:', jsonData.data._id);",
+                  "}"
+                ],
+                "type": "text/javascript"
               }
             }
-          }
+          ]
         },
         {
-          "name": "PATCH /:id",
+          "name": "PATCH /:id (Update)",
           "request": {
             "method": "PATCH",
             "header": [
               {
                 "key": "Authorization",
                 "value": "{{admin_access_token}}"
+              },
+              {
+                "key": "x-csrf-token",
+                "value": "{{csrf_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "multipart/form-data"
               }
             ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "title",
+                  "value": "Advanced React & Next.js Workshop",
+                  "type": "text"
+                },
+                {
+                  "key": "price",
+                  "value": "3500",
+                  "type": "text"
+                },
+                {
+                  "key": "files",
+                  "type": "file",
+                  "src": [],
+                  "description": "New images to add"
+                }
+              ]
+            },
             "url": {
               "raw": "{{base_url}}/workshop/:id",
-              "host": ["{{base_url}}"],
-              "path": ["workshop", ":id"]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{}",
-              "options": {
-                "raw": {
-                  "language": "json"
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "workshop",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{workshop_id}}"
                 }
-              }
-            }
+              ]
+            },
+            "description": "Update a workshop by ID.\n\n**Role**: ADMIN, SUPER_ADMIN, or INSTRUCTOR\n\n**Content-Type**: multipart/form-data\n\n**All fields optional**. Use `deleteImages` (JSON body field) to specify image URLs to remove."
           }
         },
         {
@@ -1290,13 +1359,933 @@
               {
                 "key": "Authorization",
                 "value": "{{admin_access_token}}"
+              },
+              {
+                "key": "x-csrf-token",
+                "value": "{{csrf_token}}"
               }
             ],
             "url": {
               "raw": "{{base_url}}/workshop/:id",
-              "host": ["{{base_url}}"],
-              "path": ["workshop", ":id"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "workshop",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{workshop_id}}"
+                }
+              ]
+            },
+            "description": "Soft-delete a workshop by ID.\n\n**Role**: ADMIN, SUPER_ADMIN, or INSTRUCTOR"
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Enrollment",
+      "description": "Enrollment management. Users enroll in workshops through this module.\n\n**Role legend**:\n- Create enrollment: Any authenticated user\n- View all enrollments: ADMIN, SUPER_ADMIN\n- View/Update/Cancel own: Any authenticated user",
+      "item": [
+        {
+          "name": "POST / (Create Enrollment)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{user_access_token}}"
+              },
+              {
+                "key": "x-csrf-token",
+                "value": "{{csrf_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"workshop\": \"{{workshop_id}}\",\n  \"studentCount\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/enrollment",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "enrollment"
+              ]
+            },
+            "description": "Create a new enrollment for a workshop.\n\n**Role**: Any authenticated user\n\n**Required fields**: workshop (MongoDB ObjectId), studentCount (positive integer)"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.data && jsonData.data._id) {",
+                  "    pm.collectionVariables.set('enrollment_id', jsonData.data._id);",
+                  "    console.log('Enrollment ID saved:', jsonData.data._id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
             }
+          ]
+        },
+        {
+          "name": "GET / (All Enrollments)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/enrollment",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "enrollment"
+              ]
+            },
+            "description": "Get all enrollments. Admin view.\n\n**Role**: ADMIN or SUPER_ADMIN"
+          }
+        },
+        {
+          "name": "GET /my-enrollments",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{user_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/enrollment/my-enrollments",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "enrollment",
+                "my-enrollments"
+              ]
+            },
+            "description": "Get the current user's enrollments.\n\n**Role**: Any authenticated user"
+          }
+        },
+        {
+          "name": "GET /:enrollmentId",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{user_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/enrollment/:enrollmentId",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "enrollment",
+                ":enrollmentId"
+              ],
+              "variable": [
+                {
+                  "key": "enrollmentId",
+                  "value": "{{enrollment_id}}"
+                }
+              ]
+            },
+            "description": "Get a single enrollment by ID.\n\n**Role**: Any authenticated user"
+          }
+        },
+        {
+          "name": "PATCH /:enrollmentId/status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{admin_access_token}}"
+              },
+              {
+                "key": "x-csrf-token",
+                "value": "{{csrf_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"COMPLETE\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/enrollment/:enrollmentId/status",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "enrollment",
+                ":enrollmentId",
+                "status"
+              ],
+              "variable": [
+                {
+                  "key": "enrollmentId",
+                  "value": "{{enrollment_id}}"
+                }
+              ]
+            },
+            "description": "Update enrollment status.\n\n**Role**: Any authenticated user\n\n**Status values**: PENDING, CANCEL, COMPLETE, FAILED"
+          }
+        },
+        {
+          "name": "DELETE /:enrollmentId (Cancel)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{user_access_token}}"
+              },
+              {
+                "key": "x-csrf-token",
+                "value": "{{csrf_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/enrollment/:enrollmentId",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "enrollment",
+                ":enrollmentId"
+              ],
+              "variable": [
+                {
+                  "key": "enrollmentId",
+                  "value": "{{enrollment_id}}"
+                }
+              ]
+            },
+            "description": "Cancel an enrollment.\n\n**Role**: Any authenticated user (can cancel own enrollments)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Payment",
+      "description": "Payment processing via SSLCommerz. Handles payment initialization, callbacks, invoices, and refunds.\n\n**Note**: success/fail/cancel endpoints are called by SSLCommerz — they support both GET and POST.",
+      "item": [
+        {
+          "name": "POST /init-payment/:enrollmentId",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{user_access_token}}"
+              },
+              {
+                "key": "x-csrf-token",
+                "value": "{{csrf_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/payment/init-payment/:enrollmentId",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "payment",
+                "init-payment",
+                ":enrollmentId"
+              ],
+              "variable": [
+                {
+                  "key": "enrollmentId",
+                  "value": "{{enrollment_id}}"
+                }
+              ]
+            },
+            "description": "Initialize payment for an enrollment via SSLCommerz.\n\n**Role**: STUDENT only\n\nReturns a `gatewayUrl` that the frontend should redirect the user to."
+          }
+        },
+        {
+          "name": "GET /success",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/payment/success",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "payment",
+                "success"
+              ]
+            },
+            "description": "Payment success callback — called by SSLCommerz via browser redirect.\n\n**Note**: Also accepts POST for IPN."
+          }
+        },
+        {
+          "name": "POST /success",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/payment/success",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "payment",
+                "success"
+              ]
+            },
+            "description": "Payment success callback via POST (IPN or direct POST from gateway)."
+          }
+        },
+        {
+          "name": "GET /fail",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/payment/fail",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "payment",
+                "fail"
+              ]
+            },
+            "description": "Payment failure callback — called by SSLCommerz via browser redirect.\n\n**Note**: Also accepts POST."
+          }
+        },
+        {
+          "name": "POST /fail",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/payment/fail",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "payment",
+                "fail"
+              ]
+            },
+            "description": "Payment failure callback via POST."
+          }
+        },
+        {
+          "name": "GET /cancel",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/payment/cancel",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "payment",
+                "cancel"
+              ]
+            },
+            "description": "Payment cancellation callback — called by SSLCommerz via browser redirect.\n\n**Note**: Also accepts POST."
+          }
+        },
+        {
+          "name": "POST /cancel",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/payment/cancel",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "payment",
+                "cancel"
+              ]
+            },
+            "description": "Payment cancellation callback via POST."
+          }
+        },
+        {
+          "name": "GET /invoice/:paymentId",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{user_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/payment/invoice/:paymentId",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "payment",
+                "invoice",
+                ":paymentId"
+              ],
+              "variable": [
+                {
+                  "key": "paymentId",
+                  "value": "{{payment_id}}"
+                }
+              ]
+            },
+            "description": "Get the invoice download URL for a completed payment.\n\n**Role**: Any authenticated user"
+          }
+        },
+        {
+          "name": "POST /validate-payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{user_access_token}}"
+              },
+              {
+                "key": "x-csrf-token",
+                "value": "{{csrf_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"val_id\": \"SSL_COMMERZ_VALIDATION_ID\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/payment/validate-payment",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "payment",
+                "validate-payment"
+              ]
+            },
+            "description": "Manually validate a payment using the SSLCommerz `val_id`.\n\n**Role**: Any authenticated user\n\n**Required fields**: val_id"
+          }
+        },
+        {
+          "name": "POST /ipn",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/payment/ipn",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "payment",
+                "ipn"
+              ]
+            },
+            "description": "SSLCommerz Instant Payment Notification (IPN) endpoint.\n\nCalled asynchronously by SSLCommerz to notify about payment status changes. No authentication required — this is a server-to-server call."
+          }
+        },
+        {
+          "name": "POST /refund",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{admin_access_token}}"
+              },
+              {
+                "key": "x-csrf-token",
+                "value": "{{csrf_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"paymentId\": \"{{payment_id}}\",\n  \"reason\": \"Workshop was cancelled by the student\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/payment/refund",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "payment",
+                "refund"
+              ]
+            },
+            "description": "Refund a payment.\n\n**Role**: ADMIN or SUPER_ADMIN only\n\n**Required fields**: paymentId\n**Optional fields**: reason"
+          }
+        }
+      ]
+    },
+    {
+      "name": "8. OTP",
+      "description": "OTP (One-Time Password) verification for email and phone.\n\nNo authentication required for either endpoint.",
+      "item": [
+        {
+          "name": "POST /send",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-csrf-token",
+                "value": "{{csrf_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/otp/send",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "otp",
+                "send"
+              ]
+            },
+            "description": "Send an OTP to the user's email or phone.\n\nNo authentication required.\n\nProvide either `email` or `phone` in the body."
+          }
+        },
+        {
+          "name": "POST /verify",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-csrf-token",
+                "value": "{{csrf_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"otp\": \"123456\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/otp/verify",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "otp",
+                "verify"
+              ]
+            },
+            "description": "Verify an OTP sent to the user's email or phone.\n\n**Required fields**: otp, and either email or phone"
+          }
+        }
+      ]
+    },
+    {
+      "name": "9. Stats",
+      "description": "Admin dashboard statistics. Provides aggregated data for enrollments, payments, users, and workshops.\n\n**Role**: ADMIN or SUPER_ADMIN only for all endpoints.",
+      "item": [
+        {
+          "name": "GET /enrollment",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/stats/enrollment",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "stats",
+                "enrollment"
+              ]
+            },
+            "description": "Get enrollment statistics (counts by status, trends, etc.).\n\n**Role**: ADMIN or SUPER_ADMIN"
+          }
+        },
+        {
+          "name": "GET /payment",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/stats/payment",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "stats",
+                "payment"
+              ]
+            },
+            "description": "Get payment statistics (revenue, transaction counts, etc.).\n\n**Role**: ADMIN or SUPER_ADMIN"
+          }
+        },
+        {
+          "name": "GET /users",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/stats/users",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "stats",
+                "users"
+              ]
+            },
+            "description": "Get user statistics (total users, by role, by status, etc.).\n\n**Role**: ADMIN or SUPER_ADMIN"
+          }
+        },
+        {
+          "name": "GET /workshops",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/stats/workshops",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "stats",
+                "workshops"
+              ]
+            },
+            "description": "Get workshop statistics (total workshops, by category, by level, etc.).\n\n**Role**: ADMIN or SUPER_ADMIN"
+          }
+        }
+      ]
+    },
+    {
+      "name": "10. Audit",
+      "description": "Audit trail endpoints for tracking all CRUD operations in the system.\n\n**Role**: ADMIN or SUPER_ADMIN only for all endpoints.",
+      "item": [
+        {
+          "name": "GET / (Audit Logs)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/audit?page=1&limit=20&collectionName=User&action=CREATE",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "audit"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number (default 1)"
+                },
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "description": "Items per page (default 20)"
+                },
+                {
+                  "key": "collectionName",
+                  "value": "User",
+                  "description": "Filter by collection (e.g., User, Payment, Workshop, Enrollment)"
+                },
+                {
+                  "key": "action",
+                  "value": "CREATE",
+                  "description": "Filter by action: CREATE, UPDATE, DELETE"
+                },
+                {
+                  "key": "performedBy",
+                  "value": "",
+                  "description": "Filter by user ID who performed the action"
+                },
+                {
+                  "key": "documentId",
+                  "value": "",
+                  "description": "Filter by the document ID that was affected"
+                },
+                {
+                  "key": "startDate",
+                  "value": "",
+                  "description": "Start of date range (ISO 8601)"
+                },
+                {
+                  "key": "endDate",
+                  "value": "",
+                  "description": "End of date range (ISO 8601)"
+                }
+              ]
+            },
+            "description": "Get paginated audit logs with optional filters.\n\n**Role**: ADMIN or SUPER_ADMIN\n\n**Available filters**: page, limit, collectionName, action, performedBy, documentId, startDate, endDate"
+          }
+        },
+        {
+          "name": "GET /:id",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/audit/:id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "audit",
+                ":id"
+              ]
+            },
+            "description": "Get a single audit log entry by ID.\n\n**Role**: ADMIN or SUPER_ADMIN"
+          }
+        }
+      ]
+    },
+    {
+      "name": "11. Health",
+      "description": "Health check and monitoring endpoints. Used for monitoring, uptime checks, and deployment verification.\n\nMost endpoints are public. The dashboard endpoint requires admin auth.",
+      "item": [
+        {
+          "name": "GET /",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "health"
+              ]
+            },
+            "description": "Root health endpoint. Returns a welcome message confirming the backend is running.\n\nNo authentication required."
+          }
+        },
+        {
+          "name": "GET /ping",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health/ping",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "health",
+                "ping"
+              ]
+            },
+            "description": "Simple ping endpoint — returns `pong`. Use for uptime monitoring.\n\nNo authentication required."
+          }
+        },
+        {
+          "name": "GET /check-version",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health/check-version",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "health",
+                "check-version"
+              ]
+            },
+            "description": "Returns API version (1.0.0), server timestamp, and running status.\n\nNo authentication required."
+          }
+        },
+        {
+          "name": "GET /health-check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health/health-check",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "health",
+                "health-check"
+              ]
+            },
+            "description": "Returns detailed health status: ok/degraded, timestamp, and process uptime in seconds.\n\nNo authentication required."
+          }
+        },
+        {
+          "name": "GET /dashboard (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/health/dashboard",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "health",
+                "dashboard"
+              ]
+            },
+            "description": "Advanced health dashboard for administrators.\n\n**Role**: ADMIN or SUPER_ADMIN\n\nReturns:\n- Overall status (healthy/degraded)\n- Redis memory usage and connection status\n- MongoDB connection status and latency\n- BullMQ mail queue length (waiting + active + delayed + failed)\n- Response time and uptime"
           }
         }
       ]
