@@ -32,10 +32,26 @@ import { generalLimiter } from "./app/utils/rateLimiter";
 const app = express();
 
 // ──── Security Check ────
-if (envVariables.EXPRESS_SESSION_SECRET.length < 32) {
-  logger.warn({
-    msg: "Warning: EXPRESS_SESSION_SECRET should be at least 32 characters for security.",
-  });
+const requiredSecrets = [
+  { name: "EXPRESS_SESSION_SECRET", value: envVariables.EXPRESS_SESSION_SECRET },
+  { name: "JWT_ACCESS_SECRET", value: envVariables.JWT_ACCESS_SECRET },
+  { name: "JWT_REFRESH_SECRET", value: envVariables.JWT_REFRESH_SECRET },
+  { name: "CSRF_SECRET", value: envVariables.CSRF_SECRET },
+  { name: "RESET_PASSWORD_SECRET", value: envVariables.RESET_PASSWORD_SECRET },
+];
+
+for (const secret of requiredSecrets) {
+  if (secret.value.length < 32 && envVariables.NODE_ENV === "production") {
+    throw new Error(
+      `${secret.name} must be at least 32 characters in production. Current length: ${secret.value.length}`,
+    );
+  }
+  if (secret.value.length < 16 && envVariables.NODE_ENV !== "production") {
+    logger.warn({
+      msg: `${secret.name} should be at least 16 characters.`,
+      currentLength: secret.value.length,
+    });
+  }
 }
 
 // ──── HTTP Request Logger ────
@@ -66,37 +82,47 @@ app.use((req, res, next) => {
 
 // ──── Security Headers ────
 // contentSecurityPolicy is configured to allow swagger-ui-express assets
-app.use(
-  helmet({
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ["'self'"],
-        scriptSrc: [
-          "'self'",
-          "'unsafe-inline'",
-          "'unsafe-eval'",
-          "https://vercel.live",
-          "https://cdnjs.cloudflare.com",
-        ],
-        styleSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com"],
-        imgSrc: ["'self'", "data:", "validator.swagger.io"],
-        connectSrc: [
-          "'self'",
-          "https://vercel.live",
-          "https://cdnjs.cloudflare.com",
-        ],
-        frameSrc: ["'self'", "https://vercel.live"],
+const helmetOptions = envVariables.NODE_ENV === "production"
+  ? {}
+  : {
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          scriptSrc: [
+            "'self'",
+            "'unsafe-inline'",
+            "'unsafe-eval'",
+            "https://vercel.live",
+            "https://cdnjs.cloudflare.com",
+          ],
+          styleSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com"],
+          imgSrc: ["'self'", "data:", "validator.swagger.io"],
+          connectSrc: [
+            "'self'",
+            "https://vercel.live",
+            "https://cdnjs.cloudflare.com",
+          ],
+          frameSrc: ["'self'", "https://vercel.live"],
+        },
       },
-    },
-  }),
-);
+    };
+
+app.use(helmet(helmetOptions));
 
 app.set("trust proxy", 1);
 
 // ──── CORS ────
+const allowedOrigins = envVariables.FRONTEND_URL.split(",").map((s) => s.trim());
+
 app.use(
   cors({
-    origin: envVariables.FRONTEND_URL,
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
   }),
 );
@@ -140,19 +166,19 @@ app.get("/api-docs.json", (_req, res) => {
   res.json(swaggerSpec);
 });
 
-app.use(
-  "/api-docs",
-  swaggerUi.serve,
-  swaggerUi.setup(swaggerSpec, {
-    customCss: ".swagger-ui .topbar { display: none }", // example refinement
-    customCssUrl:
-      "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.11.0/swagger-ui.min.css",
-    customJs: [
-      "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.11.0/swagger-ui-bundle.js",
-      "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.11.0/swagger-ui-standalone-preset.js",
-    ],
-  }),
-);
+if (envVariables.NODE_ENV !== "production") {
+  app.use(
+    "/api-docs",
+    swaggerUi.serve,
+    swaggerUi.setup(swaggerSpec, {
+      customCss: ".swagger-ui .topbar { display: none }",
+    }),
+  );
+} else {
+  app.get("/api-docs", (_req, res) => {
+    res.status(404).json({ message: "API documentation is not available in production" });
+  });
+}
 
 // ──── CSRF Token Endpoint ────
 app.get("/api/v1/csrf-token", (req: Request, res: Response) => {
@@ -195,7 +221,7 @@ app.get("/", (_req: Request, res: Response) => {
 });
 
 // ──── Global Error Handler & 404 ────
-app.use(globalErrorHandler);
 app.use(notFound);
+app.use(globalErrorHandler);
 
 export default app;

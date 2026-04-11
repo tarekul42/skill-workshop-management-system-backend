@@ -192,6 +192,22 @@ export const swaggerOptions = {
             },
           },
         },
+        TooManyRequestsError: {
+          description: "Too Many Requests — rate limit exceeded",
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/ErrorResponse" },
+            },
+          },
+        },
+        ConflictError: {
+          description: "Conflict — resource already exists",
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/ErrorResponse" },
+            },
+          },
+        },
       },
     },
   },

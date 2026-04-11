@@ -76,46 +76,37 @@ router.use(adminCrudLimiter);
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                 data:
- *                   type: array
- *                   items:
- *                     type: object
- *                     properties:
- *                       _id:
- *                         type: string
- *                       action:
- *                         type: string
- *                         enum: [CREATE, UPDATE, DELETE]
- *                       collectionName:
- *                         type: string
- *                       documentId:
- *                         type: string
- *                       performedBy:
- *                         type: string
- *                         nullable: true
- *                       changes:
+ *               allOf:
+ *                 - $ref: "#/components/schemas/BaseResponse"
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       type: array
+ *                       items:
  *                         type: object
- *                         description: Key-value pairs of field changes
- *                       ipAddress:
- *                         type: string
- *                         nullable: true
- *                       userAgent:
- *                         type: string
- *                         nullable: true
- *                       createdAt:
- *                         type: string
- *                         format: date-time
+ *                         properties:
+ *                           _id: { type: string }
+ *                           collectionName: { type: string }
+ *                           documentId: { type: string }
+ *                           action: { type: string, enum: [CREATE, UPDATE, DELETE] }
+ *                           performedBy: { type: string }
+ *                           changes: { type: object }
+ *                           createdAt: { type: string, format: date-time }
+ *                     meta:
+ *                       type: object
+ *                       properties:
+ *                         page: { type: integer }
+ *                         limit: { type: integer }
+ *                         total: { type: integer }
+ *                         totalPages: { type: integer }
  *       401:
  *         $ref: "#/components/responses/UnauthorizedError"
  *       403:
  *         $ref: "#/components/responses/ForbiddenError"
+ *       429:
+ *         $ref: "#/components/responses/TooManyRequestsError"
+ *       500:
+ *         $ref: "#/components/responses/InternalServerError"
  */
 router.get(
   "/",
@@ -145,47 +136,30 @@ router.get(
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                 data:
- *                   type: object
+ *               allOf:
+ *                 - $ref: "#/components/schemas/BaseResponse"
+ *                 - type: object
  *                   properties:
- *                     _id:
- *                       type: string
- *                     action:
- *                       type: string
- *                       enum: [CREATE, UPDATE, DELETE]
- *                     collectionName:
- *                       type: string
- *                     documentId:
- *                       type: string
- *                     performedBy:
- *                       type: string
- *                       nullable: true
- *                     changes:
+ *                     data:
  *                       type: object
- *                     ipAddress:
- *                       type: string
- *                       nullable: true
- *                     userAgent:
- *                       type: string
- *                       nullable: true
- *                     createdAt:
- *                       type: string
- *                       format: date-time
+ *                       properties:
+ *                         _id: { type: string }
+ *                         collectionName: { type: string }
+ *                         documentId: { type: string }
+ *                         action: { type: string, enum: [CREATE, UPDATE, DELETE] }
+ *                         performedBy: { type: string }
+ *                         changes: { type: object }
+ *                         createdAt: { type: string, format: date-time }
  *       401:
  *         $ref: "#/components/responses/UnauthorizedError"
+ *       403:
+ *         $ref: "#/components/responses/ForbiddenError"
  *       404:
- *         description: Audit log not found
- *         content:
- *           application/json:
- *             schema:
- *               $ref: "#/components/schemas/ErrorResponse"
+ *         $ref: "#/components/responses/NotFoundError"
+ *       429:
+ *         $ref: "#/components/responses/TooManyRequestsError"
+ *       500:
+ *         $ref: "#/components/responses/InternalServerError"
  */
 router.get(
   "/:id",

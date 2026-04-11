@@ -42,11 +42,11 @@ const sslPaymentInit = async (payload: ISSLCommerz) => {
     };
 
     // Diagnostic logging for Bug #11 (Environment variable quotes)
-    logger.info({
+    logger.debug({
       msg: "SSL Store ID:",
       storeId: envVariables.SSL.SSL_STORE_ID,
     });
-    logger.info({
+    logger.debug({
       msg: "SSL API URL:",
       apiUrl: envVariables.SSL.SSL_PAYMENT_API,
     });

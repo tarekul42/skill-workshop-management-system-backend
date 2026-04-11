@@ -31,6 +31,10 @@ router.use(healthLimiter);
  *           application/json:
  *             schema:
  *               $ref: "#/components/schemas/BaseResponse"
+ *       429:
+ *         $ref: "#/components/responses/TooManyRequestsError"
+ *       500:
+ *         $ref: "#/components/responses/InternalServerError"
  */
 router.get("/", (_req: Request, res: Response) => {
   res.status(200).json({
@@ -52,6 +56,10 @@ router.get("/", (_req: Request, res: Response) => {
  *           application/json:
  *             schema:
  *               $ref: "#/components/schemas/BaseResponse"
+ *       429:
+ *         $ref: "#/components/responses/TooManyRequestsError"
+ *       500:
+ *         $ref: "#/components/responses/InternalServerError"
  */
 router.get("/ping", (_req, res) => {
   res.json({ message: "pong" });
@@ -71,6 +79,10 @@ router.get("/ping", (_req, res) => {
  *           application/json:
  *             schema:
  *               $ref: "#/components/schemas/BaseResponse"
+ *       429:
+ *         $ref: "#/components/responses/TooManyRequestsError"
+ *       500:
+ *         $ref: "#/components/responses/InternalServerError"
  */
 router.get("/check-version", (_req: Request, res: Response) => {
   res.json({
@@ -94,6 +106,10 @@ router.get("/check-version", (_req: Request, res: Response) => {
  *           application/json:
  *             schema:
  *               $ref: "#/components/schemas/BaseResponse"
+ *       429:
+ *         $ref: "#/components/responses/TooManyRequestsError"
+ *       500:
+ *         $ref: "#/components/responses/InternalServerError"
  */
 router.get("/health-check", (_req: Request, res: Response) => {
   res.status(200).json({
@@ -168,6 +184,10 @@ router.get("/health-check", (_req: Request, res: Response) => {
  *         $ref: "#/components/responses/UnauthorizedError"
  *       403:
  *         $ref: "#/components/responses/ForbiddenError"
+ *       429:
+ *         $ref: "#/components/responses/TooManyRequestsError"
+ *       500:
+ *         $ref: "#/components/responses/InternalServerError"
  */
 router.get("/dashboard", checkAuth(UserRole.ADMIN, UserRole.SUPER_ADMIN), async (_req: Request, res: Response) => {
   const startedAt = Date.now();

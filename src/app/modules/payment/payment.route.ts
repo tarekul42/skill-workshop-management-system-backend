@@ -48,6 +48,10 @@ const router = express.Router();
  *                         gatewayUrl: { type: "string" }
  *       401:
  *         $ref: "#/components/responses/UnauthorizedError"
+ *       429:
+ *         $ref: "#/components/responses/TooManyRequestsError"
+ *       500:
+ *         $ref: "#/components/responses/InternalServerError"
  */
 router.post(
   "/init-payment/:enrollmentId",
@@ -73,6 +77,10 @@ router.post(
  *     responses:
  *       302:
  *         description: Redirects to frontend success page
+ *       429:
+ *         $ref: "#/components/responses/TooManyRequestsError"
+ *       500:
+ *         $ref: "#/components/responses/InternalServerError"
  */
 router
   .route("/success")
@@ -96,6 +104,10 @@ router
  *     responses:
  *       302:
  *         description: Redirects to frontend failure page
+ *       429:
+ *         $ref: "#/components/responses/TooManyRequestsError"
+ *       500:
+ *         $ref: "#/components/responses/InternalServerError"
  */
 router
   .route("/fail")
@@ -119,6 +131,10 @@ router
  *     responses:
  *       302:
  *         description: Redirects to frontend cancellation page
+ *       429:
+ *         $ref: "#/components/responses/TooManyRequestsError"
+ *       500:
+ *         $ref: "#/components/responses/InternalServerError"
  */
 router
   .route("/cancel")
@@ -157,6 +173,10 @@ router
  *         $ref: "#/components/responses/UnauthorizedError"
  *       404:
  *         $ref: "#/components/responses/NotFoundError"
+ *       429:
+ *         $ref: "#/components/responses/TooManyRequestsError"
+ *       500:
+ *         $ref: "#/components/responses/InternalServerError"
  */
 router.get(
   "/invoice/:paymentId",
@@ -195,6 +215,12 @@ router.get(
  *         $ref: "#/components/responses/BadRequestError"
  *       401:
  *         $ref: "#/components/responses/UnauthorizedError"
+ *       403:
+ *         $ref: "#/components/responses/ForbiddenError"
+ *       429:
+ *         $ref: "#/components/responses/TooManyRequestsError"
+ *       500:
+ *         $ref: "#/components/responses/InternalServerError"
  */
 router.post(
   "/validate-payment",
@@ -214,35 +240,30 @@ router.post(
  *     requestBody:
  *       required: true
  *       content:
- *         application/x-www-form-urlencoded:
+ *         application/json:
  *           schema:
  *             type: object
- *             properties:
- *               val_id:
- *                 type: string
- *                 description: SSLCommerz validation ID
- *               tran_id:
- *                 type: string
- *                 description: Transaction ID
- *               status:
- *                 type: string
- *                 description: Transaction status (VALID, VALIDATED, FAILED)
- *               amount:
- *                 type: string
- *                 description: Payment amount
- *               currency:
- *                 type: string
- *                 description: Currency code (BDT)
- *               card_type:
- *                 type: string
- *                 description: Payment card type
- *               store_amount:
- *                 type: string
- *                 description: Amount received by store
  *             required:
  *               - val_id
  *               - tran_id
  *               - status
+ *             properties:
+ *               val_id:
+ *                 type: string
+ *               tran_id:
+ *                 type: string
+ *               status:
+ *                 type: string
+ *                 enum: [VALID, FAILED, CANCELLED]
+ *                 description: Payment status from SSLCommerz
+ *               amount:
+ *                 type: string
+ *               currency:
+ *                 type: string
+ *               card_type:
+ *                 type: string
+ *               store_amount:
+ *                 type: string
  *     responses:
  *       200:
  *         description: IPN processed successfully
@@ -252,6 +273,8 @@ router.post(
  *           application/json:
  *             schema:
  *               $ref: "#/components/schemas/ErrorResponse"
+ *       429:
+ *         $ref: "#/components/responses/TooManyRequestsError"
  *       500:
  *         description: Internal server error while processing IPN
  *         content:
@@ -295,6 +318,12 @@ router.post("/ipn", PaymentController.handleIPN);
  *         $ref: "#/components/responses/UnauthorizedError"
  *       403:
  *         $ref: "#/components/responses/ForbiddenError"
+ *       404:
+ *         $ref: "#/components/responses/NotFoundError"
+ *       429:
+ *         $ref: "#/components/responses/TooManyRequestsError"
+ *       500:
+ *         $ref: "#/components/responses/InternalServerError"
  */
 router.post(
   "/refund",

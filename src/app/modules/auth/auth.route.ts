@@ -8,6 +8,8 @@ import { authLimiter } from "../../utils/rateLimiter";
 import {
   changePasswordZodSchema,
   setPasswordZodSchema,
+  resetPasswordZodSchema,
+  forgotPasswordZodSchema,
 } from "../user/user.validation";
 import { UserRole } from "../user/user.interface";
 import AuthControllers from "./auth.controller";
@@ -64,6 +66,10 @@ const router = Router();
  *                         user: { $ref: "#/components/schemas/User" }
  *       401:
  *         $ref: "#/components/responses/UnauthorizedError"
+ *       429:
+ *         $ref: "#/components/responses/TooManyRequestsError"
+ *       500:
+ *         $ref: "#/components/responses/InternalServerError"
  */
 router.post("/login", authLimiter, AuthControllers.credentialsLogin);
 
@@ -90,6 +96,12 @@ router.post("/login", authLimiter, AuthControllers.credentialsLogin);
  *                         accessToken: { type: "string" }
  *       400:
  *         $ref: "#/components/responses/BadRequestError"
+ *       429:
+ *         $ref: "#/components/responses/TooManyRequestsError"
+ *       500:
+ *         $ref: "#/components/responses/InternalServerError"
+ *       401:
+ *         $ref: "#/components/responses/UnauthorizedError"
  */
 router.post("/refresh-token", authLimiter, AuthControllers.getNewAccessToken);
 
@@ -105,14 +117,11 @@ router.post("/refresh-token", authLimiter, AuthControllers.getNewAccessToken);
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: Logout successful
+ *               $ref: "#/components/schemas/BaseResponse"
+ *       429:
+ *         $ref: "#/components/responses/TooManyRequestsError"
+ *       500:
+ *         $ref: "#/components/responses/InternalServerError"
  */
 router.post("/logout", authLimiter, AuthControllers.logout);
 /**
@@ -148,6 +157,10 @@ router.post("/logout", authLimiter, AuthControllers.logout);
  *         $ref: "#/components/responses/UnauthorizedError"
  *       403:
  *         $ref: "#/components/responses/ForbiddenError"
+ *       429:
+ *         $ref: "#/components/responses/TooManyRequestsError"
+ *       500:
+ *         $ref: "#/components/responses/InternalServerError"
  */
 router.post(
   "/change-password",
@@ -185,6 +198,12 @@ router.post(
  *               $ref: "#/components/schemas/BaseResponse"
  *       401:
  *         $ref: "#/components/responses/UnauthorizedError"
+ *       429:
+ *         $ref: "#/components/responses/TooManyRequestsError"
+ *       500:
+ *         $ref: "#/components/responses/InternalServerError"
+ *       403:
+ *         $ref: "#/components/responses/ForbiddenError"
  */
 router.post(
   "/set-password",
@@ -220,8 +239,17 @@ router.post(
  *               $ref: "#/components/schemas/BaseResponse"
  *       400:
  *         $ref: "#/components/responses/BadRequestError"
+ *       429:
+ *         $ref: "#/components/responses/TooManyRequestsError"
+ *       500:
+ *         $ref: "#/components/responses/InternalServerError"
  */
-router.post("/forgot-password", authLimiter, AuthControllers.forgotPassword);
+router.post(
+  "/forgot-password",
+  authLimiter,
+  validateRequest(forgotPasswordZodSchema),
+  AuthControllers.forgotPassword,
+);
 
 /**
  * @openapi
@@ -252,11 +280,16 @@ router.post("/forgot-password", authLimiter, AuthControllers.forgotPassword);
  *               $ref: "#/components/schemas/BaseResponse"
  *       400:
  *         $ref: "#/components/responses/BadRequestError"
+ *       429:
+ *         $ref: "#/components/responses/TooManyRequestsError"
+ *       500:
+ *         $ref: "#/components/responses/InternalServerError"
  */
 router.post(
   "/reset-password",
   authLimiter,
   checkResetToken,
+  validateRequest(resetPasswordZodSchema),
   AuthControllers.resetPassword,
 );
 
@@ -275,6 +308,10 @@ router.post(
  *     responses:
  *       302:
  *         description: Redirects to Google login page
+ *       429:
+ *         $ref: "#/components/responses/TooManyRequestsError"
+ *       500:
+ *         $ref: "#/components/responses/InternalServerError"
  */
 router.get(
   "/google",
@@ -298,6 +335,10 @@ router.get(
  *     responses:
  *       302:
  *         description: Redirects to the frontend application
+ *       429:
+ *         $ref: "#/components/responses/TooManyRequestsError"
+ *       500:
+ *         $ref: "#/components/responses/InternalServerError"
  */
 router.get(
   "/google/callback",

@@ -82,7 +82,12 @@ const startServer = async () => {
 };
 
 (async () => {
-  await connectRedis();
+  try {
+    await connectRedis();
+  } catch (error) {
+    logger.error({ msg: "Failed to connect to Redis — required for sessions, rate limiting, and auth", err: error });
+    process.exit(1);
+  }
   await startServer();
   await seedSuperAdmin();
 })();

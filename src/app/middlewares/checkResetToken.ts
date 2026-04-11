@@ -30,7 +30,11 @@ const checkResetToken = async (
     }
 
     if (resetToken.startsWith("Bearer ")) {
-      resetToken = resetToken.split(" ")[1];
+      const parts = resetToken.split(" ");
+      if (parts.length !== 2 || !parts[1]) {
+        throw new AppError(StatusCodes.UNAUTHORIZED, "Malformed authorization header");
+      }
+      resetToken = parts[1];
     }
 
     const verifiedToken = verifyToken(

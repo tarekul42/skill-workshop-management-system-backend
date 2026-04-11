@@ -82,9 +82,19 @@ const setPasswordZodSchema = z.object({
   password: passwordZodSchema,
 });
 
+const resetPasswordZodSchema = z.object({
+  newPassword: passwordZodSchema,
+});
+
+const forgotPasswordZodSchema = z.object({
+  email: z.string().email("Valid email is required"),
+});
+
 export {
   createUserZodSchema,
   updateUserZodSchema,
   changePasswordZodSchema,
   setPasswordZodSchema,
+  resetPasswordZodSchema,
+  forgotPasswordZodSchema,
 };

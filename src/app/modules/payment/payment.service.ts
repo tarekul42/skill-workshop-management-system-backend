@@ -11,9 +11,10 @@ import {
 import { ISSLCommerz } from "../sslCommerz/sslCommerz.interface";
 import SSLService from "../sslCommerz/sslCommerz.service";
 import { PAYMENT_STATUS } from "./payment.interface";
+import { UserRole } from "../user/user.interface";
 import PaymentRepository from "./payment.repository";
 
-const initPayment = async (enrollmentId: string) => {
+const initPayment = async (enrollmentId: string, userId: string) => {
   if (!enrollmentId) {
     throw new AppError(StatusCodes.BAD_REQUEST, "Invalid enrollment ID");
   }
@@ -42,6 +43,16 @@ const initPayment = async (enrollmentId: string) => {
 
   const populatedEnrollment = enrollment as unknown as IEnrollmentPopulated;
   const user = populatedEnrollment.user;
+
+  const enrollmentUser = populatedEnrollment.user;
+  if (!enrollmentUser || !enrollmentUser._id) {
+    throw new AppError(StatusCodes.NOT_FOUND, "User associated with enrollment not found");
+  }
+
+  const enrollmentUserId = String(enrollmentUser._id);
+  if (enrollmentUserId !== userId) {
+    throw new AppError(StatusCodes.FORBIDDEN, "You can only initiate payment for your own enrollment");
+  }
 
   if (!user?.address || !user?.phone) {
     throw new AppError(
@@ -223,11 +234,19 @@ const cancelPayment = async (query: Record<string, string>) => {
   }
 };
 
-const getInvoiceDownloadUrl = async (paymentId: string) => {
+const getInvoiceDownloadUrl = async (paymentId: string, userId: string, userRole: string) => {
   const payment = await PaymentRepository.findPaymentById(paymentId);
 
   if (!payment) {
     throw new AppError(StatusCodes.NOT_FOUND, "Payment not found");
+  }
+
+  const isAdmin = userRole === UserRole.ADMIN || userRole === UserRole.SUPER_ADMIN;
+  if (!isAdmin) {
+    const enrollment = await PaymentRepository.findEnrollmentWithUser(String(payment.enrollment));
+    if (!enrollment || String(enrollment.user) !== userId) {
+      throw new AppError(StatusCodes.FORBIDDEN, "You can only access your own invoices");
+    }
   }
 
   if (!payment.invoiceUrl) {

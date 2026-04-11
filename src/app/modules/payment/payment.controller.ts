@@ -14,7 +14,11 @@ const initPayment = catchAsync(async (req: Request, res: Response) => {
     "enrollmentId",
   );
 
-  const result = await PaymentService.initPayment(enrollmentId);
+  const tokenUser = req.user as JwtPayload;
+  const result = await PaymentService.initPayment(
+    enrollmentId,
+    tokenUser.userId,
+  );
 
   sendResponse(res, {
     statusCode: StatusCodes.OK,
@@ -105,7 +109,12 @@ const getInvoiceDownloadUrl = catchAsync(
   async (req: Request, res: Response) => {
     const paymentId = parseStringParam(req.params.paymentId, "paymentId");
 
-    const invoiceUrl = await PaymentService.getInvoiceDownloadUrl(paymentId);
+    const tokenUser = req.user as JwtPayload;
+    const invoiceUrl = await PaymentService.getInvoiceDownloadUrl(
+      paymentId,
+      tokenUser.userId,
+      tokenUser.role,
+    );
 
     sendResponse(res, {
       success: true,

@@ -17,6 +17,17 @@ const transport =
 const logger = pino({
   level: envVariables.NODE_ENV === "development" ? "debug" : "info",
   transport,
+  redact: [
+    "password",
+    "oldPassword",
+    "newPassword",
+    "token",
+    "refreshToken",
+    "resetToken",
+    "cvv",
+    "card_number",
+    "store_passwd",
+  ],
   base: {
     env: envVariables.NODE_ENV,
   },
