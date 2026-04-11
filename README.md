@@ -30,7 +30,7 @@ This repository houses the backend infrastructure for the **Skill Workshop Manag
 - **Soft Deletes**: Data recovery and audit-ready deletion mechanism for core models.
 - **Audit Trail System**: Real-time logging of all write operations (Create, Update, Delete) with entity-level tracking for accountability.
 - **Observability & Metrics**: Integrated Prometheus metrics for real-time monitoring of HTTP traffic, database latency, and background job queues.
-- **CI/CD Pipeline**: Automated GitHub Actions workflows for continuous integration, linting, testing, and security scanning.
+- **CI/CD Pipeline**: Automated GitHub Actions workflows for continuous integration, linting, building, and security scanning (CodeQL).
 
 ---
 
@@ -269,6 +269,7 @@ System metrics are exposed for Prometheus scraping at the `/metrics` endpoint. T
 | GET    | `/health/ping`          | Simple health ping     | Public |
 | GET    | `/health/check-version` | Get API version        | Public |
 | GET    | `/health/health-check`  | Detailed health status | Public |
+| GET    | `/health/dashboard`     | Infrastructure health dashboard (Redis, DB, queue) | Admin  |
 
 ### Audit (`/api/v1/audit`)
 
@@ -281,8 +282,8 @@ System metrics are exposed for Prometheus scraping at the `/metrics` endpoint. T
 
 | Method | Endpoint             | Description                 | Access |
 | ------ | -------------------- | --------------------------- | ------ |
-| GET    | `/metrics`           | Prometheus metrics scraping | Public |
-| GET    | `/api/v1/csrf-token` | Generate new CSRF token     | Public |
+| GET    | `/metrics`           | Prometheus metrics scraping | API Key |
+| GET    | `/api/v1/csrf-token` | Generate new CSRF token     | Public  |
 
 ---
 
@@ -344,69 +345,47 @@ Create a `.env` file with the following variables:
 ```env
 PORT=5000
 NODE_ENV=development
-DATABASE_URL="mongodb+srv://<DB_USERNAME>:<DB_PASSWORD>@<DB_URL>/skill-workshop-management-system-backend?retryWrites=true&w=majority"
-
-# Security
-BCRYPT_SALT_ROUND=10
-JWT_ACCESS_SECRET=your_jwt_access_secret_here
-JWT_ACCESS_EXPIRES=1d
-JWT_REFRESH_SECRET=your_jwt_refresh_secret_here
-JWT_REFRESH_EXPIRES=365d
-RESET_PASSWORD_SECRET=your_dedicated_reset_secret_here
-
-# Super Admin
-SUPER_ADMIN_EMAIL=<YOUR_SUPER_ADMIN_EMAIL>
-SUPER_ADMIN_PASSWORD=<YOUR_SUPER_ADMIN_PASSWORD>
-
-# Google OAuth
-GOOGLE_CLIENT_ID=your_google_client_id
-GOOGLE_CLIENT_SECRET=your_google_client_secret
+DATABASE_URL=mongodb://localhost:27017/skill-workshop-management-system
+BCRYPT_SALT_ROUND=12
+JWT_ACCESS_SECRET=your-access-secret-min-32-chars
+JWT_ACCESS_EXPIRES=15m
+JWT_REFRESH_SECRET=your-refresh-secret-min-32-chars
+JWT_REFRESH_EXPIRES=7d
+SUPER_ADMIN_EMAIL=admin@example.com
+SUPER_ADMIN_PASSWORD=Admin@123456
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
 GOOGLE_CALLBACK_URL=http://localhost:5000/api/v1/auth/google/callback
-
-# Session
-EXPRESS_SESSION_SECRET=your_session_secret_here
-
-# Frontend URL
-FRONTEND_URL=http://localhost:5173
-
-# Backend URLs (for Swagger, callbacks)
+EXPRESS_SESSION_SECRET=your-session-secret-min-32-chars
+FRONTEND_URL=http://localhost:3000
 BACKEND_DEV_URL=http://localhost:5000
-BACKEND_PROD_URL=https://skill-workshop-management-system-backend.up.railway.app
-
-# Redis (for sessions, rate limiting, OTP)
-REDIS_HOST=localhost
-REDIS_PORT=6379
-REDIS_USERNAME=
-REDIS_PASSWORD=
-
-# CSRF
-CSRF_SECRET=your_csrf_secret_here_min_32_chars
-METRICS_API_KEY=your_metrics_api_key_here
-
-# SSL Commerz Payment
-SSL_STORE_ID=your_ssl_store_id
-SSL_STORE_PASS=your_ssl_store_password
+BACKEND_PROD_URL=https://your-domain.com
+SSL_STORE_ID=your-ssl-store-id
+SSL_STORE_PASS=your-ssl-store-password
 SSL_PAYMENT_API=https://sandbox.sslcommerz.com/gwprocess/v4/api.php
 SSL_VALIDATION_API=https://sandbox.sslcommerz.com/validator/api/validationserverAPI.php
 SSL_IPN_URL=http://localhost:5000/api/v1/payment/ipn
 SSL_SUCCESS_BACKEND_URL=http://localhost:5000/api/v1/payment/success
 SSL_FAIL_BACKEND_URL=http://localhost:5000/api/v1/payment/fail
 SSL_CANCEL_BACKEND_URL=http://localhost:5000/api/v1/payment/cancel
-SSL_SUCCESS_FRONTEND_URL=http://localhost:5173/payment/success
-SSL_FAIL_FRONTEND_URL=http://localhost:5173/payment/fail
-SSL_CANCEL_FRONTEND_URL=http://localhost:5173/payment/cancel
-
-# Cloudinary
-CLOUDINARY_CLOUD_NAME=your_cloud_name
-CLOUDINARY_API_KEY=your_api_key
-CLOUDINARY_API_SECRET=your_api_secret
-
-# Email (SMTP)
-SMTP_USER=your_email@gmail.com
-SMTP_PASS=your_email_app_password
-SMTP_PORT=587
+SSL_SUCCESS_FRONTEND_URL=http://localhost:3000/payment/success
+SSL_FAIL_FRONTEND_URL=http://localhost:3000/payment/fail
+SSL_CANCEL_FRONTEND_URL=http://localhost:3000/payment/cancel
+CLOUDINARY_CLOUD_NAME=your-cloud-name
+CLOUDINARY_API_KEY=your-api-key
+CLOUDINARY_API_SECRET=your-api-secret
+SMTP_USER=your-smtp-user@gmail.com
+SMTP_PASS=your-smtp-password
+SMTP_PORT=465
 SMTP_HOST=smtp.gmail.com
-SMTP_FROM=Skill Workshop <your_email@gmail.com>
+SMTP_FROM=noreply@example.com
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_USERNAME=
+REDIS_PASSWORD=
+CSRF_SECRET=your-csrf-secret-min-32-chars
+RESET_PASSWORD_SECRET=your-reset-password-secret-min-32-chars
+METRICS_API_KEY=your-metrics-api-key-min-32-chars
 ```
 
 ---
@@ -418,7 +397,7 @@ SMTP_FROM=Skill Workshop <your_email@gmail.com>
 - **Rate Limiting**: Request throttling
 - **CSRF Protection**: Built-in token validation
 - **Input Validation**: Zod schema validation
-- **NoSQL Injection Prevention**: express-mongo-sanitize
+- **NoSQL Injection Prevention**: Custom MongoDB sanitizer middleware stripping `$` and `.` operators
 - **Helmet.js**: Security headers
 - **HPP Protection**: HTTP Parameter Pollution prevention
 - **Structured Logging**: Production-grade monitoring and audit trails via Pino
