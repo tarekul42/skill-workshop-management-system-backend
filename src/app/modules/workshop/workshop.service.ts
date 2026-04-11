@@ -7,6 +7,8 @@ import logger from "../../utils/logger";
 import QueryBuilder from "../../utils/queryBuilder";
 import { ISoftDelete } from "../../utils/softDeletePlugin";
 import { AuditAction } from "../audit/audit.interface";
+import { isAdminRole } from "../user/user.interface";
+import { JwtPayload } from "jsonwebtoken";
 import { levelSearchableFields, workshopSearchableFields } from "./workshop.constant";
 import { ILevel, IWorkshop } from "./workshop.interface";
 import { Level, WorkShop } from "./workshop.model";
@@ -241,13 +243,28 @@ const getAllWorkshops = async (query: Record<string, string>) => {
   return result;
 };
 
-const updateWorkshop = async (id: string, payload: Partial<IWorkshop>) => {
+const updateWorkshop = async (
+  id: string,
+  payload: Partial<IWorkshop>,
+  currentUser: JwtPayload,
+) => {
   const existingWorkshop = await WorkShop.findById(id);
-
+ 
   if (!existingWorkshop) {
     throw new AppError(StatusCodes.NOT_FOUND, "Workshop not found");
   }
-
+ 
+  // Ownership check
+  const isAdmin = isAdminRole(currentUser.role);
+  const isOwner = existingWorkshop.createdBy?.toString() === currentUser.userId;
+ 
+  if (!isAdmin && !isOwner) {
+    throw new AppError(
+      StatusCodes.FORBIDDEN,
+      "You are not authorized to update this workshop",
+    );
+  }
+ 
   const title = payload.title;
 
   if (title && typeof title !== "string") {
@@ -443,12 +460,24 @@ const processWorkshopImages = (
   };
 };
 
-const deleteWorkshop = async (id: string) => {
+const deleteWorkshop = async (id: string, currentUser: JwtPayload) => {
   const existingWorkshop = await WorkShop.findById(id);
-
+ 
   if (!existingWorkshop) {
     throw new AppError(StatusCodes.NOT_FOUND, "Workshop not found");
   }
+ 
+  // Ownership check
+  const isAdmin = isAdminRole(currentUser.role);
+  const isOwner = existingWorkshop.createdBy?.toString() === currentUser.userId;
+ 
+  if (!isAdmin && !isOwner) {
+    throw new AppError(
+      StatusCodes.FORBIDDEN,
+      "You are not authorized to delete this workshop",
+    );
+  }
+ 
   await auditLogger({
     action: AuditAction.DELETE,
     collectionName: "WorkShop",

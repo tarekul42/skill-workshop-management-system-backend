@@ -52,6 +52,12 @@ const workshopSchema = new Schema<IWorkshop>(
       required: true,
       index: true,
     },
+    createdBy: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      index: true,
+    },
   },
   {
     timestamps: true,
