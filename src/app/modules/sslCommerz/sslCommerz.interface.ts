@@ -5,4 +5,8 @@ export interface ISSLCommerz {
   email: string;
   phoneNumber: string;
   address: string;
+  city?: string;
+  state?: string;
+  postcode?: string;
+  country?: string;
 }

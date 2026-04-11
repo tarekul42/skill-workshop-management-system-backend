@@ -8,6 +8,7 @@ import { isAdminRole } from "../user/user.interface";
 import { ENROLLMENT_STATUS, } from "./enrollment.interface";
 import Enrollment from "./enrollment.model";
 import EnrollmentRepository from "./enrollment.repository";
+import { WorkShop } from "../workshop/workshop.model";
 const createEnrollment = async (payload, userId) => {
     if (!payload.workshop) {
         throw new AppError(StatusCodes.BAD_REQUEST, "Workshop ID is required.");
@@ -130,6 +131,12 @@ const cancelEnrollment = async (enrollmentId, userId) => {
         throw new AppError(StatusCodes.BAD_REQUEST, "Only pending enrollments can be cancelled");
     }
     const updatedEnrollment = await Enrollment.findOneAndUpdate({ _id: { $eq: new Types.ObjectId(enrollmentId) } }, { status: ENROLLMENT_STATUS.CANCEL }, { returnDocument: "after", runValidators: true });
+    // Decrement the workshop's currentEnrollments counter
+    if (updatedEnrollment && updatedEnrollment.workshop) {
+        await WorkShop.findByIdAndUpdate(updatedEnrollment.workshop, {
+            $inc: { currentEnrollments: -1 },
+        });
+    }
     await auditLogger({
         action: AuditAction.UPDATE,
         collectionName: "Enrollment",

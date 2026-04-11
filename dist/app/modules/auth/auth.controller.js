@@ -124,14 +124,8 @@ const forgotPassword = catchAsync(async (req, res) => {
 const resetPassword = catchAsync(async (req, res) => {
     const newPassword = req.body.newPassword;
     const decodedToken = req.user;
-    let accessToken = req.headers.authorization;
-    if (accessToken?.startsWith("Bearer ")) {
-        accessToken = accessToken.split(" ")[1];
-    }
-    else {
-        accessToken = req.cookies.accessToken;
-    }
-    await AuthServices.resetPassword(newPassword, decodedToken, accessToken);
+    const resetToken = req.resetToken;
+    await AuthServices.resetPassword(newPassword, decodedToken, resetToken);
     sendResponse(res, {
         statusCode: StatusCodes.OK,
         success: true,

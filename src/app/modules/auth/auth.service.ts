@@ -1,8 +1,10 @@
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 import { StatusCodes } from "http-status-codes";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import validator from "validator";
 import envVariables from "../../config/env";
+import { redisClient } from "../../config/redis.config";
 import AppError from "../../errorHelpers/AppError";
 import { mailQueue } from "../../jobs/mail.queue";
 import { invalidateToken } from "../../utils/tokenBlacklist";
@@ -25,7 +27,7 @@ const changePassword = async (
   decodedToken: JwtPayload,
   accessToken: string,
 ) => {
-  const user = await User.findById(decodedToken.userId);
+  const user = await User.findOne({ _id: { $eq: decodedToken.userId } });
 
   if (!user) {
     throw new AppError(StatusCodes.NOT_FOUND, "User not found");
@@ -59,10 +61,13 @@ const changePassword = async (
   await user.save();
 
   await invalidateToken(accessToken, envVariables.JWT_ACCESS_SECRET);
+
+  // Invalidate ALL refresh tokens so other sessions can't generate new access tokens
+  await redisClient.del(`refresh_token:${decodedToken.userId}`);
 };
 
 const setPassword = async (userId: string, plainPassword: string) => {
-  const user = await User.findById(userId);
+  const user = await User.findOne({ _id: { $eq: userId } });
 
   if (!user) throw new AppError(StatusCodes.NOT_FOUND, "User not found");
 
@@ -126,6 +131,7 @@ const forgotPassword = async (email: string) => {
     userId: isUserExists._id,
     email: isUserExists.email,
     role: isUserExists.role,
+    jti: crypto.randomUUID(),
   };
 
   const resetToken = jwt.sign(jwtPayload, envVariables.RESET_PASSWORD_SECRET, {
@@ -149,7 +155,7 @@ const resetPassword = async (
   decodedToken: JwtPayload,
   accessToken: string,
 ) => {
-  const user = await User.findById(decodedToken.userId);
+  const user = await User.findOne({ _id: { $eq: decodedToken.userId } });
 
   if (!user) {
     throw new AppError(StatusCodes.NOT_FOUND, "User not found");
@@ -163,6 +169,9 @@ const resetPassword = async (
   await user.save();
 
   await invalidateToken(accessToken, envVariables.RESET_PASSWORD_SECRET);
+
+  // Invalidate ALL refresh tokens to force re-authentication after password reset
+  await redisClient.del(`refresh_token:${decodedToken.userId}`);
 };
 
 const AuthServices = {

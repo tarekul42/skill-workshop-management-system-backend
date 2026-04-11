@@ -139,7 +139,6 @@ const deleteUser = async (userId, decodedToken) => {
     if (user.role === UserRole.SUPER_ADMIN) {
         throw new AppError(StatusCodes.FORBIDDEN, "Cannot delete a SUPER_ADMIN account");
     }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await user.softDelete();
     await auditLogger({
         action: AuditAction.DELETE,
@@ -147,7 +146,7 @@ const deleteUser = async (userId, decodedToken) => {
         documentId: userId,
         performedBy: decodedToken.userId,
     });
-    return null;
+    return { data: null };
 };
 const UserServices = {
     createUser,

@@ -127,7 +127,6 @@ const deleteCategory = async (id) => {
     if (workshopCount > 0) {
         throw new AppError(StatusCodes.BAD_REQUEST, `Cannot delete category: ${workshopCount} workshop(s) are still using it. Reassign or delete them first.`);
     }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await existingCategory.softDelete();
     return null;
 };
