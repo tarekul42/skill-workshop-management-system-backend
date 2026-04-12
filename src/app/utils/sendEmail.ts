@@ -2,9 +2,9 @@ import ejs from "ejs";
 
 import nodemailer from "nodemailer";
 import path from "path";
-import envVariables from "../config/env";
+import envVariables from "../config/env.js";
 
-import logger from "./logger";
+import logger from "./logger.js";
 
 const transporter = nodemailer.createTransport({
   secure: true,

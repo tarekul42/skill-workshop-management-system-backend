@@ -1,8 +1,8 @@
 import { Query, Schema, Types } from "mongoose";
-import { AuditAction } from "../modules/audit/audit.interface";
-import AuditLog from "../modules/audit/audit.model";
-import { getAuditContext } from "./auditContext";
-import logger from "./logger";
+import { AuditAction } from "../modules/audit/audit.interface.js";
+import AuditLog from "../modules/audit/audit.model.js";
+import { getAuditContext } from "./auditContext.js";
+import logger from "./logger.js";
 
 /**
  * Sanitize document data for audit logging.

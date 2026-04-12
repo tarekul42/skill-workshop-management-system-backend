@@ -1,13 +1,13 @@
 import bcrypt from "bcryptjs";
 import { StatusCodes } from "http-status-codes";
-import envVariables from "../../config/env";
-import AppError from "../../errorHelpers/AppError";
-import auditLogger from "../../utils/auditLogger";
-import QueryBuilder from "../../utils/queryBuilder";
-import { AuditAction } from "../audit/audit.interface";
-import { userSearchableFields } from "./user.constant";
-import { UserRole, isAdminRole, isSuperAdmin, } from "./user.interface";
-import User from "./user.model";
+import envVariables from "../../config/env.js";
+import AppError from "../../errorHelpers/AppError.js";
+import auditLogger from "../../utils/auditLogger.js";
+import QueryBuilder from "../../utils/queryBuilder.js";
+import { AuditAction } from "../audit/audit.interface.js";
+import { userSearchableFields } from "./user.constant.js";
+import { UserRole, isAdminRole, isSuperAdmin, } from "./user.interface.js";
+import User from "./user.model.js";
 const createUser = async (payload) => {
     const { name, email, password, ...rest } = payload;
     if (typeof email !== "string" || email.trim().length === 0) {
@@ -147,7 +147,7 @@ const deleteUser = async (userId, decodedToken) => {
         documentId: userId,
         performedBy: decodedToken.userId,
     });
-    return null;
+    return { data: null };
 };
 const UserServices = {
     createUser,

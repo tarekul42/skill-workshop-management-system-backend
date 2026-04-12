@@ -1,6 +1,6 @@
 import express from "express";
-import { strictLimiter } from "../../utils/rateLimiter";
-import OTPController from "./otp.controller";
+import { strictLimiter } from "../../utils/rateLimiter.js";
+import OTPController from "./otp.controller.js";
 
 const router = express.Router();
 

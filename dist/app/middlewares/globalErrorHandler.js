@@ -1,13 +1,13 @@
 import { StatusCodes } from "http-status-codes";
 import mongoose from "mongoose";
 import { ZodError } from "zod";
-import envVariables from "../config/env";
-import AppError from "../errorHelpers/AppError";
-import handleCastError from "../helpers/handleCastError";
-import handleDuplicateError from "../helpers/handleDuplicateError";
-import handleValidationError from "../helpers/handleValidationError";
-import handleZodError from "../helpers/handleZodError";
-import logger from "../utils/logger";
+import envVariables from "../config/env.js";
+import AppError from "../errorHelpers/AppError.js";
+import handleCastError from "../helpers/handleCastError.js";
+import handleDuplicateError from "../helpers/handleDuplicateError.js";
+import handleValidationError from "../helpers/handleValidationError.js";
+import handleZodError from "../helpers/handleZodError.js";
+import logger from "../utils/logger.js";
 const globalErrorHandler = (err, req, res, 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 next) => {

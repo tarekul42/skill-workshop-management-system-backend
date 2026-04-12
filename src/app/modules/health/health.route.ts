@@ -1,8 +1,8 @@
 import express, { Request, Response } from "express";
 import mongoose from "mongoose";
-import { redisClient } from "../../config/redis.config";
-import { mailQueue } from "../../jobs/mail.queue";
-import { healthLimiter } from "../../utils/rateLimiter";
+import { redisClient } from "../../config/redis.config.js";
+import { mailQueue } from "../../jobs/mail.queue.js";
+import { healthLimiter } from "../../utils/rateLimiter.js";
 
 const router = express.Router();
 

@@ -1,6 +1,6 @@
-import { ICreateAuditLog } from "../modules/audit/audit.interface";
-import AuditLog from "../modules/audit/audit.model";
-import logger from "./logger";
+import { ICreateAuditLog } from "../modules/audit/audit.interface.js";
+import AuditLog from "../modules/audit/audit.model.js";
+import logger from "./logger.js";
 
 /**
  * Centralized helper to create an AuditLog entry.

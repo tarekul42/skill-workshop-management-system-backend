@@ -2,13 +2,13 @@ import bcrypt from "bcryptjs";
 import { StatusCodes } from "http-status-codes";
 import jwt from "jsonwebtoken";
 import validator from "validator";
-import envVariables from "../../config/env";
-import AppError from "../../errorHelpers/AppError";
-import { mailQueue } from "../../jobs/mail.queue";
-import { invalidateToken } from "../../utils/tokenBlacklist";
-import { createNewAccessToken } from "../../utils/userTokens";
-import { IsActive } from "../user/user.interface";
-import User from "../user/user.model";
+import envVariables from "../../config/env.js";
+import AppError from "../../errorHelpers/AppError.js";
+import { mailQueue } from "../../jobs/mail.queue.js";
+import { invalidateToken } from "../../utils/tokenBlacklist.js";
+import { createNewAccessToken } from "../../utils/userTokens.js";
+import { IsActive } from "../user/user.interface.js";
+import User from "../user/user.model.js";
 const getNewAccessToken = async (refreshToken) => {
     if (!refreshToken) {
         throw new AppError(StatusCodes.BAD_REQUEST, "No refresh token found");
@@ -57,14 +57,11 @@ const setPassword = async (userId, plainPassword) => {
     await user.save();
 };
 const forgotPassword = async (email) => {
-    if (typeof email !== "string") {
-        throw new AppError(StatusCodes.BAD_REQUEST, "Invalid email");
-    }
-    if (email.length > 254) {
-        throw new AppError(StatusCodes.BAD_REQUEST, "Invalid email length");
-    }
-    if (!validator.isEmail(email)) {
-        throw new AppError(StatusCodes.BAD_REQUEST, "Invalid email format");
+    if (typeof email !== "string" ||
+        email.trim().length === 0 ||
+        email.length > 254 ||
+        !validator.isEmail(email)) {
+        return; // Silent return - don't reveal anything
     }
     const isUserExists = await User.findOne({ email: { $eq: email } });
     // Generic success message to prevent user enumeration

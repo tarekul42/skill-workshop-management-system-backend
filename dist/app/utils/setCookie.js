@@ -1,5 +1,5 @@
-import envVariables from "../config/env";
-import { parseExpiryToSeconds } from "./parseExpiry";
+import envVariables from "../config/env.js";
+import { parseExpiryToSeconds } from "./parseExpiry.js";
 const setAuthCookie = (res, tokenInfo) => {
     const isProduction = envVariables.NODE_ENV === "production";
     if (tokenInfo.accessToken) {

@@ -1,10 +1,10 @@
 import { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
-import catchAsync from "../../utils/catchAsync";
-import { parseStringParam } from "../../utils/parseParams";
-import sendResponse from "../../utils/sendResponse";
-import { IWorkshop } from "./workshop.interface";
-import WorkshopService from "./workshop.service";
+import catchAsync from "../../utils/catchAsync.js";
+import { parseStringParam } from "../../utils/parseParams.js";
+import sendResponse from "../../utils/sendResponse.js";
+import { IWorkshop } from "./workshop.interface.js";
+import WorkshopService from "./workshop.service.js";
 
 const createLevel = catchAsync(async (req: Request, res: Response) => {
   const { name } = req.body;

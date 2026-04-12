@@ -1,8 +1,8 @@
 import { StatusCodes } from "http-status-codes";
-import catchAsync from "../../utils/catchAsync";
-import { parseStringParam } from "../../utils/parseParams";
-import sendResponse from "../../utils/sendResponse";
-import WorkshopService from "./workshop.service";
+import catchAsync from "../../utils/catchAsync.js";
+import { parseStringParam } from "../../utils/parseParams.js";
+import sendResponse from "../../utils/sendResponse.js";
+import WorkshopService from "./workshop.service.js";
 const createLevel = catchAsync(async (req, res) => {
     const { name } = req.body;
     const result = await WorkshopService.createLevel({ name });

@@ -1,7 +1,7 @@
 import { model, Schema } from "mongoose";
-import auditPlugin from "../../utils/auditPlugin";
-import softDeletePlugin from "../../utils/softDeletePlugin";
-import { IsActive, UserRole } from "./user.interface";
+import auditPlugin from "../../utils/auditPlugin.js";
+import softDeletePlugin from "../../utils/softDeletePlugin.js";
+import { IsActive, UserRole } from "./user.interface.js";
 const authProviderSchema = new Schema({
     provider: { type: String, required: true },
     providerId: { type: String, required: true },

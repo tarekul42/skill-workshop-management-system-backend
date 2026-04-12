@@ -1,10 +1,10 @@
 import { Router } from "express";
-import checkAuth from "../../middlewares/checkAuth";
-import validateRequest from "../../middlewares/validateRequest";
-import { authLimiter, strictLimiter } from "../../utils/rateLimiter";
-import UserControllers from "./user.controller";
-import { UserRole } from "./user.interface";
-import { createUserZodSchema, updateUserZodSchema } from "./user.validation";
+import checkAuth from "../../middlewares/checkAuth.js";
+import validateRequest from "../../middlewares/validateRequest.js";
+import { authLimiter, strictLimiter } from "../../utils/rateLimiter.js";
+import UserControllers from "./user.controller.js";
+import { UserRole } from "./user.interface.js";
+import { createUserZodSchema, updateUserZodSchema } from "./user.validation.js";
 const router = Router();
 /**
  * @openapi

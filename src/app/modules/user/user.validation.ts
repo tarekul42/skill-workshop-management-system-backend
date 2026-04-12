@@ -1,5 +1,5 @@
 import z from "zod";
-import { IsActive, UserRole } from "./user.interface";
+import { IsActive, UserRole } from "./user.interface.js";
 
 const createUserZodSchema = z.object({
   name: z

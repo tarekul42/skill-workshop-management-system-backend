@@ -1,13 +1,13 @@
 import { StatusCodes } from "http-status-codes";
 import { Types } from "mongoose";
-import AppError from "../../errorHelpers/AppError";
-import auditLogger from "../../utils/auditLogger";
-import QueryBuilder from "../../utils/queryBuilder";
-import { AuditAction } from "../audit/audit.interface";
-import { isAdminRole } from "../user/user.interface";
-import { ENROLLMENT_STATUS, } from "./enrollment.interface";
-import Enrollment from "./enrollment.model";
-import EnrollmentRepository from "./enrollment.repository";
+import AppError from "../../errorHelpers/AppError.js";
+import auditLogger from "../../utils/auditLogger.js";
+import QueryBuilder from "../../utils/queryBuilder.js";
+import { AuditAction } from "../audit/audit.interface.js";
+import { isAdminRole } from "../user/user.interface.js";
+import { ENROLLMENT_STATUS, } from "./enrollment.interface.js";
+import Enrollment from "./enrollment.model.js";
+import EnrollmentRepository from "./enrollment.repository.js";
 const createEnrollment = async (payload, userId) => {
     if (!payload.workshop) {
         throw new AppError(StatusCodes.BAD_REQUEST, "Workshop ID is required.");

@@ -1,15 +1,15 @@
 import { StatusCodes } from "http-status-codes";
-import { deleteImageFromCloudinary } from "../../config/cloudinary.config";
-import { redisClient } from "../../config/redis.config";
-import AppError from "../../errorHelpers/AppError";
-import auditLogger from "../../utils/auditLogger";
-import logger from "../../utils/logger";
-import QueryBuilder from "../../utils/queryBuilder";
-import { ISoftDelete } from "../../utils/softDeletePlugin";
-import { AuditAction } from "../audit/audit.interface";
-import { levelSearchableFields, workshopSearchableFields } from "./workshop.constant";
-import { ILevel, IWorkshop } from "./workshop.interface";
-import { Level, WorkShop } from "./workshop.model";
+import { deleteImageFromCloudinary } from "../../config/cloudinary.config.js";
+import { redisClient } from "../../config/redis.config.js";
+import AppError from "../../errorHelpers/AppError.js";
+import auditLogger from "../../utils/auditLogger.js";
+import logger from "../../utils/logger.js";
+import QueryBuilder from "../../utils/queryBuilder.js";
+import { ISoftDelete } from "../../utils/softDeletePlugin.js";
+import { AuditAction } from "../audit/audit.interface.js";
+import { levelSearchableFields, workshopSearchableFields } from "./workshop.constant.js";
+import { ILevel, IWorkshop } from "./workshop.interface.js";
+import { Level, WorkShop } from "./workshop.model.js";
 
 /**
  * Invalidates all workshop list cache keys using Redis SCAN.

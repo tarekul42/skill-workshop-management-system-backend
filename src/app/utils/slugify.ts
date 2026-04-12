@@ -1,5 +1,5 @@
 import { Model, Types } from "mongoose";
-import logger from "./logger";
+import logger from "./logger.js";
 
 /**
  * Generates a unique slug for a given Mongoose model.

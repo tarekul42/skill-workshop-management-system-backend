@@ -1,13 +1,13 @@
 import express from "express";
-import checkAuth from "../../middlewares/checkAuth";
-import validateRequest from "../../middlewares/validateRequest";
-import { adminCrudLimiter } from "../../utils/rateLimiter";
-import { UserRole } from "../user/user.interface";
-import EnrollmentController from "./enrollment.controller";
+import checkAuth from "../../middlewares/checkAuth.js";
+import validateRequest from "../../middlewares/validateRequest.js";
+import { adminCrudLimiter } from "../../utils/rateLimiter.js";
+import { UserRole } from "../user/user.interface.js";
+import EnrollmentController from "./enrollment.controller.js";
 import {
   createEnrollmentZodSchema,
   updateEnrollmentStatusZodSchema,
-} from "./enrollment.validation";
+} from "./enrollment.validation.js";
 
 const router = express.Router();
 

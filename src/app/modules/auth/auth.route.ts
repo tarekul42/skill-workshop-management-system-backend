@@ -1,11 +1,11 @@
 import { NextFunction, Request, Response, Router } from "express";
 import passport from "passport";
-import envVariables from "../../config/env";
-import checkAuth from "../../middlewares/checkAuth";
-import checkResetToken from "../../middlewares/checkResetToken";
-import { authLimiter } from "../../utils/rateLimiter";
-import { UserRole } from "../user/user.interface";
-import AuthControllers from "./auth.controller";
+import envVariables from "../../config/env.js";
+import checkAuth from "../../middlewares/checkAuth.js";
+import checkResetToken from "../../middlewares/checkResetToken.js";
+import { authLimiter } from "../../utils/rateLimiter.js";
+import { UserRole } from "../user/user.interface.js";
+import AuthControllers from "./auth.controller.js";
 
 const router = Router();
 

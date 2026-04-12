@@ -1,8 +1,8 @@
 import { v2 as cloudinary } from "cloudinary";
 import { StatusCodes } from "http-status-codes";
-import AppError from "../errorHelpers/AppError";
-import logger from "../utils/logger";
-import envVariables from "./env";
+import AppError from "../errorHelpers/AppError.js";
+import logger from "../utils/logger.js";
+import envVariables from "./env.js";
 cloudinary.config({
     cloud_name: envVariables.CLOUDINARY.CLOUDINARY_CLOUD_NAME,
     api_key: envVariables.CLOUDINARY.CLOUDINARY_API_KEY,

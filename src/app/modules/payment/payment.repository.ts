@@ -1,8 +1,8 @@
 import { ClientSession, Types } from "mongoose";
-import { ENROLLMENT_STATUS } from "../enrollment/enrollment.interface";
-import Enrollment from "../enrollment/enrollment.model";
-import { PAYMENT_STATUS } from "./payment.interface";
-import Payment from "./payment.model";
+import { ENROLLMENT_STATUS } from "../enrollment/enrollment.interface.js";
+import Enrollment from "../enrollment/enrollment.model.js";
+import { PAYMENT_STATUS } from "./payment.interface.js";
+import Payment from "./payment.model.js";
 
 const findPaymentByEnrollmentId = async (enrollmentId: string) => {
   return await Payment.findOne({

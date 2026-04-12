@@ -1,11 +1,11 @@
 import { Job, Worker } from "bullmq";
-import { uploadBufferToCloudinary } from "../config/cloudinary.config";
-import redisConnection from "../config/redis.connection";
-import Payment from "../modules/payment/payment.model";
-import { generatePDF, IInvoiceData } from "../utils/invoice";
-import logger from "../utils/logger";
-import sendEmail from "../utils/sendEmail";
-import { MAIL_QUEUE } from "./mail.queue";
+import { uploadBufferToCloudinary } from "../config/cloudinary.config.js";
+import redisConnection from "../config/redis.connection.js";
+import Payment from "../modules/payment/payment.model.js";
+import { generatePDF, IInvoiceData } from "../utils/invoice.js";
+import logger from "../utils/logger.js";
+import sendEmail from "../utils/sendEmail.js";
+import { MAIL_QUEUE } from "./mail.queue.js";
 
 interface MailJobData {
   type: "forgot-password" | "otp" | "invoice";

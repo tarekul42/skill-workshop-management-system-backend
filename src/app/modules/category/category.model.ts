@@ -1,7 +1,7 @@
 import { model, Schema } from "mongoose";
-import auditPlugin from "../../utils/auditPlugin";
-import softDeletePlugin from "../../utils/softDeletePlugin";
-import { ICategory } from "./category.interface";
+import auditPlugin from "../../utils/auditPlugin.js";
+import softDeletePlugin from "../../utils/softDeletePlugin.js";
+import { ICategory } from "./category.interface.js";
 
 const categorySchema = new Schema<ICategory>(
   {

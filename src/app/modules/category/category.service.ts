@@ -1,12 +1,12 @@
 import { StatusCodes } from "http-status-codes";
-import { deleteImageFromCloudinary } from "../../config/cloudinary.config";
-import AppError from "../../errorHelpers/AppError";
-import logger from "../../utils/logger";
-import QueryBuilder from "../../utils/queryBuilder";
-import { WorkShop } from "../workshop/workshop.model";
-import { categorySearchableFields } from "./category.constant";
-import { ICategory } from "./category.interface";
-import { Category } from "./category.model";
+import { deleteImageFromCloudinary } from "../../config/cloudinary.config.js";
+import AppError from "../../errorHelpers/AppError.js";
+import logger from "../../utils/logger.js";
+import QueryBuilder from "../../utils/queryBuilder.js";
+import { WorkShop } from "../workshop/workshop.model.js";
+import { categorySearchableFields } from "./category.constant.js";
+import { ICategory } from "./category.interface.js";
+import { Category } from "./category.model.js";
 
 const createCategory = async (payload: ICategory) => {
   if (typeof payload.name !== "string") {

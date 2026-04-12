@@ -1,10 +1,8 @@
 import ejs from "ejs";
-import { StatusCodes } from "http-status-codes";
 import nodemailer from "nodemailer";
 import path from "path";
-import envVariables from "../config/env";
-import AppError from "../errorHelpers/AppError";
-import logger from "./logger";
+import envVariables from "../config/env.js";
+import logger from "./logger.js";
 const transporter = nodemailer.createTransport({
     secure: true,
     auth: {
@@ -33,7 +31,7 @@ const sendEmail = async ({ to, subject, templateName, templateData, attachments,
     }
     catch (error) {
         logger.error({ msg: "Email sending error", err: error });
-        throw new AppError(StatusCodes.BAD_REQUEST, "Email sending error");
+        throw error; // Let the caller (BullMQ worker) decide what to do
     }
 };
 export default sendEmail;

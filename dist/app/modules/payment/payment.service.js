@@ -1,13 +1,13 @@
 import { StatusCodes } from "http-status-codes";
-import AppError from "../../errorHelpers/AppError";
-import { mailQueue } from "../../jobs/mail.queue";
-import auditLogger from "../../utils/auditLogger";
-import logger from "../../utils/logger";
-import { AuditAction } from "../audit/audit.interface";
-import { ENROLLMENT_STATUS, } from "../enrollment/enrollment.interface";
-import SSLService from "../sslCommerz/sslCommerz.service";
-import { PAYMENT_STATUS } from "./payment.interface";
-import PaymentRepository from "./payment.repository";
+import AppError from "../../errorHelpers/AppError.js";
+import { mailQueue } from "../../jobs/mail.queue.js";
+import auditLogger from "../../utils/auditLogger.js";
+import logger from "../../utils/logger.js";
+import { AuditAction } from "../audit/audit.interface.js";
+import { ENROLLMENT_STATUS, } from "../enrollment/enrollment.interface.js";
+import SSLService from "../sslCommerz/sslCommerz.service.js";
+import { PAYMENT_STATUS } from "./payment.interface.js";
+import PaymentRepository from "./payment.repository.js";
 const initPayment = async (enrollmentId) => {
     if (!enrollmentId) {
         throw new AppError(StatusCodes.BAD_REQUEST, "Invalid enrollment ID");

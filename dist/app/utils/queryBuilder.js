@@ -1,4 +1,4 @@
-import { excludeFields } from "../constants";
+import { excludeFields } from "../constants.js";
 class QueryBuilder {
     constructor(modelQuery, query) {
         this.modelQuery = modelQuery;

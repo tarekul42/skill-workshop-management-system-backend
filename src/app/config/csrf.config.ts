@@ -1,5 +1,5 @@
 import { doubleCsrf } from "csrf-csrf";
-import envVariables from "./env";
+import envVariables from "./env.js";
 
 /**
  * Paths that should skip CSRF validation.

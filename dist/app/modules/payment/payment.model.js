@@ -1,6 +1,6 @@
 import { model, Schema } from "mongoose";
-import auditPlugin from "../../utils/auditPlugin";
-import { PAYMENT_STATUS } from "./payment.interface";
+import auditPlugin from "../../utils/auditPlugin.js";
+import { PAYMENT_STATUS } from "./payment.interface.js";
 const paymentSchema = new Schema({
     enrollment: {
         type: Schema.Types.ObjectId,

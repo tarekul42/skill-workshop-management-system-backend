@@ -2,16 +2,16 @@ import { NextFunction, Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import { JwtPayload } from "jsonwebtoken";
 import passport from "passport";
-import envVariables from "../../config/env";
-import AppError from "../../errorHelpers/AppError";
-import catchAsync from "../../utils/catchAsync";
-import logger from "../../utils/logger";
-import sendResponse from "../../utils/sendResponse";
-import setAuthCookie from "../../utils/setCookie";
-import { invalidateToken } from "../../utils/tokenBlacklist";
-import { createUserTokens } from "../../utils/userTokens";
-import { IUser } from "../user/user.interface";
-import AuthServices from "./auth.service";
+import envVariables from "../../config/env.js";
+import AppError from "../../errorHelpers/AppError.js";
+import catchAsync from "../../utils/catchAsync.js";
+import logger from "../../utils/logger.js";
+import sendResponse from "../../utils/sendResponse.js";
+import setAuthCookie from "../../utils/setCookie.js";
+import { invalidateToken } from "../../utils/tokenBlacklist.js";
+import { createUserTokens } from "../../utils/userTokens.js";
+import { IUser } from "../user/user.interface.js";
+import AuthServices from "./auth.service.js";
 
 type TPassportError = Error | null;
 

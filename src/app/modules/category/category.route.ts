@@ -1,14 +1,14 @@
 import { Router } from "express";
-import multerUpload from "../../config/multer.config";
-import checkAuth from "../../middlewares/checkAuth";
-import validateRequest from "../../middlewares/validateRequest";
-import { adminCrudLimiter } from "../../utils/rateLimiter";
-import { UserRole } from "../user/user.interface";
-import CategoryController from "./category.controller";
+import multerUpload from "../../config/multer.config.js";
+import checkAuth from "../../middlewares/checkAuth.js";
+import validateRequest from "../../middlewares/validateRequest.js";
+import { adminCrudLimiter } from "../../utils/rateLimiter.js";
+import { UserRole } from "../user/user.interface.js";
+import CategoryController from "./category.controller.js";
 import {
   createCategoryZodSchema,
   updateCategoryZodSchema,
-} from "./category.validation";
+} from "./category.validation.js";
 
 const router = Router();
 
