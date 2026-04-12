@@ -12,8 +12,7 @@ const storage = new CloudinaryStorage({
         .toLowerCase()
         .replace(/\s+/g, "-") // empty space remove replace with dash
         .replace(/\./g, "-")
-        // eslint-disable-next-line no-useless-escape
-        .replace(/[^a-z0-9\-\.]/g, ""); // non alpha numeric - !@#$
+        .replace(/[^a-z0-9.-]/g, ""); // non alpha numeric - !@#$
 
       const parts = file.originalname.split(".");
       const extension = parts.length > 1 ? parts.pop() : "";

@@ -9,8 +9,7 @@ import { MAIL_QUEUE } from "./mail.queue";
 
 interface MailJobData {
   type: "forgot-password" | "otp" | "invoice";
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  payload: Record<string, any>;
+  payload: Record<string, unknown>;
 }
 
 export const mailWorker = new Worker(
@@ -24,24 +23,24 @@ export const mailWorker = new Worker(
       switch (type) {
         case "forgot-password":
           await sendEmail({
-            to: payload.email,
+            to: payload.email as string,
             subject: "Password Reset",
             templateName: "forgetPassword",
             templateData: {
-              name: payload.name,
-              resetUILink: payload.resetUILink,
+              name: payload.name as string,
+              resetUILink: payload.resetUILink as string,
             },
           });
           break;
 
         case "otp":
           await sendEmail({
-            to: payload.email,
+            to: payload.email as string,
             subject: "OTP Verification",
             templateName: "otp",
             templateData: {
-              name: payload.name,
-              otp: payload.otp,
+              name: payload.name as string,
+              otp: payload.otp as string,
             },
           });
           break;
@@ -52,9 +51,9 @@ export const mailWorker = new Worker(
           // Re-generate PDF if buffer wasn't passed (better to generate in worker to keep job size small)
           let pdfBuffer: Buffer;
           if (pdfBufferData) {
-            pdfBuffer = Buffer.from(pdfBufferData, "base64");
+            pdfBuffer = Buffer.from(pdfBufferData as string, "base64");
           } else {
-            pdfBuffer = await generatePDF(invoiceData as IInvoiceData);
+            pdfBuffer = await generatePDF(invoiceData as unknown as IInvoiceData);
           }
 
           // Upload to Cloudinary if not already done or if we want to ensure it's there
@@ -65,13 +64,13 @@ export const mailWorker = new Worker(
 
           if (cloudinaryResult) {
             await Payment.findOneAndUpdate(
-              { transactionId: invoiceData.transactionId },
+              { transactionId: (invoiceData as unknown as IInvoiceData).transactionId },
               { invoiceUrl: cloudinaryResult.secure_url },
             );
           }
 
           await sendEmail({
-            to: payload.email,
+            to: payload.email as string,
             subject: "Your Enrollment Invoice",
             templateName: "invoice",
             templateData: invoiceData as unknown as Record<string, unknown>,
