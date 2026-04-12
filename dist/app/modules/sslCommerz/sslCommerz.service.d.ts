@@ -1,4 +1,4 @@
-import { ISSLCommerz } from "./sslCommerz.interface";
+import { ISSLCommerz } from "./sslCommerz.interface.js";
 declare const SSLService: {
     sslPaymentInit: (payload: ISSLCommerz) => Promise<any>;
     validatePayment: (payload: {

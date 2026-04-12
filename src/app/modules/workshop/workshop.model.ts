@@ -1,9 +1,9 @@
 import { model, Schema, Types } from "mongoose";
-import auditPlugin from "../../utils/auditPlugin";
-import logger from "../../utils/logger";
-import { generateUniqueSlug } from "../../utils/slugify";
-import softDeletePlugin from "../../utils/softDeletePlugin";
-import { ILevel, IWorkshop } from "./workshop.interface";
+import auditPlugin from "../../utils/auditPlugin.js";
+import logger from "../../utils/logger.js";
+import { generateUniqueSlug } from "../../utils/slugify.js";
+import softDeletePlugin from "../../utils/softDeletePlugin.js";
+import { ILevel, IWorkshop } from "./workshop.interface.js";
 
 const levelSchema = new Schema<ILevel>(
   {

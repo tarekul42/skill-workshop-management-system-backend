@@ -1,5 +1,5 @@
 import { Types } from "mongoose";
-import { IEnrollment } from "../enrollment/enrollment.interface";
+import { IEnrollment } from "../enrollment/enrollment.interface.js";
 declare enum PAYMENT_STATUS {
     PAID = "PAID",
     UNPAID = "UNPAID",

@@ -1,18 +1,18 @@
 import { StatusCodes } from "http-status-codes";
 import { Types } from "mongoose";
-import AppError from "../../errorHelpers/AppError";
-import auditLogger from "../../utils/auditLogger";
-import QueryBuilder from "../../utils/queryBuilder";
-import { AuditAction } from "../audit/audit.interface";
-import { isAdminRole } from "../user/user.interface";
-import { WorkShop } from "../workshop/workshop.model";
+import AppError from "../../errorHelpers/AppError.js";
+import auditLogger from "../../utils/auditLogger.js";
+import QueryBuilder from "../../utils/queryBuilder.js";
+import { AuditAction } from "../audit/audit.interface.js";
+import { isAdminRole } from "../user/user.interface.js";
+import { WorkShop } from "../workshop/workshop.model.js";
 import {
   ENROLLMENT_STATUS,
   IEnrollment,
   IEnrollmentPopulated,
-} from "./enrollment.interface";
-import Enrollment from "./enrollment.model";
-import EnrollmentRepository from "./enrollment.repository";
+} from "./enrollment.interface.js";
+import Enrollment from "./enrollment.model.js";
+import EnrollmentRepository from "./enrollment.repository.js";
 
 const createEnrollment = async (
   payload: Partial<IEnrollment>,

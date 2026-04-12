@@ -1,9 +1,9 @@
 import crypto from "crypto";
 import { StatusCodes } from "http-status-codes";
-import { redisClient } from "../../config/redis.config";
-import AppError from "../../errorHelpers/AppError";
-import { mailQueue } from "../../jobs/mail.queue";
-import User from "../user/user.model";
+import { redisClient } from "../../config/redis.config.js";
+import AppError from "../../errorHelpers/AppError.js";
+import { mailQueue } from "../../jobs/mail.queue.js";
+import User from "../user/user.model.js";
 // 5 minutes — extended for user convenience; brute-force risk mitigated by 5-attempt limit
 const OTP_EXPIRATION = 5 * 60;
 const generateOtp = (length = 6) => {

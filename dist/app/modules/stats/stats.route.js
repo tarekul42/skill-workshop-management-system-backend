@@ -1,8 +1,8 @@
 import express from "express";
-import checkAuth from "../../middlewares/checkAuth";
-import { adminCrudLimiter } from "../../utils/rateLimiter";
-import { UserRole } from "../user/user.interface";
-import StatsController from "./stats.controller";
+import checkAuth from "../../middlewares/checkAuth.js";
+import { adminCrudLimiter } from "../../utils/rateLimiter.js";
+import { UserRole } from "../user/user.interface.js";
+import StatsController from "./stats.controller.js";
 const router = express.Router();
 /**
  * @openapi

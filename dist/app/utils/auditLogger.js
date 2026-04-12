@@ -1,5 +1,5 @@
-import AuditLog from "../modules/audit/audit.model";
-import logger from "./logger";
+import AuditLog from "../modules/audit/audit.model.js";
+import logger from "./logger.js";
 /**
  * Centralized helper to create an AuditLog entry.
  * Silently logs errors so as not to disrupt the main request flow.

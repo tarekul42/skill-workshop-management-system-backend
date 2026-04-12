@@ -1,8 +1,8 @@
 import express from "express";
-import checkAuth from "../../middlewares/checkAuth";
-import { adminCrudLimiter } from "../../utils/rateLimiter";
-import { UserRole } from "../user/user.interface";
-import AuditController from "./audit.controller";
+import checkAuth from "../../middlewares/checkAuth.js";
+import { adminCrudLimiter } from "../../utils/rateLimiter.js";
+import { UserRole } from "../user/user.interface.js";
+import AuditController from "./audit.controller.js";
 
 const router = express.Router();
 

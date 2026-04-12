@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
-import catchAsync from "../../utils/catchAsync";
-import sendResponse from "../../utils/sendResponse";
-import OTPService from "./otp.service";
+import catchAsync from "../../utils/catchAsync.js";
+import sendResponse from "../../utils/sendResponse.js";
+import OTPService from "./otp.service.js";
 
 const sendOtp = catchAsync(async (req: Request, res: Response) => {
   const { email, name } = req.body;

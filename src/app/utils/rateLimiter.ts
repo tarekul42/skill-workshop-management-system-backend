@@ -1,9 +1,9 @@
 import type { NextFunction, Request, Response } from "express";
 import { ipKeyGenerator, rateLimit } from "express-rate-limit";
 import { RedisStore } from "rate-limit-redis";
-import { redisClient } from "../config/redis.config";
+import { redisClient } from "../config/redis.config.js";
 
-import envVariables from "../config/env";
+import envVariables from "../config/env.js";
 
 const createLimiter = (
   prefix: string,

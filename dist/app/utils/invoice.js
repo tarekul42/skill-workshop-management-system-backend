@@ -1,7 +1,7 @@
 import { StatusCodes } from "http-status-codes";
 import PDFDocument from "pdfkit";
-import AppError from "../errorHelpers/AppError";
-import logger from "./logger";
+import AppError from "../errorHelpers/AppError.js";
+import logger from "./logger.js";
 const generatePDF = async (invoiceData) => {
     return new Promise((resolve, reject) => {
         const doc = new PDFDocument({ size: "A4", margin: 50 });

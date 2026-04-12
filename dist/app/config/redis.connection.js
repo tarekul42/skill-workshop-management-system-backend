@@ -1,4 +1,4 @@
-import envVariables from "./env";
+import envVariables from "./env.js";
 const redisConnection = {
     host: envVariables.REDIS.REDIS_HOST,
     port: Number(envVariables.REDIS.REDIS_PORT),

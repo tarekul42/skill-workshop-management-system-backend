@@ -1,5 +1,5 @@
 import { Types } from "mongoose";
-import { ENROLLMENT_STATUS, IEnrollment, IEnrollmentPopulated } from "./enrollment.interface";
+import { ENROLLMENT_STATUS, IEnrollment, IEnrollmentPopulated } from "./enrollment.interface.js";
 declare const EnrollmentService: {
     createEnrollment: (payload: Partial<IEnrollment>, userId: string) => Promise<{
         paymentUrl: any;

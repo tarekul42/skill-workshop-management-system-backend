@@ -1,6 +1,6 @@
 import { Response } from "express";
-import envVariables from "../config/env";
-import { parseExpiryToSeconds } from "./parseExpiry";
+import envVariables from "../config/env.js";
+import { parseExpiryToSeconds } from "./parseExpiry.js";
 
 interface IAuthTokens {
   accessToken?: string;

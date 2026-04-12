@@ -1,5 +1,5 @@
 import { JwtPayload } from "jsonwebtoken";
-import { IUser } from "./user.interface";
+import { IUser } from "./user.interface.js";
 declare const UserServices: {
     createUser: (payload: Partial<IUser>) => Promise<import("mongoose").Document<unknown, {}, IUser, {}, import("mongoose").DefaultSchemaOptions> & IUser & Required<{
         _id: import("mongoose").Types.ObjectId;

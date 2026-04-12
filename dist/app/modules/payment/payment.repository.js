@@ -1,6 +1,6 @@
 import { Types } from "mongoose";
-import Enrollment from "../enrollment/enrollment.model";
-import Payment from "./payment.model";
+import Enrollment from "../enrollment/enrollment.model.js";
+import Payment from "./payment.model.js";
 const findPaymentByEnrollmentId = async (enrollmentId) => {
     return await Payment.findOne({
         enrollment: { $eq: new Types.ObjectId(enrollmentId) },

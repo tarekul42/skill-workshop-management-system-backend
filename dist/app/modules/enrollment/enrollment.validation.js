@@ -1,5 +1,5 @@
 import z from "zod";
-import { ENROLLMENT_STATUS } from "./enrollment.interface";
+import { ENROLLMENT_STATUS } from "./enrollment.interface.js";
 const createEnrollmentZodSchema = z.object({
     workshop: z.string(),
     studentCount: z.number().int().positive(),

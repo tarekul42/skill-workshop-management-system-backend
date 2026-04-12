@@ -1,13 +1,13 @@
 import express from "express";
-import checkAuth from "../../middlewares/checkAuth";
-import validateRequest from "../../middlewares/validateRequest";
-import { adminCrudLimiter, authLimiter } from "../../utils/rateLimiter";
-import { UserRole } from "../user/user.interface";
-import PaymentController from "./payment.controller";
+import checkAuth from "../../middlewares/checkAuth.js";
+import validateRequest from "../../middlewares/validateRequest.js";
+import { adminCrudLimiter, authLimiter } from "../../utils/rateLimiter.js";
+import { UserRole } from "../user/user.interface.js";
+import PaymentController from "./payment.controller.js";
 import {
   refundPaymentBodySchema,
   validatePaymentBodySchema,
-} from "./payment.validation";
+} from "./payment.validation.js";
 
 const router = express.Router();
 

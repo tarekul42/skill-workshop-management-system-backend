@@ -1,7 +1,7 @@
 import { Router } from "express";
-import { apiVersioning } from "../middlewares/apiVersioning";
-import v1Router from "./index";
-import v2Router from "./v2";
+import { apiVersioning } from "../middlewares/apiVersioning.js";
+import v1Router from "./index.js";
+import v2Router from "./v2.js";
 const apiRouter = Router();
 // Attach version metadata + deprecation headers
 apiRouter.use(apiVersioning());

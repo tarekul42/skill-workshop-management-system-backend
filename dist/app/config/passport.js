@@ -2,9 +2,9 @@ import bcrypt from "bcryptjs";
 import passport from "passport";
 import { Strategy as GoogleStrategy, } from "passport-google-oauth20";
 import { Strategy as LocalStrategy } from "passport-local";
-import { IsActive, UserRole } from "../modules/user/user.interface";
-import User from "../modules/user/user.model";
-import envVariables from "./env";
+import { IsActive, UserRole } from "../modules/user/user.interface.js";
+import User from "../modules/user/user.model.js";
+import envVariables from "./env.js";
 // 1. SERIALIZATION
 // We store the MongoDB _id in the session
 passport.serializeUser((user, done) => {

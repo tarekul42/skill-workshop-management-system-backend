@@ -1,15 +1,15 @@
 import { StatusCodes } from "http-status-codes";
 import { ClientSession } from "mongoose";
-import AppError from "../../errorHelpers/AppError";
-import { getTransactionId } from "../../utils/getTransactionId";
-import { PAYMENT_STATUS } from "../payment/payment.interface";
-import Payment from "../payment/payment.model";
-import { ISSLCommerz } from "../sslCommerz/sslCommerz.interface";
-import SSLService from "../sslCommerz/sslCommerz.service";
-import User from "../user/user.model";
-import { WorkShop } from "../workshop/workshop.model";
-import { ENROLLMENT_STATUS, IEnrollment } from "./enrollment.interface";
-import Enrollment from "./enrollment.model";
+import AppError from "../../errorHelpers/AppError.js";
+import { getTransactionId } from "../../utils/getTransactionId.js";
+import { PAYMENT_STATUS } from "../payment/payment.interface.js";
+import Payment from "../payment/payment.model.js";
+import { ISSLCommerz } from "../sslCommerz/sslCommerz.interface.js";
+import SSLService from "../sslCommerz/sslCommerz.service.js";
+import User from "../user/user.model.js";
+import { WorkShop } from "../workshop/workshop.model.js";
+import { ENROLLMENT_STATUS, IEnrollment } from "./enrollment.interface.js";
+import Enrollment from "./enrollment.model.js";
 
 const startTransaction = async () => {
   const session = await Enrollment.startSession({

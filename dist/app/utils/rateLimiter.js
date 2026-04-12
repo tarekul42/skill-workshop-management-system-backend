@@ -1,7 +1,7 @@
 import { ipKeyGenerator, rateLimit } from "express-rate-limit";
 import { RedisStore } from "rate-limit-redis";
-import { redisClient } from "../config/redis.config";
-import envVariables from "../config/env";
+import { redisClient } from "../config/redis.config.js";
+import envVariables from "../config/env.js";
 const createLimiter = (prefix, windowMs, max, message, skipHealth = true) => {
     if (envVariables.NODE_ENV === "test") {
         return (req, res, next) => next();

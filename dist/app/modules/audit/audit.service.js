@@ -1,6 +1,6 @@
 import { StatusCodes } from "http-status-codes";
-import AppError from "../../errorHelpers/AppError";
-import AuditLog from "./audit.model";
+import AppError from "../../errorHelpers/AppError.js";
+import AuditLog from "./audit.model.js";
 const toEqFilter = (value) => {
     if (value === undefined || value === null) {
         return undefined;

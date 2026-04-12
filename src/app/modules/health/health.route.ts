@@ -1,10 +1,10 @@
 import express, { Request, Response } from "express";
 import mongoose from "mongoose";
-import { redisClient } from "../../config/redis.config";
-import { mailQueue } from "../../jobs/mail.queue";
-import checkAuth from "../../middlewares/checkAuth";
-import { healthLimiter } from "../../utils/rateLimiter";
-import { UserRole } from "../user/user.interface";
+import { redisClient } from "../../config/redis.config.js";
+import { mailQueue } from "../../jobs/mail.queue.js";
+import checkAuth from "../../middlewares/checkAuth.js";
+import { healthLimiter } from "../../utils/rateLimiter.js";
+import { UserRole } from "../user/user.interface.js";
 
 const router = express.Router();
 

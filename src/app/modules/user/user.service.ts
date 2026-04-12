@@ -1,21 +1,21 @@
 import bcrypt from "bcryptjs";
 import { StatusCodes } from "http-status-codes";
 import { JwtPayload } from "jsonwebtoken";
-import envVariables from "../../config/env";
-import AppError from "../../errorHelpers/AppError";
-import auditLogger from "../../utils/auditLogger";
-import QueryBuilder from "../../utils/queryBuilder";
-import { ISoftDelete } from "../../utils/softDeletePlugin";
-import { AuditAction } from "../audit/audit.interface";
-import { userSearchableFields } from "./user.constant";
+import envVariables from "../../config/env.js";
+import AppError from "../../errorHelpers/AppError.js";
+import auditLogger from "../../utils/auditLogger.js";
+import QueryBuilder from "../../utils/queryBuilder.js";
+import { ISoftDelete } from "../../utils/softDeletePlugin.js";
+import { AuditAction } from "../audit/audit.interface.js";
+import { userSearchableFields } from "./user.constant.js";
 import {
   IAuthProvider,
   IUser,
   UserRole,
   isAdminRole,
   isSuperAdmin,
-} from "./user.interface";
-import User from "./user.model";
+} from "./user.interface.js";
+import User from "./user.model.js";
 
 const createUser = async (payload: Partial<IUser>) => {
   const { name, email, password, ...rest } = payload;

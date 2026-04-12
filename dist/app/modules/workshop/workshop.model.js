@@ -1,8 +1,8 @@
 import { model, Schema } from "mongoose";
-import auditPlugin from "../../utils/auditPlugin";
-import logger from "../../utils/logger";
-import { generateUniqueSlug } from "../../utils/slugify";
-import softDeletePlugin from "../../utils/softDeletePlugin";
+import auditPlugin from "../../utils/auditPlugin.js";
+import logger from "../../utils/logger.js";
+import { generateUniqueSlug } from "../../utils/slugify.js";
+import softDeletePlugin from "../../utils/softDeletePlugin.js";
 const levelSchema = new Schema({
     name: { type: String, required: true, unique: true },
 }, {

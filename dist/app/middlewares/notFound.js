@@ -1,5 +1,5 @@
 import { StatusCodes } from "http-status-codes";
-import logger from "../utils/logger";
+import logger from "../utils/logger.js";
 const notFound = (req, res) => {
     logger.error({
         msg: `Route Not Found: ${req.method} ${req.originalUrl}`,

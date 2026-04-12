@@ -1,14 +1,14 @@
 import { StatusCodes } from "http-status-codes";
-import { deleteImageFromCloudinary } from "../../config/cloudinary.config";
-import { redisClient } from "../../config/redis.config";
-import AppError from "../../errorHelpers/AppError";
-import auditLogger from "../../utils/auditLogger";
-import logger from "../../utils/logger";
-import QueryBuilder from "../../utils/queryBuilder";
-import { AuditAction } from "../audit/audit.interface";
-import { isAdminRole } from "../user/user.interface";
-import { levelSearchableFields, workshopSearchableFields, } from "./workshop.constant";
-import { Level, WorkShop } from "./workshop.model";
+import { deleteImageFromCloudinary } from "../../config/cloudinary.config.js";
+import { redisClient } from "../../config/redis.config.js";
+import AppError from "../../errorHelpers/AppError.js";
+import auditLogger from "../../utils/auditLogger.js";
+import logger from "../../utils/logger.js";
+import QueryBuilder from "../../utils/queryBuilder.js";
+import { AuditAction } from "../audit/audit.interface.js";
+import { isAdminRole } from "../user/user.interface.js";
+import { levelSearchableFields, workshopSearchableFields, } from "./workshop.constant.js";
+import { Level, WorkShop } from "./workshop.model.js";
 /**
  * Invalidates all workshop list cache keys using Redis SCAN.
  */
@@ -263,10 +263,20 @@ const updateWorkshop = async (id, payload, currentUser) => {
         safePayload.prerequisites = sanitizedPrerequisites;
     }
     if (Array.isArray(payload.benefits)) {
-        safePayload.benefits = payload.benefits.filter((item) => typeof item === "string");
+        const sanitizedBenefits = payload.benefits.filter((item) => typeof item === "string");
+        if (sanitizedBenefits.length !== payload.benefits.length &&
+            payload.benefits.length > 0) {
+            throw new AppError(StatusCodes.BAD_REQUEST, "Invalid benefits format");
+        }
+        safePayload.benefits = sanitizedBenefits;
     }
     if (Array.isArray(payload.syllabus)) {
-        safePayload.syllabus = payload.syllabus.filter((item) => typeof item === "string");
+        const sanitizedSyllabus = payload.syllabus.filter((item) => typeof item === "string");
+        if (sanitizedSyllabus.length !== payload.syllabus.length &&
+            payload.syllabus.length > 0) {
+            throw new AppError(StatusCodes.BAD_REQUEST, "Invalid syllabus format");
+        }
+        safePayload.syllabus = sanitizedSyllabus;
     }
     if (typeof payload.maxSeats === "number") {
         safePayload.maxSeats = payload.maxSeats;
