@@ -18,7 +18,14 @@ const globalErrorHandler = (
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _next: NextFunction,
 ) => {
-  logger.error(err, "Global error caught");
+  logger.error(
+    {
+      message: err instanceof Error ? err.message : String(err),
+      name: err instanceof Error ? err.name : "UnknownError",
+      stack: err instanceof Error ? err.stack : undefined,
+    },
+    "Global error caught",
+  );
 
   let statusCode = StatusCodes.INTERNAL_SERVER_ERROR;
   let message = "Something went wrong!!!";
