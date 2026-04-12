@@ -1,5 +1,5 @@
 import z from "zod";
-import { IsActive, UserRole } from "./user.interface";
+import { IsActive, UserRole } from "./user.interface.js";
 /**
  * Shared password complexity rules.
  * Reused across registration, change-password, and set-password flows.

@@ -1,10 +1,10 @@
 import { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
-import catchAsync from "../../utils/catchAsync";
-import { parseStringParam } from "../../utils/parseParams";
-import sendResponse from "../../utils/sendResponse";
-import { ICategory } from "./category.interface";
-import CategoryService from "./category.service";
+import catchAsync from "../../utils/catchAsync.js";
+import { parseStringParam } from "../../utils/parseParams.js";
+import sendResponse from "../../utils/sendResponse.js";
+import { ICategory } from "./category.interface.js";
+import CategoryService from "./category.service.js";
 
 const createCategory = catchAsync(async (req: Request, res: Response) => {
   const payload = {

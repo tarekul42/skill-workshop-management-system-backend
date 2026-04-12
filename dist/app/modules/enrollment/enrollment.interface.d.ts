@@ -1,7 +1,7 @@
 import { Types } from "mongoose";
-import { IPayment } from "../payment/payment.interface";
-import { IUser } from "../user/user.interface";
-import { IWorkshop } from "../workshop/workshop.interface";
+import { IPayment } from "../payment/payment.interface.js";
+import { IUser } from "../user/user.interface.js";
+import { IWorkshop } from "../workshop/workshop.interface.js";
 declare enum ENROLLMENT_STATUS {
     PENDING = "PENDING",
     CANCEL = "CANCEL",

@@ -1,8 +1,8 @@
 import { StatusCodes } from "http-status-codes";
-import catchAsync from "../../utils/catchAsync";
-import { parseStringParam } from "../../utils/parseParams";
-import sendResponse from "../../utils/sendResponse";
-import AuditService from "./audit.service";
+import catchAsync from "../../utils/catchAsync.js";
+import { parseStringParam } from "../../utils/parseParams.js";
+import sendResponse from "../../utils/sendResponse.js";
+import AuditService from "./audit.service.js";
 const getAuditLogs = catchAsync(async (req, res) => {
     const { page, limit, collectionName, action, performedBy, documentId, startDate, endDate, } = req.query;
     const result = await AuditService.getAuditLogs({

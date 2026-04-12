@@ -1,4 +1,4 @@
-import { IUser } from "../modules/user/user.interface";
+import { IUser } from "../modules/user/user.interface.js";
 declare const createUserTokens: (user: Partial<IUser>) => Promise<{
     accessToken: string;
     refreshToken: string;

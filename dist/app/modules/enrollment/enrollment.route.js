@@ -1,10 +1,10 @@
 import express from "express";
-import checkAuth from "../../middlewares/checkAuth";
-import validateRequest from "../../middlewares/validateRequest";
-import { adminCrudLimiter } from "../../utils/rateLimiter";
-import { UserRole } from "../user/user.interface";
-import EnrollmentController from "./enrollment.controller";
-import { createEnrollmentZodSchema, updateEnrollmentStatusZodSchema, } from "./enrollment.validation";
+import checkAuth from "../../middlewares/checkAuth.js";
+import validateRequest from "../../middlewares/validateRequest.js";
+import { adminCrudLimiter } from "../../utils/rateLimiter.js";
+import { UserRole } from "../user/user.interface.js";
+import EnrollmentController from "./enrollment.controller.js";
+import { createEnrollmentZodSchema, updateEnrollmentStatusZodSchema, } from "./enrollment.validation.js";
 const router = express.Router();
 /**
  * @openapi
@@ -201,6 +201,8 @@ router.get("/:enrollmentId", adminCrudLimiter, checkAuth(...Object.values(UserRo
  *         $ref: "#/components/responses/BadRequestError"
  *       401:
  *         $ref: "#/components/responses/UnauthorizedError"
+ *       404:
+ *         $ref: "#/components/responses/NotFoundError"
  *       429:
  *         $ref: "#/components/responses/TooManyRequestsError"
  *       500:
@@ -236,6 +238,8 @@ router.patch("/:enrollmentId/status", adminCrudLimiter, checkAuth(...Object.valu
  *         $ref: "#/components/responses/UnauthorizedError"
  *       403:
  *         $ref: "#/components/responses/ForbiddenError"
+ *       404:
+ *         $ref: "#/components/responses/NotFoundError"
  *       429:
  *         $ref: "#/components/responses/TooManyRequestsError"
  *       500:

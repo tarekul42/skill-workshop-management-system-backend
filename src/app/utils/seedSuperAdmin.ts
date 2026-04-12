@@ -1,8 +1,8 @@
 import bcrypt from "bcryptjs";
-import envVariables from "../config/env";
-import { IAuthProvider, IUser, UserRole } from "../modules/user/user.interface";
-import User from "../modules/user/user.model";
-import logger from "./logger";
+import envVariables from "../config/env.js";
+import { IAuthProvider, IUser, UserRole } from "../modules/user/user.interface.js";
+import User from "../modules/user/user.model.js";
+import logger from "./logger.js";
 
 const seedSuperAdmin = async () => {
   try {

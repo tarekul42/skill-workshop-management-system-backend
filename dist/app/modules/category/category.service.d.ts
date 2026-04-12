@@ -1,4 +1,4 @@
-import { ICategory } from "./category.interface";
+import { ICategory } from "./category.interface.js";
 declare const CategoryService: {
     createCategory: (payload: ICategory) => Promise<import("mongoose").Document<unknown, {}, ICategory, {}, import("mongoose").DefaultSchemaOptions> & ICategory & {
         _id: import("mongoose").Types.ObjectId;

@@ -1,12 +1,12 @@
 import type { Server } from "http";
 import mongoose from "mongoose";
-import app from "./app";
-import envVariables from "./app/config/env";
-import { connectRedis, redisClient } from "./app/config/redis.config";
-import { mailQueue } from "./app/jobs/mail.queue";
-import { mailWorker } from "./app/jobs/mail.worker";
-import logger from "./app/utils/logger";
-import seedSuperAdmin from "./app/utils/seedSuperAdmin";
+import app from "./app.js";
+import envVariables from "./app/config/env.js";
+import { connectRedis, redisClient } from "./app/config/redis.config.js";
+import { mailQueue } from "./app/jobs/mail.queue.js";
+import { mailWorker } from "./app/jobs/mail.worker.js";
+import logger from "./app/utils/logger.js";
+import seedSuperAdmin from "./app/utils/seedSuperAdmin.js";
 
 let server: Server;
 let isShuttingDown = false;

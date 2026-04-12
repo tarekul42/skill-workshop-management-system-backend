@@ -3,14 +3,14 @@ import crypto from "crypto";
 import { StatusCodes } from "http-status-codes";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import validator from "validator";
-import envVariables from "../../config/env";
-import { redisClient } from "../../config/redis.config";
-import AppError from "../../errorHelpers/AppError";
-import { mailQueue } from "../../jobs/mail.queue";
-import { invalidateToken } from "../../utils/tokenBlacklist";
-import { createNewAccessToken } from "../../utils/userTokens";
-import { IAuthProvider, IsActive } from "../user/user.interface";
-import User from "../user/user.model";
+import envVariables from "../../config/env.js";
+import { redisClient } from "../../config/redis.config.js";
+import AppError from "../../errorHelpers/AppError.js";
+import { mailQueue } from "../../jobs/mail.queue.js";
+import { invalidateToken } from "../../utils/tokenBlacklist.js";
+import { createNewAccessToken } from "../../utils/userTokens.js";
+import { IAuthProvider, IsActive } from "../user/user.interface.js";
+import User from "../user/user.model.js";
 
 const getNewAccessToken = async (refreshToken: string) => {
   if (!refreshToken) {

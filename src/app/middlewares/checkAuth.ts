@@ -1,12 +1,12 @@
 import { NextFunction, Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import { JwtPayload } from "jsonwebtoken";
-import envVariables from "../config/env";
-import AppError from "../errorHelpers/AppError";
-import { IsActive } from "../modules/user/user.interface";
-import User from "../modules/user/user.model";
-import { verifyToken } from "../utils/jwt";
-import { isTokenBlacklisted } from "../utils/tokenBlacklist";
+import envVariables from "../config/env.js";
+import AppError from "../errorHelpers/AppError.js";
+import { IsActive } from "../modules/user/user.interface.js";
+import User from "../modules/user/user.model.js";
+import { verifyToken } from "../utils/jwt.js";
+import { isTokenBlacklisted } from "../utils/tokenBlacklist.js";
 
 const checkAuth =
   (...authRoles: string[]) =>

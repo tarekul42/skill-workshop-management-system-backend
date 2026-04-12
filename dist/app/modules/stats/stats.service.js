@@ -1,10 +1,10 @@
-import { redisClient } from "../../config/redis.config";
-import Enrollment from "../enrollment/enrollment.model";
-import { PAYMENT_STATUS } from "../payment/payment.interface";
-import Payment from "../payment/payment.model";
-import { IsActive } from "../user/user.interface";
-import User from "../user/user.model";
-import { WorkShop } from "../workshop/workshop.model";
+import { redisClient } from "../../config/redis.config.js";
+import Enrollment from "../enrollment/enrollment.model.js";
+import { PAYMENT_STATUS } from "../payment/payment.interface.js";
+import Payment from "../payment/payment.model.js";
+import { IsActive } from "../user/user.interface.js";
+import User from "../user/user.model.js";
+import { WorkShop } from "../workshop/workshop.model.js";
 const getUsersStats = async () => {
     const CACHE_KEY = "stats:admin:users";
     const CACHE_TTL = 300;

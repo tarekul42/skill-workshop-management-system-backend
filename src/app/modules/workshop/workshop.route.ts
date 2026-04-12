@@ -1,16 +1,16 @@
 import express from "express";
-import multerUpload from "../../config/multer.config";
-import checkAuth from "../../middlewares/checkAuth";
-import validateRequest from "../../middlewares/validateRequest";
-import { adminCrudLimiter } from "../../utils/rateLimiter";
-import { UserRole } from "../user/user.interface";
-import WorkshopController from "./workshop.controller";
+import multerUpload from "../../config/multer.config.js";
+import checkAuth from "../../middlewares/checkAuth.js";
+import validateRequest from "../../middlewares/validateRequest.js";
+import { adminCrudLimiter } from "../../utils/rateLimiter.js";
+import { UserRole } from "../user/user.interface.js";
+import WorkshopController from "./workshop.controller.js";
 import {
   createLevelZodSchema,
   createWorkshopZodSchema,
   updateLevelZodSchema,
   updateWorkshopZodSchema,
-} from "./workshop.validation";
+} from "./workshop.validation.js";
 
 const router = express.Router();
 

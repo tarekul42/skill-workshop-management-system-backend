@@ -1,6 +1,6 @@
 import { model, Schema } from "mongoose";
-import auditPlugin from "../../utils/auditPlugin";
-import softDeletePlugin from "../../utils/softDeletePlugin";
+import auditPlugin from "../../utils/auditPlugin.js";
+import softDeletePlugin from "../../utils/softDeletePlugin.js";
 const categorySchema = new Schema({
     name: { type: String, required: true, unique: true, trim: true },
     slug: { type: String, required: true, unique: true, trim: true },

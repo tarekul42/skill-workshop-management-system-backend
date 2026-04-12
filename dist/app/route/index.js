@@ -1,14 +1,14 @@
 import { Router } from "express";
-import { AuditRoutes } from "../modules/audit/audit.route";
-import AuthRoutes from "../modules/auth/auth.route";
-import CategoryRoutes from "../modules/category/category.route";
-import EnrollmentRoutes from "../modules/enrollment/enrollment.route";
-import { HealthRoutes } from "../modules/health/health.route";
-import OTPRoutes from "../modules/otp/otp.route";
-import PaymentRoutes from "../modules/payment/payment.route";
-import StatsRoutes from "../modules/stats/stats.route";
-import UserRoutes from "../modules/user/user.route";
-import WorkshopRoutes from "../modules/workshop/workshop.route";
+import { AuditRoutes } from "../modules/audit/audit.route.js";
+import AuthRoutes from "../modules/auth/auth.route.js";
+import CategoryRoutes from "../modules/category/category.route.js";
+import EnrollmentRoutes from "../modules/enrollment/enrollment.route.js";
+import { HealthRoutes } from "../modules/health/health.route.js";
+import OTPRoutes from "../modules/otp/otp.route.js";
+import PaymentRoutes from "../modules/payment/payment.route.js";
+import StatsRoutes from "../modules/stats/stats.route.js";
+import UserRoutes from "../modules/user/user.route.js";
+import WorkshopRoutes from "../modules/workshop/workshop.route.js";
 const router = Router();
 const moduleRoutes = [
     {

@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
-import logger from "../utils/logger";
+import logger from "../utils/logger.js";
 
 const notFound = (req: Request, res: Response) => {
   logger.error({

@@ -1,10 +1,10 @@
 import { Request, Response } from "express";
 import StatusCodes from "http-status-codes";
 import { JwtPayload } from "jsonwebtoken";
-import catchAsync from "../../utils/catchAsync";
-import { parseStringParam } from "../../utils/parseParams";
-import sendResponse from "../../utils/sendResponse";
-import UserServices from "./user.service";
+import catchAsync from "../../utils/catchAsync.js";
+import { parseStringParam } from "../../utils/parseParams.js";
+import sendResponse from "../../utils/sendResponse.js";
+import UserServices from "./user.service.js";
 
 const createUser = catchAsync(async (req: Request, res: Response) => {
   const user = await UserServices.createUser(req.body);

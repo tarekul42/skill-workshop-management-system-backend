@@ -1,7 +1,7 @@
 import multer from "multer";
 import { CloudinaryStorage } from "multer-storage-cloudinary";
 import path from "path";
-import { cloudinaryUpload } from "./cloudinary.config";
+import { cloudinaryUpload } from "./cloudinary.config.js";
 const storage = new CloudinaryStorage({
     cloudinary: cloudinaryUpload,
     params: {
@@ -10,8 +10,7 @@ const storage = new CloudinaryStorage({
                 .toLowerCase()
                 .replace(/\s+/g, "-") // empty space remove replace with dash
                 .replace(/\./g, "-")
-                // eslint-disable-next-line no-useless-escape
-                .replace(/[^a-z0-9\-\.]/g, ""); // non alpha numeric - !@#$
+                .replace(/[^a-z0-9.-]/g, ""); // non alpha numeric - !@#$
             const parts = file.originalname.split(".");
             const extension = parts.length > 1 ? parts.pop() : "";
             const uniqueFileName = Math.random().toString(36).substring(2) +

@@ -1,7 +1,7 @@
 import { StatusCodes } from "http-status-codes";
-import catchAsync from "../../utils/catchAsync";
-import sendResponse from "../../utils/sendResponse";
-import StatsService from "./stats.service";
+import catchAsync from "../../utils/catchAsync.js";
+import sendResponse from "../../utils/sendResponse.js";
+import StatsService from "./stats.service.js";
 const getEnrollmentStatus = catchAsync(async (req, res) => {
     const stats = await StatsService.getEnrollmentStats();
     sendResponse(res, {

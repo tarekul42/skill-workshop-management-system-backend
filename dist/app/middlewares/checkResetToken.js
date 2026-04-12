@@ -1,10 +1,10 @@
 import { StatusCodes } from "http-status-codes";
 import mongoose from "mongoose";
-import envVariables from "../config/env";
-import AppError from "../errorHelpers/AppError";
-import { IsActive } from "../modules/user/user.interface";
-import { verifyToken } from "../utils/jwt";
-import { isTokenBlacklisted } from "../utils/tokenBlacklist";
+import envVariables from "../config/env.js";
+import AppError from "../errorHelpers/AppError.js";
+import { IsActive } from "../modules/user/user.interface.js";
+import { verifyToken } from "../utils/jwt.js";
+import { isTokenBlacklisted } from "../utils/tokenBlacklist.js";
 /**
  * Middleware to verify password reset tokens using the dedicated RESET_PASSWORD_SECRET.
  * Also checks for user status and token blacklisting.

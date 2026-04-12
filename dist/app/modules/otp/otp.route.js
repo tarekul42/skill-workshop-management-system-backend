@@ -1,8 +1,8 @@
 import express from "express";
-import validateRequest from "../../middlewares/validateRequest";
-import { strictLimiter } from "../../utils/rateLimiter";
-import OTPController from "./otp.controller";
-import { sendOtpZodSchema, verifyOtpZodSchema } from "./otp.validation";
+import validateRequest from "../../middlewares/validateRequest.js";
+import { strictLimiter } from "../../utils/rateLimiter.js";
+import OTPController from "./otp.controller.js";
+import { sendOtpZodSchema, verifyOtpZodSchema } from "./otp.validation.js";
 const router = express.Router();
 /**
  * @openapi

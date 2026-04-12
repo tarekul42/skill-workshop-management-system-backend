@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import client from "prom-client";
-import { redisClient } from "../config/redis.config";
-import { mailQueue } from "../jobs/mail.queue";
+import { redisClient } from "../config/redis.config.js";
+import { mailQueue } from "../jobs/mail.queue.js";
 // Create a Registry which registers the metrics
 const register = new client.Registry();
 // Add a default label which is added to all metrics

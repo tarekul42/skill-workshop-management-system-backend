@@ -1,4 +1,4 @@
-import { IPayment } from "./payment.interface";
+import { IPayment } from "./payment.interface.js";
 declare const Payment: import("mongoose").Model<IPayment, {}, {}, {}, import("mongoose").Document<unknown, {}, IPayment, {}, import("mongoose").DefaultSchemaOptions> & IPayment & Required<{
     _id: import("mongoose").Types.ObjectId;
 }> & {

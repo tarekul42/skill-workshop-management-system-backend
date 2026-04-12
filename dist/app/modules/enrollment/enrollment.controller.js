@@ -1,8 +1,8 @@
 import { StatusCodes } from "http-status-codes";
-import catchAsync from "../../utils/catchAsync";
-import { parseStringParam } from "../../utils/parseParams";
-import sendResponse from "../../utils/sendResponse";
-import EnrollmentService from "./enrollment.service";
+import catchAsync from "../../utils/catchAsync.js";
+import { parseStringParam } from "../../utils/parseParams.js";
+import sendResponse from "../../utils/sendResponse.js";
+import EnrollmentService from "./enrollment.service.js";
 const createEnrollment = catchAsync(async (req, res) => {
     const userId = req.user.userId;
     const payload = req.body;

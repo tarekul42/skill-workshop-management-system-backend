@@ -1,6 +1,6 @@
 import { createClient } from "redis";
-import logger from "../utils/logger";
-import envVariables from "./env";
+import logger from "../utils/logger.js";
+import envVariables from "./env.js";
 
 const redisOptions: Parameters<typeof createClient>[0] = {
   socket: {

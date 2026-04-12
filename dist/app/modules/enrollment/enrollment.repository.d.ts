@@ -1,5 +1,5 @@
 import { ClientSession } from "mongoose";
-import { IEnrollment } from "./enrollment.interface";
+import { IEnrollment } from "./enrollment.interface.js";
 declare const EnrollmentRepository: {
     startTransaction: () => Promise<import("mongodb").ClientSession>;
     createEnrollmentWithPayment: (payload: Partial<IEnrollment>, userId: string, session: ClientSession) => Promise<{

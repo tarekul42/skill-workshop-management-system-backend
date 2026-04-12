@@ -1,10 +1,10 @@
 import { StatusCodes } from "http-status-codes";
-import envVariables from "../../config/env";
-import catchAsync from "../../utils/catchAsync";
-import { parseStringParam } from "../../utils/parseParams";
-import sendResponse from "../../utils/sendResponse";
-import SSLService from "../sslCommerz/sslCommerz.service";
-import PaymentService from "./payment.service";
+import envVariables from "../../config/env.js";
+import catchAsync from "../../utils/catchAsync.js";
+import { parseStringParam } from "../../utils/parseParams.js";
+import sendResponse from "../../utils/sendResponse.js";
+import SSLService from "../sslCommerz/sslCommerz.service.js";
+import PaymentService from "./payment.service.js";
 const initPayment = catchAsync(async (req, res) => {
     const enrollmentId = parseStringParam(req.params.enrollmentId, "enrollmentId");
     const tokenUser = req.user;

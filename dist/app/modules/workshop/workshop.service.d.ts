@@ -1,6 +1,6 @@
 import { JwtPayload } from "jsonwebtoken";
-import { ISoftDelete } from "../../utils/softDeletePlugin";
-import { ILevel, IWorkshop } from "./workshop.interface";
+import { ISoftDelete } from "../../utils/softDeletePlugin.js";
+import { ILevel, IWorkshop } from "./workshop.interface.js";
 declare const WorkshopService: {
     createLevel: (payload: ILevel) => Promise<import("mongoose").Document<unknown, {}, ILevel, {}, import("mongoose").DefaultSchemaOptions> & ILevel & {
         _id: import("mongoose").Types.ObjectId;

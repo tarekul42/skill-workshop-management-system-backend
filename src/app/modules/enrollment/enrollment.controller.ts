@@ -1,11 +1,11 @@
 import { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import { JwtPayload } from "jsonwebtoken";
-import catchAsync from "../../utils/catchAsync";
-import { parseStringParam } from "../../utils/parseParams";
-import sendResponse from "../../utils/sendResponse";
-import { ENROLLMENT_STATUS } from "./enrollment.interface";
-import EnrollmentService from "./enrollment.service";
+import catchAsync from "../../utils/catchAsync.js";
+import { parseStringParam } from "../../utils/parseParams.js";
+import sendResponse from "../../utils/sendResponse.js";
+import { ENROLLMENT_STATUS } from "./enrollment.interface.js";
+import EnrollmentService from "./enrollment.service.js";
 
 const createEnrollment = catchAsync(async (req: Request, res: Response) => {
   const userId = (req.user as JwtPayload).userId;

@@ -1,7 +1,7 @@
 import crypto from "crypto";
-import { redisClient } from "../config/redis.config";
-import { verifyToken } from "./jwt";
-import logger from "./logger";
+import { redisClient } from "../config/redis.config.js";
+import { verifyToken } from "./jwt.js";
+import logger from "./logger.js";
 /**
  * Generates a hash for the token to be used as a key in Redis.
  * @param token - The token string.

@@ -1,5 +1,5 @@
 import { StatusCodes } from "http-status-codes";
-import { IGenericErrorResponse } from "../interfaces/error.types";
+import { IGenericErrorResponse } from "../interfaces/error.types.js";
 
 const handleDuplicateError = (err: Error): IGenericErrorResponse => {
   const matchedArray = err.message.match(/"([^"]*)"/);

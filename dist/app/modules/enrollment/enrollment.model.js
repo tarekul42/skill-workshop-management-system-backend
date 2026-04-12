@@ -1,7 +1,7 @@
 import { model, Schema } from "mongoose";
-import auditPlugin from "../../utils/auditPlugin";
-import softDeletePlugin from "../../utils/softDeletePlugin";
-import { ENROLLMENT_STATUS } from "./enrollment.interface";
+import auditPlugin from "../../utils/auditPlugin.js";
+import softDeletePlugin from "../../utils/softDeletePlugin.js";
+import { ENROLLMENT_STATUS } from "./enrollment.interface.js";
 const enrollmentSchema = new Schema({
     user: {
         type: Schema.Types.ObjectId,

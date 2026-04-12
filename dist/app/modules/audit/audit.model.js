@@ -1,5 +1,5 @@
 import { model, Schema } from "mongoose";
-import { AuditAction } from "./audit.interface";
+import { AuditAction } from "./audit.interface.js";
 const auditLogSchema = new Schema({
     action: {
         type: String,

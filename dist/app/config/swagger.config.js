@@ -1,6 +1,6 @@
 import path from "path";
 import swaggerJsdoc from "swagger-jsdoc";
-import envVariables from "./env";
+import envVariables from "./env.js";
 // Use the runtime working directory as the project root.
 // - In local dev/tests: cwd is the repo root
 // - In Docker: WORKDIR is /app (repo root in image)

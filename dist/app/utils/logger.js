@@ -1,5 +1,5 @@
 import pino from "pino";
-import envVariables from "../config/env";
+import envVariables from "../config/env.js";
 const transport = envVariables.NODE_ENV === "development"
     ? {
         target: "pino-pretty",

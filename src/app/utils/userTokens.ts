@@ -1,13 +1,13 @@
 import crypto from "crypto";
 import { StatusCodes } from "http-status-codes";
-import envVariables from "../config/env";
-import { redisClient } from "../config/redis.config";
-import AppError from "../errorHelpers/AppError";
-import { IsActive, IUser } from "../modules/user/user.interface";
-import User from "../modules/user/user.model";
-import { generateToken, verifyToken } from "./jwt";
-import logger from "./logger";
-import { parseExpiryToSeconds } from "./parseExpiry";
+import envVariables from "../config/env.js";
+import { redisClient } from "../config/redis.config.js";
+import AppError from "../errorHelpers/AppError.js";
+import { IsActive, IUser } from "../modules/user/user.interface.js";
+import User from "../modules/user/user.model.js";
+import { generateToken, verifyToken } from "./jwt.js";
+import logger from "./logger.js";
+import { parseExpiryToSeconds } from "./parseExpiry.js";
 
 const hashToken = (token: string) =>
   crypto.createHash("sha256").update(token).digest("hex");

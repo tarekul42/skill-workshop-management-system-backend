@@ -3,7 +3,7 @@ import { ZodError } from "zod";
 import {
   IErrorSources,
   IGenericErrorResponse,
-} from "../interfaces/error.types";
+} from "../interfaces/error.types.js";
 
 const handleZodError = (err: ZodError): IGenericErrorResponse => {
   const errorSources: IErrorSources[] = err.issues.map((issue) => ({

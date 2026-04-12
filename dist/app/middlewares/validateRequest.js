@@ -1,5 +1,5 @@
 import { StatusCodes } from "http-status-codes";
-import AppError from "../errorHelpers/AppError";
+import AppError from "../errorHelpers/AppError.js";
 const validateRequest = (zodSchema) => async (req, _res, next) => {
     try {
         if (!req.body) {

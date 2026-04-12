@@ -11,7 +11,7 @@ declare const createUserZodSchema: z.ZodObject<{
     phone: z.ZodOptional<z.ZodString>;
     age: z.ZodOptional<z.ZodNumber>;
     address: z.ZodOptional<z.ZodString>;
-}, z.core.$strip>;
+}, z.z.core.$strip>;
 declare const updateUserZodSchema: z.ZodObject<{
     name: z.ZodOptional<z.ZodString>;
     password: z.ZodOptional<z.ZodString>;
@@ -26,18 +26,18 @@ declare const updateUserZodSchema: z.ZodObject<{
     role: z.ZodOptional<z.ZodEnum<{
         [x: string]: string;
     }>>;
-}, z.core.$strip>;
+}, z.z.core.$strip>;
 declare const changePasswordZodSchema: z.ZodObject<{
     oldPassword: z.ZodString;
     newPassword: z.ZodString;
-}, z.core.$strip>;
+}, z.z.core.$strip>;
 declare const setPasswordZodSchema: z.ZodObject<{
     password: z.ZodString;
-}, z.core.$strip>;
+}, z.z.core.$strip>;
 declare const resetPasswordZodSchema: z.ZodObject<{
     newPassword: z.ZodString;
-}, z.core.$strip>;
+}, z.z.core.$strip>;
 declare const forgotPasswordZodSchema: z.ZodObject<{
     email: z.ZodString;
-}, z.core.$strip>;
+}, z.z.core.$strip>;
 export { changePasswordZodSchema, createUserZodSchema, forgotPasswordZodSchema, resetPasswordZodSchema, setPasswordZodSchema, updateUserZodSchema, };
