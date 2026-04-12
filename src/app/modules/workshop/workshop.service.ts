@@ -353,14 +353,34 @@ const updateWorkshop = async (
     safePayload.prerequisites = sanitizedPrerequisites;
   }
   if (Array.isArray(payload.benefits)) {
-    safePayload.benefits = payload.benefits.filter(
+    const sanitizedBenefits = payload.benefits.filter(
       (item): item is string => typeof item === "string",
     );
+    if (
+      sanitizedBenefits.length !== payload.benefits.length &&
+      payload.benefits.length > 0
+    ) {
+      throw new AppError(
+        StatusCodes.BAD_REQUEST,
+        "Invalid benefits format",
+      );
+    }
+    safePayload.benefits = sanitizedBenefits;
   }
   if (Array.isArray(payload.syllabus)) {
-    safePayload.syllabus = payload.syllabus.filter(
+    const sanitizedSyllabus = payload.syllabus.filter(
       (item): item is string => typeof item === "string",
     );
+    if (
+      sanitizedSyllabus.length !== payload.syllabus.length &&
+      payload.syllabus.length > 0
+    ) {
+      throw new AppError(
+        StatusCodes.BAD_REQUEST,
+        "Invalid syllabus format",
+      );
+    }
+    safePayload.syllabus = sanitizedSyllabus;
   }
   if (typeof payload.maxSeats === "number") {
     safePayload.maxSeats = payload.maxSeats;
