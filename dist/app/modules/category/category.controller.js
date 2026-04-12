@@ -1,0 +1,71 @@
+import { StatusCodes } from "http-status-codes";
+import catchAsync from "../../utils/catchAsync";
+import { parseStringParam } from "../../utils/parseParams";
+import sendResponse from "../../utils/sendResponse";
+import CategoryService from "./category.service";
+const createCategory = catchAsync(async (req, res) => {
+    const payload = {
+        ...req.body,
+        ...(req.file?.path && { thumbnail: req.file.path }),
+    };
+    const result = await CategoryService.createCategory(payload);
+    sendResponse(res, {
+        statusCode: StatusCodes.CREATED,
+        success: true,
+        message: "Category created successfully",
+        data: result,
+    });
+});
+const getSingleCategory = catchAsync(async (req, res) => {
+    const slug = parseStringParam(req.params.slug, "slug");
+    const result = await CategoryService.getSingleCategory(slug);
+    sendResponse(res, {
+        statusCode: StatusCodes.OK,
+        success: true,
+        message: "Category fetched successfully",
+        data: result,
+    });
+});
+const getAllCategories = catchAsync(async (req, res) => {
+    const query = req.query;
+    const result = await CategoryService.getAllCategories(query);
+    sendResponse(res, {
+        statusCode: StatusCodes.OK,
+        success: true,
+        message: "Categories fetched successfully",
+        data: result.data,
+        meta: result.meta,
+    });
+});
+const updateCategory = catchAsync(async (req, res) => {
+    const id = parseStringParam(req.params.id, "id");
+    const payload = {
+        ...req.body,
+        ...(req.file?.path && { thumbnail: req.file.path }),
+    };
+    const result = await CategoryService.updateCategory(id, payload);
+    sendResponse(res, {
+        statusCode: StatusCodes.OK,
+        success: true,
+        message: "Category updated successfully",
+        data: result,
+    });
+});
+const deleteCategory = catchAsync(async (req, res) => {
+    const id = parseStringParam(req.params.id, "id");
+    await CategoryService.deleteCategory(id);
+    sendResponse(res, {
+        statusCode: StatusCodes.OK,
+        success: true,
+        message: "Category deleted successfully",
+        data: null,
+    });
+});
+const CategoryController = {
+    createCategory,
+    getSingleCategory,
+    getAllCategories,
+    updateCategory,
+    deleteCategory,
+};
+export default CategoryController;

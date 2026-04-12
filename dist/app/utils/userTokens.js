@@ -1,0 +1,92 @@
+import crypto from "crypto";
+import { StatusCodes } from "http-status-codes";
+import envVariables from "../config/env";
+import { redisClient } from "../config/redis.config";
+import AppError from "../errorHelpers/AppError";
+import { IsActive } from "../modules/user/user.interface";
+import User from "../modules/user/user.model";
+import { generateToken, verifyToken } from "./jwt";
+import logger from "./logger";
+import { parseExpiryToSeconds } from "./parseExpiry";
+const hashToken = (token) => crypto.createHash("sha256").update(token).digest("hex");
+const createUserTokens = async (user) => {
+    const jwtPayload = {
+        userId: user._id,
+        email: user.email,
+        role: user.role,
+    };
+    const accessToken = generateToken(jwtPayload, envVariables.JWT_ACCESS_SECRET, envVariables.JWT_ACCESS_EXPIRES);
+    const refreshToken = generateToken(jwtPayload, envVariables.JWT_REFRESH_SECRET, envVariables.JWT_REFRESH_EXPIRES);
+    const hashedToken = hashToken(refreshToken);
+    try {
+        await redisClient.set(`refresh_token:${user._id}`, hashedToken, {
+            EX: parseExpiryToSeconds(envVariables.JWT_REFRESH_EXPIRES),
+        });
+    }
+    catch (error) {
+        logger.error({
+            msg: "Redis unavailable — refresh token not stored",
+            err: error,
+        });
+    }
+    return { accessToken, refreshToken };
+};
+const createNewAccessToken = async (refreshToken) => {
+    const verifiedPayload = verifyToken(refreshToken, envVariables.JWT_REFRESH_SECRET);
+    const userId = verifiedPayload.userId;
+    let storedHashedToken;
+    try {
+        storedHashedToken = await redisClient.get(`refresh_token:${userId}`);
+    }
+    catch (error) {
+        logger.error({
+            msg: "Redis unavailable — cannot verify refresh token",
+            err: error,
+        });
+        throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, "Authentication service temporarily unavailable");
+    }
+    if (!storedHashedToken || storedHashedToken !== hashToken(refreshToken)) {
+        throw new AppError(StatusCodes.UNAUTHORIZED, "Invalid or expired refresh token");
+    }
+    try {
+        await redisClient.del(`refresh_token:${userId}`);
+    }
+    catch (error) {
+        logger.error({
+            msg: "Redis unavailable — cannot delete old refresh token",
+            err: error,
+        });
+    }
+    const isUserExists = await User.findOne({ email: verifiedPayload.email });
+    if (!isUserExists) {
+        throw new AppError(StatusCodes.BAD_REQUEST, "User does not exist");
+    }
+    if (isUserExists.isActive === IsActive.INACTIVE ||
+        isUserExists.isActive === IsActive.BLOCKED) {
+        throw new AppError(StatusCodes.FORBIDDEN, `User is ${isUserExists.isActive.toLowerCase()}.`);
+    }
+    if (isUserExists.isDeleted) {
+        throw new AppError(StatusCodes.BAD_REQUEST, "User is deleted");
+    }
+    const jwtPayload = {
+        userId: isUserExists._id,
+        email: isUserExists.email,
+        role: isUserExists.role,
+    };
+    const accessToken = generateToken(jwtPayload, envVariables.JWT_ACCESS_SECRET, envVariables.JWT_ACCESS_EXPIRES);
+    const newRefreshToken = generateToken(jwtPayload, envVariables.JWT_REFRESH_SECRET, envVariables.JWT_REFRESH_EXPIRES);
+    const hashedNewToken = hashToken(newRefreshToken);
+    try {
+        await redisClient.set(`refresh_token:${userId}`, hashedNewToken, {
+            EX: parseExpiryToSeconds(envVariables.JWT_REFRESH_EXPIRES),
+        });
+    }
+    catch (error) {
+        logger.error({
+            msg: "Redis unavailable — new refresh token not stored",
+            err: error,
+        });
+    }
+    return { accessToken, refreshToken: newRefreshToken };
+};
+export { createNewAccessToken, createUserTokens };
