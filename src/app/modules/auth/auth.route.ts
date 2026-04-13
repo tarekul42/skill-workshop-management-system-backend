@@ -318,9 +318,13 @@ router.get(
   authLimiter,
   async (req: Request, res: Response, next: NextFunction) => {
     const redirect = req.query.redirect || "/";
+    // Pass state as an OBJECT (not a string) so passport-oauth2 uses the
+    // StateStore properly. A string value bypasses the store entirely —
+    // no nonce is saved to the session, so verification always fails with
+    // "Unable to verify authorization request state."
     passport.authenticate("google", {
       scope: ["profile", "email"],
-      state: redirect as string,
+      state: { redirect: redirect as string },
     })(req, res, next);
   },
 );
