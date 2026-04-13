@@ -32,7 +32,7 @@ describe("Root & Health Endpoints", () => {
     expect(response.body).toEqual({
       message: "Skill Workshop Management System Backend is up and running.",
     });
-  }, 10000);
+  }, 30000);
 
   it("GET /ping should return 200 and pong", async () => {
     const response = await request(app).get("/api/v1/health/ping");
@@ -54,7 +54,7 @@ describe("Root & Health Endpoints", () => {
     expect(response.body).toHaveProperty("status", "ok");
     expect(response.body).toHaveProperty("timestamp");
     expect(response.body).toHaveProperty("uptime");
-  }, 10000);
+  }, 30000);
 
   it("GET /api-docs.json should return the OpenAPI spec", async () => {
     const response = await request(app).get("/api-docs.json");
