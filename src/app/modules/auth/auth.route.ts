@@ -1,9 +1,12 @@
+import crypto from "crypto";
 import { NextFunction, Request, Response, Router } from "express";
 import passport from "passport";
 import envVariables from "../../config/env.js";
+import { redisClient } from "../../config/redis.config.js";
 import checkAuth from "../../middlewares/checkAuth.js";
 import checkResetToken from "../../middlewares/checkResetToken.js";
 import validateRequest from "../../middlewares/validateRequest.js";
+import logger from "../../utils/logger.js";
 import { authLimiter } from "../../utils/rateLimiter.js";
 import { UserRole } from "../user/user.interface.js";
 import {
@@ -317,10 +320,33 @@ router.get(
   "/google",
   authLimiter,
   async (req: Request, res: Response, next: NextFunction) => {
-    const redirect = req.query.redirect || "/";
+    const redirect = (req.query.redirect as string) || "";
+
+    // Generate a cryptographically random state for CSRF protection.
+    // We store it in Redis (NOT in express-session) because Vercel Serverless
+    // functions are stateless and session cookies may not survive the round-trip.
+    const state = crypto.randomBytes(32).toString("hex");
+
+    try {
+      // Store both the state AND the redirect path in Redis (10 min TTL)
+      const pipeline = redisClient.multi();
+      pipeline.set(`oauth_state:${state}`, "1", { EX: 600 });
+      if (redirect) {
+        pipeline.set(`oauth_redirect:${state}`, redirect, { EX: 600 });
+      }
+      await pipeline.exec();
+    } catch (err) {
+      logger.error({ msg: "Failed to store OAuth state in Redis", err });
+      return res.redirect(
+        `${envVariables.FRONTEND_URL}/login?error=${encodeURIComponent("Authentication service temporarily unavailable. Please try again.")}`,
+      );
+    }
+
+    // Pass our custom state to Passport.
+    // Passport will send this to Google and verify it on callback.
     passport.authenticate("google", {
       scope: ["profile", "email"],
-      state: redirect as string,
+      state,
     })(req, res, next);
   },
 );
@@ -343,19 +369,56 @@ router.get(
 router.get(
   "/google/callback",
   authLimiter,
-  (req: Request, res: Response, next: NextFunction) => {
+  async (req: Request, res: Response, next: NextFunction) => {
+    const queryState = req.query.state as string | undefined;
+
+    // ── Verify state against Redis (bypasses session-based verification) ──
+    if (!queryState) {
+      return res.redirect(
+        `${envVariables.FRONTEND_URL}/login?error=${encodeURIComponent("Missing OAuth state parameter")}`,
+      );
+    }
+
+    try {
+      const exists = await redisClient.get(`oauth_state:${queryState}`);
+      if (!exists) {
+        logger.warn({ msg: "[Google OAuth] Invalid or expired state", state: queryState });
+        return res.redirect(
+          `${envVariables.FRONTEND_URL}/login?error=${encodeURIComponent("Invalid or expired OAuth state. Please try again.")}`,
+        );
+      }
+      // Delete state immediately — one-time use (prevents replay attacks)
+      await redisClient.del(`oauth_state:${queryState}`);
+    } catch (err) {
+      logger.error({ msg: "[Google OAuth] Redis error verifying state", err });
+      return res.redirect(
+        `${envVariables.FRONTEND_URL}/login?error=${encodeURIComponent("Authentication service temporarily unavailable")}`,
+      );
+    }
+
+    // State is valid — proceed with passport authentication.
+    // We inject our verified state into the session so passport's internal
+    // state check also passes (it compares req.session[oauth2state] === query state).
+    if (req.session) {
+      req.session["oauth2state"] = queryState;
+      // Ensure session is saved before passing to passport
+      await new Promise<void>((resolve, reject) => {
+        req.session!.save((err) => (err ? reject(err) : resolve()));
+      });
+    }
+
     passport.authenticate(
       "google",
       (err: Error | null, user: Express.User | false | null, info?: { message?: string }) => {
         if (err) {
-          console.error("[Google OAuth] Internal error:", err.message || err);
+          logger.error({ msg: "[Google OAuth] Internal error", err: err.message || err });
           return res.redirect(
             `${envVariables.FRONTEND_URL}/login?error=${encodeURIComponent(`OAuth error: ${err.message || "Internal server error"}`)}`,
           );
         }
         if (!user) {
           const reason = info?.message || "Authentication failed";
-          console.error("[Google OAuth] Auth failed:", reason);
+          logger.error({ msg: "[Google OAuth] Auth failed", detail: reason });
           return res.redirect(
             `${envVariables.FRONTEND_URL}/login?error=${encodeURIComponent(reason)}`,
           );
@@ -366,6 +429,40 @@ router.get(
     )(req, res, next);
   },
   AuthControllers.googleCallback,
+);
+
+/**
+ * @openapi
+ * /auth/exchange-code:
+ *   post:
+ *     summary: Exchange one-time auth code for tokens (after OAuth redirect)
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - code
+ *             properties:
+ *               code:
+ *                 type: string
+ *                 description: One-time authorization code from OAuth redirect
+ *     responses:
+ *       200:
+ *         description: Tokens exchanged successfully
+ *       400:
+ *         $ref: "#/components/responses/BadRequestError"
+ *       429:
+ *         $ref: "#/components/responses/TooManyRequestsError"
+ *       500:
+ *         $ref: "#/components/responses/InternalServerError"
+ */
+router.post(
+  "/exchange-code",
+  authLimiter,
+  AuthControllers.exchangeAuthCode,
 );
 
 const AuthRoutes = router;
