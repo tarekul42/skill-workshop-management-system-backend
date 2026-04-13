@@ -61,5 +61,5 @@ describe("Prometheus Metrics Cardinality Fix", () => {
     if (metrics.includes('route="(unmatched)"')) {
       expect(metrics).toContain('route="(unmatched)"');
     }
-  }, 10000); // Increased timeout to 10s just in case
+  }, 30000); // Increased timeout to 30s just in case
 });

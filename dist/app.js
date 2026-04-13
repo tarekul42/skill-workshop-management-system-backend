@@ -66,6 +66,7 @@ app.use((req, res, next) => {
 const helmetOptions = envVariables.NODE_ENV === "production"
     ? {}
     : {
+        hsts: false,
         contentSecurityPolicy: {
             directives: {
                 defaultSrc: ["'self'"],

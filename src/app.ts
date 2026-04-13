@@ -88,31 +88,32 @@ const helmetOptions =
   envVariables.NODE_ENV === "production"
     ? {}
     : {
-        contentSecurityPolicy: {
-          directives: {
-            defaultSrc: ["'self'"],
-            scriptSrc: [
-              "'self'",
-              "'unsafe-inline'",
-              "'unsafe-eval'",
-              "https://vercel.live",
-              "https://cdnjs.cloudflare.com",
-            ],
-            styleSrc: [
-              "'self'",
-              "'unsafe-inline'",
-              "https://cdnjs.cloudflare.com",
-            ],
-            imgSrc: ["'self'", "data:", "validator.swagger.io"],
-            connectSrc: [
-              "'self'",
-              "https://vercel.live",
-              "https://cdnjs.cloudflare.com",
-            ],
-            frameSrc: ["'self'", "https://vercel.live"],
-          },
+      hsts: false,
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          scriptSrc: [
+            "'self'",
+            "'unsafe-inline'",
+            "'unsafe-eval'",
+            "https://vercel.live",
+            "https://cdnjs.cloudflare.com",
+          ],
+          styleSrc: [
+            "'self'",
+            "'unsafe-inline'",
+            "https://cdnjs.cloudflare.com",
+          ],
+          imgSrc: ["'self'", "data:", "validator.swagger.io"],
+          connectSrc: [
+            "'self'",
+            "https://vercel.live",
+            "https://cdnjs.cloudflare.com",
+          ],
+          frameSrc: ["'self'", "https://vercel.live"],
         },
-      };
+      },
+    };
 
 app.use(helmet(helmetOptions));
 
