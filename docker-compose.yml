@@ -8,7 +8,7 @@ services:
       - mongodb_data:/data/db
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      test: [ "CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')" ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -23,7 +23,7 @@ services:
       - redis_data:/data
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      test: [ "CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping" ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -55,7 +55,7 @@ services:
       EXPRESS_SESSION_SECRET: ${EXPRESS_SESSION_SECRET}
       FRONTEND_URL: ${FRONTEND_URL}
       BACKEND_DEV_URL: ${BACKEND_DEV_URL:-http://localhost:5000}
-      BACKEND_PROD_URL: ${BACKEND_PROD_URL:-http://localhost:5000}
+      BACKEND_PROD_URL: ${BACKEND_PROD_URL:-https://skill-workshop-management-system-backend.vercel.app}
       SSL_STORE_ID: ${SSL_STORE_ID}
       SSL_STORE_PASS: ${SSL_STORE_PASS}
       SSL_PAYMENT_API: ${SSL_PAYMENT_API}
@@ -89,14 +89,7 @@ services:
         limits:
           memory: 1G
     healthcheck:
-      test:
-        [
-          "CMD",
-          "wget",
-          "--spider",
-          "-q",
-          "http://localhost:5000/api/v1/health/health-check",
-        ]
+      test: [ "CMD", "wget", "--spider", "-q", "https://skill-workshop-management-system-backend.vercel.app/api/v1/health/health-check" ]
       interval: 30s
       timeout: 10s
       retries: 3
