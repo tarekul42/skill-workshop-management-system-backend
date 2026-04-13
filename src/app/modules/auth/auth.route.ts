@@ -403,7 +403,7 @@ router.get(
       req.session["oauth2state"] = queryState;
       // Ensure session is saved before passing to passport
       await new Promise<void>((resolve, reject) => {
-        req.session!.save((err) => (err ? reject(err) : resolve()));
+        req.session.save((err) => (err ? reject(err) : resolve()));
       });
     }
 
