@@ -320,14 +320,31 @@ router.get(
   "/google",
   authLimiter,
   async (req: Request, res: Response, next: NextFunction) => {
-    const redirect = req.query.redirect || "/";
-    // Pass state as an OBJECT (not a string) so passport-oauth2 uses the
-    // StateStore properly. A string value bypasses the store entirely —
-    // no nonce is saved to the session, so verification always fails with
-    // "Unable to verify authorization request state."
+    const redirect = (req.query.redirect as string) || "/";
+
+    // Generate a cryptographically random state and store it in Redis.
+    // This replaces the default session-based state management which
+    // doesn't work reliably on Vercel Serverless (stateless functions).
+    const state = crypto.randomBytes(32).toString("hex");
+
+    try {
+      // Store state for verification (10 min TTL)
+      await redisClient.set(`oauth_state:${state}`, "1", { EX: 600 });
+      // Store redirect URL separately (also 10 min TTL)
+      await redisClient.set(`oauth_redirect:${state}`, redirect, { EX: 600 });
+    } catch (err) {
+      logger.error({ msg: "[Google OAuth] Failed to store state in Redis", err });
+      return res.redirect(
+        `${envVariables.FRONTEND_URL}/login?error=${encodeURIComponent("Authentication service temporarily unavailable")}`,
+      );
+    }
+
+    // Pass state as a plain string so passport-oauth2 sends it as-is
+    // (the default StateStore is NOT used — we handle verification in
+    // the callback via Redis).
     passport.authenticate("google", {
       scope: ["profile", "email"],
-      state: { redirect: redirect as string },
+      state,
     })(req, res, next);
   },
 );
@@ -381,7 +398,7 @@ router.get(
     // We inject our verified state into the session so passport's internal
     // state check also passes (it compares req.session[oauth2state] === query state).
     if (req.session) {
-      req.session["oauth2state"] = queryState;
+      (req.session as unknown as Record<string, unknown>)["oauth2state"] = queryState;
       // Ensure session is saved before passing to passport
       await new Promise<void>((resolve, reject) => {
         req.session.save((err) => (err ? reject(err) : resolve()));
