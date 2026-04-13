@@ -197,7 +197,12 @@ const resetPassword = catchAsync(async (req: Request, res: Response) => {
 });
 
 const googleCallback = catchAsync(async (req: Request, res: Response) => {
-  const stateParam = req.query.state;
+  // State is now stored/restored via passport-oauth2's StateStore (not query param).
+  // The original state object ({ redirect: "..." }) is available in req.authInfo.state.
+  const authInfo = (req as Request & { authInfo?: { state?: { redirect?: string } } }).authInfo;
+  const stateParam = authInfo?.state?.redirect
+    ? authInfo.state.redirect
+    : req.query.state;
   let redirectTo = "";
 
   if (typeof stateParam === "string") {

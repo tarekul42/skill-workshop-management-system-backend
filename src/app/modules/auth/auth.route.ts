@@ -4,6 +4,7 @@ import envVariables from "../../config/env.js";
 import checkAuth from "../../middlewares/checkAuth.js";
 import checkResetToken from "../../middlewares/checkResetToken.js";
 import validateRequest from "../../middlewares/validateRequest.js";
+import logger from "../../utils/logger.js";
 import { authLimiter } from "../../utils/rateLimiter.js";
 import { UserRole } from "../user/user.interface.js";
 import {
@@ -318,9 +319,13 @@ router.get(
   authLimiter,
   async (req: Request, res: Response, next: NextFunction) => {
     const redirect = req.query.redirect || "/";
+    // Pass state as an OBJECT (not a string) so passport-oauth2 uses the
+    // StateStore properly. A string value bypasses the store entirely —
+    // no nonce is saved to the session, so verification always fails with
+    // "Unable to verify authorization request state."
     passport.authenticate("google", {
       scope: ["profile", "email"],
-      state: redirect as string,
+      state: { redirect: redirect as string },
     })(req, res, next);
   },
 );
@@ -348,14 +353,14 @@ router.get(
       "google",
       (err: Error | null, user: Express.User | false | null, info?: { message?: string }) => {
         if (err) {
-          console.error("[Google OAuth] Internal error:", err.message || err);
+          logger.error({ msg: "[Google OAuth] Internal error", err: err.message || err });
           return res.redirect(
             `${envVariables.FRONTEND_URL}/login?error=${encodeURIComponent(`OAuth error: ${err.message || "Internal server error"}`)}`,
           );
         }
         if (!user) {
           const reason = info?.message || "Authentication failed";
-          console.error("[Google OAuth] Auth failed:", reason);
+          logger.error({ msg: "[Google OAuth] Auth failed", detail: reason });
           return res.redirect(
             `${envVariables.FRONTEND_URL}/login?error=${encodeURIComponent(reason)}`,
           );
