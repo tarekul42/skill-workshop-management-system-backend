@@ -223,6 +223,7 @@ const googleCallback = catchAsync(async (req: Request, res: Response) => {
         "workshops",
         "enrollments",
         "payments",
+        "google/callback",
         "",
       ];
 
@@ -244,8 +245,25 @@ const googleCallback = catchAsync(async (req: Request, res: Response) => {
 
   const tokenInfo = await createUserTokens(user);
 
+  // Set cookies for same-domain API calls
   setAuthCookie(res, tokenInfo);
-  res.redirect(`${envVariables.FRONTEND_URL}/${redirectTo}`);
+
+  // Also pass tokens via URL params for cross-domain redirect (frontend on different domain)
+  const userData = {
+    _id: user._id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    picture: user.picture,
+    isVerified: user.isVerified,
+  };
+
+  const params = new URLSearchParams({
+    accessToken: tokenInfo.accessToken,
+    user: JSON.stringify(userData),
+  });
+
+  res.redirect(`${envVariables.FRONTEND_URL}/${redirectTo}?${params.toString()}`);
 });
 
 const AuthControllers = {

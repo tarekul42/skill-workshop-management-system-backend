@@ -343,9 +343,28 @@ router.get(
 router.get(
   "/google/callback",
   authLimiter,
-  passport.authenticate("google", {
-    failureRedirect: `${envVariables.FRONTEND_URL}/login?error=${encodeURIComponent("There are some issues with your account. Please contact our support team.")}`,
-  }),
+  (req: Request, res: Response, next: NextFunction) => {
+    passport.authenticate(
+      "google",
+      (err: Error | null, user: Express.User | false | null, info?: { message?: string }) => {
+        if (err) {
+          console.error("[Google OAuth] Internal error:", err.message || err);
+          return res.redirect(
+            `${envVariables.FRONTEND_URL}/login?error=${encodeURIComponent(`OAuth error: ${err.message || "Internal server error"}`)}`,
+          );
+        }
+        if (!user) {
+          const reason = info?.message || "Authentication failed";
+          console.error("[Google OAuth] Auth failed:", reason);
+          return res.redirect(
+            `${envVariables.FRONTEND_URL}/login?error=${encodeURIComponent(reason)}`,
+          );
+        }
+        req.user = user;
+        next();
+      },
+    )(req, res, next);
+  },
   AuthControllers.googleCallback,
 );
 
