@@ -320,33 +320,14 @@ router.get(
   "/google",
   authLimiter,
   async (req: Request, res: Response, next: NextFunction) => {
-    const redirect = (req.query.redirect as string) || "";
-
-    // Generate a cryptographically random state for CSRF protection.
-    // We store it in Redis (NOT in express-session) because Vercel Serverless
-    // functions are stateless and session cookies may not survive the round-trip.
-    const state = crypto.randomBytes(32).toString("hex");
-
-    try {
-      // Store both the state AND the redirect path in Redis (10 min TTL)
-      const pipeline = redisClient.multi();
-      pipeline.set(`oauth_state:${state}`, "1", { EX: 600 });
-      if (redirect) {
-        pipeline.set(`oauth_redirect:${state}`, redirect, { EX: 600 });
-      }
-      await pipeline.exec();
-    } catch (err) {
-      logger.error({ msg: "Failed to store OAuth state in Redis", err });
-      return res.redirect(
-        `${envVariables.FRONTEND_URL}/login?error=${encodeURIComponent("Authentication service temporarily unavailable. Please try again.")}`,
-      );
-    }
-
-    // Pass our custom state to Passport.
-    // Passport will send this to Google and verify it on callback.
+    const redirect = req.query.redirect || "/";
+    // Pass state as an OBJECT (not a string) so passport-oauth2 uses the
+    // StateStore properly. A string value bypasses the store entirely —
+    // no nonce is saved to the session, so verification always fails with
+    // "Unable to verify authorization request state."
     passport.authenticate("google", {
       scope: ["profile", "email"],
-      state,
+      state: { redirect: redirect as string },
     })(req, res, next);
   },
 );
