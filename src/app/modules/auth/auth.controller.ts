@@ -213,14 +213,8 @@ const ALLOWED_REDIRECT_PATHS = [
 ];
 
 const googleCallback = catchAsync(async (req: Request, res: Response) => {
-  // State is now stored/restored via passport-oauth2's StateStore (not query param).
-  // The original state object ({ redirect: "..." }) is available in req.authInfo.state.
-  const authInfo = (req as Request & { authInfo?: { state?: { redirect?: string } } }).authInfo;
-  const stateParam = authInfo?.state?.redirect
-    ? authInfo.state.redirect
-    : req.query.state;
+  // ── 1. Resolve redirect path from Redis (stored during /auth/google) ──
   let redirectTo = "";
-  // We need the state from the query to look up the redirect path
   const stateParam = req.query.state as string | undefined;
   if (stateParam) {
     try {
