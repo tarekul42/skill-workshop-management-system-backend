@@ -94,6 +94,16 @@ const handleIPN = catchAsync(async (req, res) => {
         data: result,
     });
 });
+const getPaymentStatus = catchAsync(async (req, res) => {
+    const transactionId = String(req.query.transactionId || "").trim();
+    const result = await PaymentService.getPaymentStatus(transactionId);
+    sendResponse(res, {
+        statusCode: StatusCodes.OK,
+        success: true,
+        message: "Payment status retrieved successfully",
+        data: result,
+    });
+});
 const refundPayment = catchAsync(async (req, res) => {
     const decodeToken = req.user;
     const { paymentId, reason } = req.body;
@@ -114,5 +124,6 @@ const PaymentController = {
     validatePayment,
     handleIPN,
     refundPayment,
+    getPaymentStatus,
 };
 export default PaymentController;

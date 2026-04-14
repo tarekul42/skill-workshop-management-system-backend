@@ -1,6 +1,8 @@
+import crypto from "crypto";
 import { StatusCodes } from "http-status-codes";
 import passport from "passport";
 import envVariables from "../../config/env.js";
+import { redisClient } from "../../config/redis.config.js";
 import AppError from "../../errorHelpers/AppError.js";
 import catchAsync from "../../utils/catchAsync.js";
 import logger from "../../utils/logger.js";
@@ -133,44 +135,115 @@ const resetPassword = catchAsync(async (req, res) => {
         data: null,
     });
 });
+/**
+ * Allowed redirect paths after OAuth — whitelist to prevent open redirects.
+ */
+const ALLOWED_REDIRECT_PATHS = [
+    "dashboard",
+    "profile",
+    "settings",
+    "workshops",
+    "enrollments",
+    "payments",
+    "google/callback",
+    "",
+];
 const googleCallback = catchAsync(async (req, res) => {
-    const stateParam = req.query.state;
+    // ── 1. Resolve redirect path from Redis (stored during /auth/google) ──
     let redirectTo = "";
-    if (typeof stateParam === "string") {
-        // Normalize backslashes and strip leading slashes for relative path
-        const sanitized = stateParam.replace(/\\/g, "/").replace(/^\/+/, "");
-        // Reject if it looks like an absolute URL (contains protocol)
-        if (!sanitized.includes("://") &&
-            !/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(sanitized)) {
-            let normalizedPath = sanitized.split("?")[0];
-            while (normalizedPath.length > 0 && normalizedPath.startsWith("/")) {
-                normalizedPath = normalizedPath.substring(1);
-            }
-            while (normalizedPath.length > 0 && normalizedPath.endsWith("/")) {
-                normalizedPath = normalizedPath.substring(0, normalizedPath.length - 1);
-            }
-            const ALLOWED_REDIRECT_PATHS = [
-                "dashboard",
-                "profile",
-                "settings",
-                "workshops",
-                "enrollments",
-                "payments",
-                "",
-            ];
-            const isAllowed = ALLOWED_REDIRECT_PATHS.some((p) => normalizedPath === p || normalizedPath.startsWith(p + "/"));
-            if (isAllowed) {
-                redirectTo = sanitized;
+    const stateParam = req.query.state;
+    if (stateParam) {
+        try {
+            const storedRedirect = await redisClient.get(`oauth_redirect:${stateParam}`);
+            if (storedRedirect) {
+                // Clean up
+                await redisClient.del(`oauth_redirect:${stateParam}`);
+                // Validate against whitelist
+                const sanitized = storedRedirect.replace(/\\/g, "/").replace(/^\/+/, "").replace(/\/+$/, "");
+                if (!sanitized.includes("://") &&
+                    !/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(sanitized) &&
+                    ALLOWED_REDIRECT_PATHS.some((p) => sanitized === p || sanitized.startsWith(p + "/"))) {
+                    redirectTo = sanitized;
+                }
             }
         }
+        catch (err) {
+            logger.error({ msg: "Failed to retrieve OAuth redirect", err });
+        }
     }
+    // ── 2. Generate tokens for the authenticated user ──
     const user = req.user;
     if (!user) {
         throw new AppError(StatusCodes.NOT_FOUND, "User Not Found");
     }
     const tokenInfo = await createUserTokens(user);
+    // Set httpOnly cookies for same-domain API calls
     setAuthCookie(res, tokenInfo);
-    res.redirect(`${envVariables.FRONTEND_URL}/${redirectTo}`);
+    // ── 3. Generate a one-time authorization code (NOT the access token) ──
+    // The frontend will exchange this code for the actual tokens via POST.
+    // This avoids exposing the access token in browser URL bar / history / logs.
+    const authCode = crypto.randomBytes(32).toString("hex");
+    const codePayload = {
+        accessToken: tokenInfo.accessToken,
+        refreshToken: tokenInfo.refreshToken,
+        user: {
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            picture: user.picture,
+            isVerified: user.isVerified,
+        },
+    };
+    try {
+        // Store code → payload in Redis with short TTL (2 minutes)
+        await redisClient.set(`auth_code:${authCode}`, JSON.stringify(codePayload), {
+            EX: 120,
+        });
+    }
+    catch (err) {
+        logger.error({ msg: "Failed to store auth code", err });
+        throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, "Authentication service temporarily unavailable");
+    }
+    // ── 4. Redirect to frontend with the one-time code (safe — code is useless without the exchange endpoint) ──
+    res.redirect(`${envVariables.FRONTEND_URL}/${redirectTo}?code=${authCode}`);
+});
+/**
+ * Exchange a one-time authorization code for tokens.
+ * Called by the frontend after the OAuth redirect.
+ * The code is consumed (deleted) after first use.
+ */
+const exchangeAuthCode = catchAsync(async (req, res) => {
+    const { code } = req.body;
+    if (!code || typeof code !== "string") {
+        throw new AppError(StatusCodes.BAD_REQUEST, "Authorization code is required");
+    }
+    // Retrieve and immediately delete the code (one-time use)
+    let payload;
+    try {
+        payload = await redisClient.get(`auth_code:${code}`);
+        await redisClient.del(`auth_code:${code}`);
+    }
+    catch (err) {
+        logger.error({ msg: "Redis error during code exchange", err });
+        throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, "Authentication service temporarily unavailable");
+    }
+    if (!payload) {
+        throw new AppError(StatusCodes.BAD_REQUEST, "Invalid or expired authorization code");
+    }
+    let tokenData;
+    try {
+        tokenData = JSON.parse(payload);
+    }
+    catch {
+        throw new AppError(StatusCodes.INTERNAL_SERVER_ERROR, "Invalid token data");
+    }
+    sendResponse(res, {
+        statusCode: StatusCodes.OK,
+        success: true,
+        message: "Tokens exchanged successfully",
+        data: tokenData,
+    });
 });
 const AuthControllers = {
     credentialsLogin,
@@ -181,5 +254,6 @@ const AuthControllers = {
     forgotPassword,
     resetPassword,
     googleCallback,
+    exchangeAuthCode,
 };
 export default AuthControllers;

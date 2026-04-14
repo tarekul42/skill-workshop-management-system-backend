@@ -20,7 +20,7 @@ import apiRouter from "./app/route/api.js";
 import { auditContextMiddleware } from "./app/utils/auditContext.js";
 import logger from "./app/utils/logger.js";
 import { httpRequestDurationMicroseconds, register, updateSystemMetrics, } from "./app/utils/metrics.js";
-import { generalLimiter } from "./app/utils/rateLimiter.js";
+import { authLimiter, generalLimiter } from "./app/utils/rateLimiter.js";
 const app = express();
 // ──── Security Check ────
 const requiredSecrets = [
@@ -124,7 +124,7 @@ app.use(expressSession({
     cookie: {
         secure: envVariables.NODE_ENV === "production",
         httpOnly: true,
-        sameSite: envVariables.NODE_ENV === "production" ? "strict" : "lax",
+        sameSite: "lax",
         maxAge: 24 * 60 * 60 * 1000, // 24 hours
     },
 }));
@@ -150,12 +150,12 @@ else {
     });
 }
 // ──── CSRF Token Endpoint ────
-app.get("/api/v1/csrf-token", (req, res) => {
+app.get("/api/v1/csrf-token", authLimiter, (req, res) => {
     const token = generateCsrfToken(req, res);
     res.status(200).json({ csrfToken: token });
 });
 // Versioned CSRF token endpoint for newer clients (and to support header-based versioning)
-app.get("/api/csrf-token", (req, res) => {
+app.get("/api/csrf-token", authLimiter, (req, res) => {
     const token = generateCsrfToken(req, res);
     res.status(200).json({ csrfToken: token });
 });

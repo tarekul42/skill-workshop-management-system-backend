@@ -2,7 +2,7 @@ import z from "zod";
 import { ENROLLMENT_STATUS } from "./enrollment.interface.js";
 const createEnrollmentZodSchema = z.object({
     workshop: z.string(),
-    studentCount: z.number().int().positive(),
+    studentCount: z.number().int().positive().max(100),
 });
 const updateEnrollmentStatusZodSchema = z.object({
     status: z.enum(Object.values(ENROLLMENT_STATUS)),

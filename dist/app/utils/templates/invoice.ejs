@@ -1,5 +1,8 @@
 <h1>Invoice for Enrollment</h1>
-<p>Payment ID: <%= paymentId %></p>
-<p>Amount Paid: <%= amount %></p>
-<p>Thank you for your Enrollment</p>
-<p><a href="<%= downloadUrl %>">Download Invoice</a></p>
+<p>Workshop: <%= workshopTitle %></p>
+<p>Student Name: <%= userName %></p>
+<p>Transaction ID: <%= transactionId %></p>
+<p>Enrollment Date: <%= new Date(enrollmentDate).toLocaleDateString() %></p>
+<p>Number of Students: <%= studentCount %></p>
+<p>Amount Paid: <%= totalAmount %> BDT</p>
+<p>Thank you for your enrollment!</p>
