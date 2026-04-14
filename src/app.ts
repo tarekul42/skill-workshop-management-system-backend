@@ -27,7 +27,7 @@ import {
   register,
   updateSystemMetrics,
 } from "./app/utils/metrics.js";
-import { generalLimiter } from "./app/utils/rateLimiter.js";
+import { authLimiter, generalLimiter } from "./app/utils/rateLimiter.js";
 
 const app = express();
 
@@ -193,13 +193,13 @@ if (envVariables.NODE_ENV !== "production") {
 }
 
 // ──── CSRF Token Endpoint ────
-app.get("/api/v1/csrf-token", (req: Request, res: Response) => {
+app.get("/api/v1/csrf-token", authLimiter, (req: Request, res: Response) => {
   const token = generateCsrfToken(req, res);
   res.status(200).json({ csrfToken: token });
 });
 
 // Versioned CSRF token endpoint for newer clients (and to support header-based versioning)
-app.get("/api/csrf-token", (req: Request, res: Response) => {
+app.get("/api/csrf-token", authLimiter, (req: Request, res: Response) => {
   const token = generateCsrfToken(req, res);
   res.status(200).json({ csrfToken: token });
 });

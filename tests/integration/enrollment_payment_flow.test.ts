@@ -36,6 +36,7 @@ import { generateToken } from "../../src/app/utils/jwt";
 // Another approach is to mock the module BEFORE importing app.
 import { mailQueue } from "../../src/app/jobs/mail.queue";
 import * as sslServiceModule from "../../src/app/modules/sslCommerz/sslCommerz.service";
+import * as sendEmailDirectModule from "../../src/app/utils/sendEmailDirect";
 
 // Create spies on the actual imported modules that the app uses.
 const sslInitSpy = spyOn(
@@ -52,6 +53,12 @@ const validatePaymentSpy = spyOn(
 
 // Spy on mailQueue to verify invoice jobs without actually pushing to BullMQ
 const mailQueueSpy = spyOn(mailQueue, "add").mockResolvedValue({} as any);
+
+// Spy on sendEmailDirect to verify invoice email is attempted (works without USE_BULLMQ)
+const sendEmailDirectSpy = spyOn(
+  sendEmailDirectModule,
+  "sendEmailDirect",
+).mockResolvedValue(undefined as any);
 
 describe("Integration: Enrollment -> Payment Flow", () => {
   let userToken: string;
@@ -144,6 +151,7 @@ describe("Integration: Enrollment -> Payment Flow", () => {
     sslInitSpy.mockRestore();
     validatePaymentSpy.mockRestore();
     mailQueueSpy.mockRestore();
+    sendEmailDirectSpy.mockRestore();
 
     // Close connections
     await mongoose.disconnect();
@@ -221,13 +229,13 @@ describe("Integration: Enrollment -> Payment Flow", () => {
     const updatedEnrollment = await Enrollment.findById(enrollmentId);
     expect(updatedEnrollment?.status).toBe(ENROLLMENT_STATUS.COMPLETE);
 
-    // Verify the invoice background job was added
-    expect(mailQueueSpy).toHaveBeenCalled();
-    const mockCall = mailQueueSpy.mock.calls[0];
-    if (mockCall) {
-      expect(mockCall[0]).toBe("invoice");
-      expect(mockCall[1].payload.transactionId).toBe(transactionId);
-      expect(mockCall[1].payload.totalAmount).toBe(1500);
+    // Verify the invoice email was attempted via sendEmailDirect
+    expect(sendEmailDirectSpy).toHaveBeenCalled();
+    const emailCall = sendEmailDirectSpy.mock.calls[0];
+    if (emailCall) {
+      expect(emailCall[0].templateName).toBe("invoice");
+      expect(emailCall[0].templateData?.transactionId).toBe(transactionId);
+      expect(emailCall[0].templateData?.totalAmount).toBe(1500);
     }
   });
 });

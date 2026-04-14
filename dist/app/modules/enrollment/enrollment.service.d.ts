@@ -43,12 +43,12 @@ declare const EnrollmentService: {
     } & {
         id: string;
     }) | null>;
-    cancelEnrollment: (enrollmentId: string, userId: string) => Promise<(import("mongoose").Document<unknown, {}, IEnrollment, {}, import("mongoose").DefaultSchemaOptions> & IEnrollment & Required<{
+    cancelEnrollment: (enrollmentId: string, userId: string) => Promise<import("mongoose").Document<unknown, {}, IEnrollment, {}, import("mongoose").DefaultSchemaOptions> & IEnrollment & Required<{
         _id: Types.ObjectId;
     }> & {
         __v: number;
     } & {
         id: string;
-    }) | null>;
+    }>;
 };
 export default EnrollmentService;

@@ -8,5 +8,6 @@ declare const AuthControllers: {
     forgotPassword: (req: Request, res: Response, next: NextFunction) => void;
     resetPassword: (req: Request, res: Response, next: NextFunction) => void;
     googleCallback: (req: Request, res: Response, next: NextFunction) => void;
+    exchangeAuthCode: (req: Request, res: Response, next: NextFunction) => void;
 };
 export default AuthControllers;

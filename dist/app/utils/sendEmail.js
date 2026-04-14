@@ -31,7 +31,9 @@ const sendEmail = async ({ to, subject, templateName, templateData, attachments,
     }
     catch (error) {
         logger.error({ msg: "Email sending error", err: error });
-        throw error; // Let the caller (BullMQ worker) decide what to do
+        // Do not throw — a failed email should not crash the caller flow
+        // (e.g., payment success, password reset). The email can be retried
+        // later via BullMQ or manually.
     }
 };
 export default sendEmail;

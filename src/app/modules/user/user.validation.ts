@@ -8,6 +8,7 @@ import { IsActive, UserRole } from "./user.interface.js";
 export const passwordZodSchema = z
   .string("Password must be string")
   .min(6, { message: "Password must be at least 6 characters long." })
+  .max(72, { message: "Password cannot exceed 72 characters." })
   .regex(/^(?=.*[A-Z])/, {
     message: "Password must contain at least 1 uppercase letter.",
   })
@@ -51,7 +52,6 @@ const updateUserZodSchema = z.object({
     .min(2, { message: "Name must be at least 2 characters long." })
     .max(50, { message: "Name cannot exceed 50 characters." })
     .optional(),
-  password: passwordZodSchema.optional(),
   phone: z
     .string("Phone Number must be string")
     .regex(/^(?:\+8801\d{9}|01\d{9})$/, {

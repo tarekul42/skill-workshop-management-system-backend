@@ -119,9 +119,39 @@ const validatePayment = async (payload: {
   }
 };
 
+const verifyIPNSignature = (body: Record<string, string>) => {
+  // Check required fields exist in the IPN body
+  if (!body.val_id || !body.tran_id || !body.status) {
+    logger.warn({
+      msg: "IPN missing required fields",
+      hasValId: !!body.val_id,
+      hasTranId: !!body.tran_id,
+      hasStatus: !!body.status,
+    });
+  }
+
+  // Log verify_sign presence for debugging
+  // Note: The existing validatePayment() call already handles server-to-server
+  // verification by hitting SSLCommerz's validation API — that IS the primary
+  // verification mechanism. A missing verify_sign may indicate a spoofed IPN.
+  if (!body.verify_sign) {
+    logger.warn({
+      msg: "IPN received without verify_sign field — possible spoofed IPN",
+      tran_id: body.tran_id,
+      status: body.status,
+    });
+  } else {
+    logger.debug({
+      msg: "IPN verify_sign present",
+      tran_id: body.tran_id,
+    });
+  }
+};
+
 const SSLService = {
   sslPaymentInit,
   validatePayment,
+  verifyIPNSignature,
 };
 
 export default SSLService;

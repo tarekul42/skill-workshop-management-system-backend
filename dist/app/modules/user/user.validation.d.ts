@@ -14,7 +14,6 @@ declare const createUserZodSchema: z.ZodObject<{
 }, z.z.core.$strip>;
 declare const updateUserZodSchema: z.ZodObject<{
     name: z.ZodOptional<z.ZodString>;
-    password: z.ZodOptional<z.ZodString>;
     phone: z.ZodOptional<z.ZodString>;
     age: z.ZodOptional<z.ZodNumber>;
     address: z.ZodOptional<z.ZodString>;

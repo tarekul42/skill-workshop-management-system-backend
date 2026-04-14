@@ -27,6 +27,11 @@ const findPaymentById = async (paymentId) => {
         _id: { $eq: new Types.ObjectId(paymentId) },
     }).select("invoiceUrl");
 };
+const findPaymentByTransactionId = async (transactionId) => {
+    return await Payment.findOne({
+        transactionId: { $eq: transactionId },
+    });
+};
 const findPaymentWithEnrollment = async (paymentId) => {
     if (!Types.ObjectId.isValid(paymentId)) {
         return null;
@@ -43,6 +48,7 @@ const startTransaction = async () => {
 const PaymentRepository = {
     findPaymentByEnrollmentId,
     findEnrollmentWithUser,
+    findPaymentByTransactionId,
     updatePaymentStatus,
     updateEnrollmentStatus,
     findPaymentById,

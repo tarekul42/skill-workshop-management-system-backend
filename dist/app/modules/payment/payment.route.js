@@ -257,6 +257,49 @@ router.post("/validate-payment", authLimiter, checkAuth(...Object.values(UserRol
 router.post("/ipn", PaymentController.handleIPN);
 /**
  * @openapi
+ * /payment/status:
+ *   get:
+ *     summary: Get payment status by transaction ID
+ *     tags: [Payment]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: transactionId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Payment status retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: "#/components/schemas/BaseResponse"
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       type: object
+ *                       properties:
+ *                         status: { type: "string" }
+ *                         transactionId: { type: "string" }
+ *                         amount: { type: "number" }
+ *                         enrollmentId: { type: "string" }
+ *       400:
+ *         $ref: "#/components/responses/BadRequestError"
+ *       401:
+ *         $ref: "#/components/responses/UnauthorizedError"
+ *       404:
+ *         $ref: "#/components/responses/NotFoundError"
+ *       429:
+ *         $ref: "#/components/responses/TooManyRequestsError"
+ *       500:
+ *         $ref: "#/components/responses/InternalServerError"
+ */
+router.get("/status", authLimiter, checkAuth(...Object.values(UserRole)), PaymentController.getPaymentStatus);
+/**
+ * @openapi
  * /payment/refund:
  *   post:
  *     summary: Refund a payment

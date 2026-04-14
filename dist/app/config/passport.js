@@ -26,7 +26,6 @@ passport.use(new GoogleStrategy({
     clientID: envVariables.GOOGLE_CLIENT_ID,
     clientSecret: envVariables.GOOGLE_CLIENT_SECRET,
     callbackURL: envVariables.GOOGLE_CALLBACK_URL,
-    state: true,
 }, async (accessToken, refreshToken, profile, done) => {
     // Extract data from Google Profile
     const email = profile.emails?.[0].value;

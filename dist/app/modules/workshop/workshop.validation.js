@@ -5,7 +5,12 @@ const createLevelZodSchema = z.object({
 const updateLevelZodSchema = z.object({
     name: z.string().min(1, { message: "Level name cannot be empty" }).optional(),
 });
-const createWorkshopZodSchema = z.object({
+const dateSchema = z.string().refine((val) => {
+    const date = new Date(val);
+    return !isNaN(date.getTime());
+}, { message: "Must be a valid date string" });
+const createWorkshopZodSchema = z
+    .object({
     title: z.string().min(1, { message: "Title is required" }),
     description: z
         .string()
@@ -16,8 +21,8 @@ const createWorkshopZodSchema = z.object({
         .number()
         .min(0, { message: "Price must be a positive number" })
         .optional(),
-    startDate: z.string().optional(),
-    endDate: z.string().optional(),
+    startDate: dateSchema.optional(),
+    endDate: dateSchema.optional(),
     level: z.string().min(1, { message: "Level is required" }),
     whatYouLearn: z
         .array(z.string().max(200))
@@ -46,8 +51,27 @@ const createWorkshopZodSchema = z.object({
         .min(0, { message: "Min age cannot be negative" })
         .optional(),
     category: z.string().min(1, { message: "Category is required" }),
+})
+    .refine((data) => {
+    if (data.startDate && data.endDate) {
+        return new Date(data.startDate) < new Date(data.endDate);
+    }
+    return true;
+}, {
+    message: "startDate must be before endDate",
+    path: ["endDate"],
+})
+    .refine((data) => {
+    if (data.startDate) {
+        return new Date(data.startDate) > new Date();
+    }
+    return true;
+}, {
+    message: "startDate must be in the future",
+    path: ["startDate"],
 });
-const updateWorkshopZodSchema = z.object({
+const updateWorkshopZodSchema = z
+    .object({
     title: z.string().min(1, { message: "Title cannot be empty" }).optional(),
     description: z
         .string()
@@ -58,8 +82,8 @@ const updateWorkshopZodSchema = z.object({
         .number()
         .min(0, { message: "Price must be a positive number" })
         .optional(),
-    startDate: z.string().optional(),
-    endDate: z.string().optional(),
+    startDate: dateSchema.optional(),
+    endDate: dateSchema.optional(),
     level: z.string().min(1, { message: "Level cannot be empty" }).optional(),
     whatYouLearn: z
         .array(z.string().max(200))
@@ -93,5 +117,23 @@ const updateWorkshopZodSchema = z.object({
         .optional(),
     images: z.array(z.string().url()).optional(),
     deleteImages: z.array(z.string()).optional(),
+})
+    .refine((data) => {
+    if (data.startDate && data.endDate) {
+        return new Date(data.startDate) < new Date(data.endDate);
+    }
+    return true;
+}, {
+    message: "startDate must be before endDate",
+    path: ["endDate"],
+})
+    .refine((data) => {
+    if (data.startDate) {
+        return new Date(data.startDate) > new Date();
+    }
+    return true;
+}, {
+    message: "startDate must be in the future",
+    path: ["startDate"],
 });
 export { createLevelZodSchema, createWorkshopZodSchema, updateLevelZodSchema, updateWorkshopZodSchema, };

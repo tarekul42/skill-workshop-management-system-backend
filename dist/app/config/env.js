@@ -45,6 +45,9 @@ const loadEnvVariables = () => {
     if (process.env.NODE_ENV !== "test") {
         requiredEnvVariables.push("RESET_PASSWORD_SECRET", "METRICS_API_KEY");
     }
+    if (process.env.NODE_ENV === "production") {
+        requiredEnvVariables.push("REDIS_USERNAME", "REDIS_PASSWORD");
+    }
     requiredEnvVariables.forEach((envVariables) => {
         if (!process.env[envVariables]) {
             throw new Error(`Required environment variable ${envVariables} is not defined`);

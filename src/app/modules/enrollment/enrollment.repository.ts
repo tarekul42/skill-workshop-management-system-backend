@@ -47,6 +47,12 @@ const createEnrollmentWithPayment = async (
   if (!workshop) {
     throw new AppError(StatusCodes.NOT_FOUND, "Workshop not found.");
   }
+  if (workshop.isDeleted) {
+    throw new AppError(
+      StatusCodes.BAD_REQUEST,
+      "This workshop is no longer available.",
+    );
+  }
   if (workshop.price == null) {
     throw new AppError(StatusCodes.BAD_REQUEST, "Workshop price is not set.");
   }

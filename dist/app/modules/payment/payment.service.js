@@ -1,12 +1,13 @@
 import { StatusCodes } from "http-status-codes";
 import AppError from "../../errorHelpers/AppError.js";
-import { mailQueue } from "../../jobs/mail.queue.js";
 import auditLogger from "../../utils/auditLogger.js";
 import logger from "../../utils/logger.js";
+import { sendEmailDirect } from "../../utils/sendEmailDirect.js";
 import { AuditAction } from "../audit/audit.interface.js";
 import { ENROLLMENT_STATUS, } from "../enrollment/enrollment.interface.js";
 import SSLService from "../sslCommerz/sslCommerz.service.js";
 import { UserRole } from "../user/user.interface.js";
+import { WorkShop } from "../workshop/workshop.model.js";
 import { PAYMENT_STATUS } from "./payment.interface.js";
 import PaymentRepository from "./payment.repository.js";
 const initPayment = async (enrollmentId, userId) => {
@@ -62,15 +63,54 @@ const successPayment = async (query, body) => {
     if (!val_id) {
         throw new AppError(StatusCodes.BAD_REQUEST, "Invalid val_id");
     }
+    // Check if payment is already paid (idempotent — handles race with IPN)
+    const existingPayment = await PaymentRepository.findPaymentByTransactionId(transactionId);
+    if (!existingPayment) {
+        throw new AppError(StatusCodes.NOT_FOUND, "Payment not found");
+    }
+    if (existingPayment.status === PAYMENT_STATUS.PAID) {
+        return {
+            success: true,
+            message: "Payment already completed",
+        };
+    }
+    // Validate payment with SSLCommerz
     await SSLService.validatePayment({
         val_id,
         tran_id: transactionId,
     });
+    // Re-fetch to get paymentGatewayData that was stored during validation
+    const paymentWithGatewayData = await PaymentRepository.findPaymentByTransactionId(transactionId);
+    if (paymentWithGatewayData?.paymentGatewayData &&
+        typeof paymentWithGatewayData.paymentGatewayData === "object") {
+        const gatewayData = paymentWithGatewayData.paymentGatewayData;
+        // Verify amount from SSLCommerz matches stored amount
+        const sslAmount = Number(gatewayData.currency_amount) || Number(gatewayData.amount);
+        if (sslAmount && Math.abs(sslAmount - existingPayment.amount) > 0.5) {
+            logger.warn({
+                msg: "Payment amount mismatch",
+                transactionId,
+                expectedAmount: existingPayment.amount,
+                sslAmount,
+            });
+            throw new AppError(StatusCodes.BAD_REQUEST, "Payment amount mismatch");
+        }
+    }
     const session = await PaymentRepository.startTransaction();
     try {
+        // Use conditional update: only update if status is still UNPAID
         const updatedPayment = await PaymentRepository.updatePaymentStatus(transactionId, PAYMENT_STATUS.PAID, session);
         if (!updatedPayment) {
             throw new AppError(StatusCodes.NOT_FOUND, "Payment not found");
+        }
+        // If another process already updated this, skip
+        if (updatedPayment.status !== PAYMENT_STATUS.PAID) {
+            await session.abortTransaction();
+            session.endSession();
+            return {
+                success: true,
+                message: "Payment is being processed",
+            };
         }
         const updatedEnrollment = await PaymentRepository.updateEnrollmentStatus(String(updatedPayment.enrollment), ENROLLMENT_STATUS.COMPLETE, session);
         if (!updatedEnrollment) {
@@ -79,17 +119,17 @@ const successPayment = async (query, body) => {
         const populatedEnrollment = updatedEnrollment;
         await session.commitTransaction();
         session.endSession();
-        await mailQueue.add("invoice", {
-            type: "invoice",
-            payload: {
-                to: populatedEnrollment.user.email,
+        await sendEmailDirect({
+            to: populatedEnrollment.user.email,
+            subject: "Your Enrollment Invoice",
+            templateName: "invoice",
+            templateData: {
                 transactionId: updatedPayment.transactionId,
                 enrollmentDate: populatedEnrollment.createdAt,
                 userName: populatedEnrollment.user.name,
                 workshopTitle: populatedEnrollment.workshop.title,
                 studentCount: populatedEnrollment.studentCount,
                 totalAmount: updatedPayment.amount,
-                email: populatedEnrollment.user.email,
             },
         });
         return {
@@ -110,6 +150,18 @@ const failPayment = async (query) => {
     if (!transactionId) {
         throw new AppError(StatusCodes.BAD_REQUEST, "Invalid transactionId");
     }
+    // Check current payment status to prevent overwriting a successful IPN
+    const existingPayment = await PaymentRepository.findPaymentByTransactionId(transactionId);
+    if (!existingPayment) {
+        throw new AppError(StatusCodes.NOT_FOUND, "Payment not found");
+    }
+    if (existingPayment.status !== PAYMENT_STATUS.UNPAID) {
+        // Already processed by IPN or another callback — return idempotent response
+        return {
+            success: false,
+            message: "Payment already processed",
+        };
+    }
     const session = await PaymentRepository.startTransaction();
     try {
         const updatedPayment = await PaymentRepository.updatePaymentStatus(transactionId, PAYMENT_STATUS.FAILED, session);
@@ -119,6 +171,13 @@ const failPayment = async (query) => {
         await PaymentRepository.updateEnrollmentStatus(String(updatedPayment.enrollment), ENROLLMENT_STATUS.FAILED, session);
         await session.commitTransaction();
         session.endSession();
+        // Decrement workshop's currentEnrollments after successful commit
+        const enrollmentWithWorkshop = await PaymentRepository.findEnrollmentWithUser(String(updatedPayment.enrollment));
+        if (enrollmentWithWorkshop?.workshop) {
+            await WorkShop.findByIdAndUpdate(enrollmentWithWorkshop.workshop, {
+                $inc: { currentEnrollments: -1 },
+            });
+        }
         return {
             success: false,
             message: "Payment Failed",
@@ -135,6 +194,18 @@ const cancelPayment = async (query) => {
     if (!transactionId) {
         throw new AppError(StatusCodes.BAD_REQUEST, "Invalid transactionId");
     }
+    // Check current payment status to prevent overwriting a successful IPN
+    const existingPayment = await PaymentRepository.findPaymentByTransactionId(transactionId);
+    if (!existingPayment) {
+        throw new AppError(StatusCodes.NOT_FOUND, "Payment not found");
+    }
+    if (existingPayment.status !== PAYMENT_STATUS.UNPAID) {
+        // Already processed by IPN or another callback — return idempotent response
+        return {
+            success: false,
+            message: "Payment already processed",
+        };
+    }
     const session = await PaymentRepository.startTransaction();
     try {
         const updatedPayment = await PaymentRepository.updatePaymentStatus(transactionId, PAYMENT_STATUS.CANCELLED, session);
@@ -144,6 +215,13 @@ const cancelPayment = async (query) => {
         await PaymentRepository.updateEnrollmentStatus(String(updatedPayment.enrollment), ENROLLMENT_STATUS.CANCEL, session);
         await session.commitTransaction();
         session.endSession();
+        // Decrement workshop's currentEnrollments after successful commit
+        const enrollmentWithWorkshop = await PaymentRepository.findEnrollmentWithUser(String(updatedPayment.enrollment));
+        if (enrollmentWithWorkshop?.workshop) {
+            await WorkShop.findByIdAndUpdate(enrollmentWithWorkshop.workshop, {
+                $inc: { currentEnrollments: -1 },
+            });
+        }
         return {
             success: false,
             message: "Payment Cancelled",
@@ -184,8 +262,40 @@ const handleIPN = async (body) => {
         transactionId,
         status,
     });
+    // Verify IPN signature and required fields
+    SSLService.verifyIPNSignature(body);
+    if (status === "VALID") {
+        // Validate IPN body contains amount (log warning if missing)
+        if (!body.amount && !body.currency_amount) {
+            logger.warn({
+                msg: "IPN VALID status received without amount field",
+                transactionId,
+            });
+        }
+    }
     if (status === "VALID" && valId) {
         await SSLService.validatePayment({ val_id: valId, tran_id: transactionId });
+        // Re-fetch payment to get paymentGatewayData stored during validation
+        const paymentWithGatewayData = await PaymentRepository.findPaymentByTransactionId(transactionId);
+        if (paymentWithGatewayData) {
+            // Verify amount from SSLCommerz response matches stored payment amount
+            if (paymentWithGatewayData.paymentGatewayData &&
+                typeof paymentWithGatewayData.paymentGatewayData === "object") {
+                const gatewayData = paymentWithGatewayData.paymentGatewayData;
+                const sslAmount = Number(gatewayData.currency_amount) ||
+                    Number(gatewayData.amount);
+                if (sslAmount &&
+                    Math.abs(sslAmount - paymentWithGatewayData.amount) > 0.5) {
+                    logger.warn({
+                        msg: "IPN amount mismatch",
+                        transactionId,
+                        expectedAmount: paymentWithGatewayData.amount,
+                        sslAmount,
+                    });
+                    throw new AppError(StatusCodes.BAD_REQUEST, "IPN amount mismatch");
+                }
+            }
+        }
         const session = await PaymentRepository.startTransaction();
         try {
             const updatedPayment = await PaymentRepository.updatePaymentStatus(transactionId, PAYMENT_STATUS.PAID, session);
@@ -212,6 +322,15 @@ const handleIPN = async (body) => {
             }
             await session.commitTransaction();
             session.endSession();
+            // Decrement workshop's currentEnrollments after successful commit
+            if (updatedPayment) {
+                const enrollmentWithWorkshop = await PaymentRepository.findEnrollmentWithUser(String(updatedPayment.enrollment));
+                if (enrollmentWithWorkshop?.workshop) {
+                    await WorkShop.findByIdAndUpdate(enrollmentWithWorkshop.workshop, {
+                        $inc: { currentEnrollments: -1 },
+                    });
+                }
+            }
         }
         catch (err) {
             if (session.inTransaction()) {
@@ -259,6 +378,21 @@ const refundPayment = async (paymentId, userId, reason) => {
         throw err;
     }
 };
+const getPaymentStatus = async (transactionId) => {
+    if (!transactionId) {
+        throw new AppError(StatusCodes.BAD_REQUEST, "Invalid transactionId");
+    }
+    const payment = await PaymentRepository.findPaymentByTransactionId(transactionId);
+    if (!payment) {
+        throw new AppError(StatusCodes.NOT_FOUND, "Payment not found");
+    }
+    return {
+        status: payment.status,
+        transactionId: payment.transactionId,
+        amount: payment.amount,
+        enrollmentId: payment.enrollment,
+    };
+};
 const PaymentService = {
     initPayment,
     successPayment,
@@ -267,5 +401,6 @@ const PaymentService = {
     getInvoiceDownloadUrl,
     handleIPN,
     refundPayment,
+    getPaymentStatus,
 };
 export default PaymentService;

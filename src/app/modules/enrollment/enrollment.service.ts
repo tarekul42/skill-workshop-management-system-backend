@@ -172,44 +172,53 @@ const updateEnrollmentStatus = async (
 };
 
 const cancelEnrollment = async (enrollmentId: string, userId: string) => {
-  const enrollment = await Enrollment.findOne({
-    _id: { $eq: new Types.ObjectId(enrollmentId) },
-  })
-    .populate("user", "name email")
-    .populate("payment", "status");
+  // Atomic: check status AND update in a single operation to prevent race conditions
+  const updatedEnrollment = await Enrollment.findOneAndUpdate(
+    {
+      _id: new Types.ObjectId(enrollmentId),
+      status: { $in: [ENROLLMENT_STATUS.PENDING, ENROLLMENT_STATUS.COMPLETE] },
+    },
+    { status: ENROLLMENT_STATUS.CANCEL },
+    { returnDocument: "after", runValidators: true },
+  );
 
-  if (!enrollment) {
+  if (!updatedEnrollment) {
+    // Either not found or not PENDING/COMPLETE — determine which
+    const existing = await Enrollment.findById(enrollmentId);
+    if (!existing) {
+      throw new AppError(StatusCodes.NOT_FOUND, "Enrollment not found");
+    }
+    if (existing.isDeleted) {
+      throw new AppError(StatusCodes.GONE, "Enrollment has been deleted");
+    }
+    if (String(existing.user) !== userId) {
+      throw new AppError(
+        StatusCodes.FORBIDDEN,
+        "You can only cancel your own enrollments",
+      );
+    }
+    if (
+      existing.status !== ENROLLMENT_STATUS.PENDING &&
+      existing.status !== ENROLLMENT_STATUS.COMPLETE
+    ) {
+      throw new AppError(
+        StatusCodes.BAD_REQUEST,
+        "Only pending or completed enrollments can be cancelled",
+      );
+    }
     throw new AppError(StatusCodes.NOT_FOUND, "Enrollment not found");
   }
 
-  if (enrollment.isDeleted) {
-    throw new AppError(StatusCodes.GONE, "Enrollment has been deleted");
-  }
-
-  const populatedEnrollment = enrollment as unknown as IEnrollmentPopulated;
-
-  if (String(populatedEnrollment.user._id) !== userId) {
+  // Verify ownership
+  if (String(updatedEnrollment.user) !== userId) {
     throw new AppError(
       StatusCodes.FORBIDDEN,
       "You can only cancel your own enrollments",
     );
   }
 
-  if (enrollment.status !== ENROLLMENT_STATUS.PENDING) {
-    throw new AppError(
-      StatusCodes.BAD_REQUEST,
-      "Only pending enrollments can be cancelled",
-    );
-  }
-
-  const updatedEnrollment = await Enrollment.findOneAndUpdate(
-    { _id: { $eq: new Types.ObjectId(enrollmentId) } },
-    { status: ENROLLMENT_STATUS.CANCEL },
-    { returnDocument: "after", runValidators: true },
-  );
-
   // Decrement the workshop's currentEnrollments counter
-  if (updatedEnrollment && updatedEnrollment.workshop) {
+  if (updatedEnrollment.workshop) {
     await WorkShop.findByIdAndUpdate(updatedEnrollment.workshop, {
       $inc: { currentEnrollments: -1 },
     });

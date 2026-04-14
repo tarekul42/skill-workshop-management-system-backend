@@ -8,5 +8,6 @@ declare const PaymentController: {
     validatePayment: (req: Request, res: Response, next: import("express").NextFunction) => void;
     handleIPN: (req: Request, res: Response, next: import("express").NextFunction) => void;
     refundPayment: (req: Request, res: Response, next: import("express").NextFunction) => void;
+    getPaymentStatus: (req: Request, res: Response, next: import("express").NextFunction) => void;
 };
 export default PaymentController;

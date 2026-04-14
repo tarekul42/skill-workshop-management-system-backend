@@ -53,9 +53,9 @@ export const isTokenBlacklisted = async (token: string) => {
     return !!result;
   } catch (error) {
     logger.error({
-      msg: "Redis unavailable for token blacklist check — failing open",
+      msg: "Redis unavailable for token blacklist check — blocking request for safety",
       err: error,
     });
-    return false;
+    return true;
   }
 };

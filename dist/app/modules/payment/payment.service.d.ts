@@ -1,3 +1,4 @@
+import { PAYMENT_STATUS } from "./payment.interface.js";
 declare const PaymentService: {
     initPayment: (enrollmentId: string, userId: string) => Promise<{
         paymentUrl: any;
@@ -21,6 +22,12 @@ declare const PaymentService: {
     refundPayment: (paymentId: string, userId: string, reason?: string) => Promise<{
         success: boolean;
         message: string;
+    }>;
+    getPaymentStatus: (transactionId: string) => Promise<{
+        status: PAYMENT_STATUS;
+        transactionId: string;
+        amount: number;
+        enrollmentId: import("mongoose").Types.ObjectId;
     }>;
 };
 export default PaymentService;
