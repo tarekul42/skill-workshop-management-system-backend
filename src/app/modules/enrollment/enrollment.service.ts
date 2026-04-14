@@ -176,14 +176,14 @@ const cancelEnrollment = async (enrollmentId: string, userId: string) => {
   const updatedEnrollment = await Enrollment.findOneAndUpdate(
     {
       _id: new Types.ObjectId(enrollmentId),
-      status: ENROLLMENT_STATUS.PENDING,
+      status: { $in: [ENROLLMENT_STATUS.PENDING, ENROLLMENT_STATUS.COMPLETE] },
     },
     { status: ENROLLMENT_STATUS.CANCEL },
     { returnDocument: "after", runValidators: true },
   );
 
   if (!updatedEnrollment) {
-    // Either not found or not PENDING — determine which
+    // Either not found or not PENDING/COMPLETE — determine which
     const existing = await Enrollment.findById(enrollmentId);
     if (!existing) {
       throw new AppError(StatusCodes.NOT_FOUND, "Enrollment not found");
@@ -197,10 +197,13 @@ const cancelEnrollment = async (enrollmentId: string, userId: string) => {
         "You can only cancel your own enrollments",
       );
     }
-    if (existing.status !== ENROLLMENT_STATUS.PENDING) {
+    if (
+      existing.status !== ENROLLMENT_STATUS.PENDING &&
+      existing.status !== ENROLLMENT_STATUS.COMPLETE
+    ) {
       throw new AppError(
         StatusCodes.BAD_REQUEST,
-        "Only pending enrollments can be cancelled",
+        "Only pending or completed enrollments can be cancelled",
       );
     }
     throw new AppError(StatusCodes.NOT_FOUND, "Enrollment not found");

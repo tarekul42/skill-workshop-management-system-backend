@@ -394,8 +394,53 @@ const handleIPN = async (body: Record<string, string>) => {
     status,
   });
 
+  // Verify IPN signature and required fields
+  SSLService.verifyIPNSignature(body);
+
+  if (status === "VALID") {
+    // Validate IPN body contains amount (log warning if missing)
+    if (!body.amount && !body.currency_amount) {
+      logger.warn({
+        msg: "IPN VALID status received without amount field",
+        transactionId,
+      });
+    }
+  }
+
   if (status === "VALID" && valId) {
     await SSLService.validatePayment({ val_id: valId, tran_id: transactionId });
+
+    // Re-fetch payment to get paymentGatewayData stored during validation
+    const paymentWithGatewayData =
+      await PaymentRepository.findPaymentByTransactionId(transactionId);
+
+    if (paymentWithGatewayData) {
+      // Verify amount from SSLCommerz response matches stored payment amount
+      if (
+        paymentWithGatewayData.paymentGatewayData &&
+        typeof paymentWithGatewayData.paymentGatewayData === "object"
+      ) {
+        const gatewayData = paymentWithGatewayData.paymentGatewayData;
+        const sslAmount =
+          Number((gatewayData as Record<string, unknown>).currency_amount) ||
+          Number((gatewayData as Record<string, unknown>).amount);
+        if (
+          sslAmount &&
+          Math.abs(sslAmount - paymentWithGatewayData.amount) > 0.5
+        ) {
+          logger.warn({
+            msg: "IPN amount mismatch",
+            transactionId,
+            expectedAmount: paymentWithGatewayData.amount,
+            sslAmount,
+          });
+          throw new AppError(
+            StatusCodes.BAD_REQUEST,
+            "IPN amount mismatch",
+          );
+        }
+      }
+    }
 
     const session = await PaymentRepository.startTransaction();
     try {
@@ -525,6 +570,26 @@ const refundPayment = async (
   }
 };
 
+const getPaymentStatus = async (transactionId: string) => {
+  if (!transactionId) {
+    throw new AppError(StatusCodes.BAD_REQUEST, "Invalid transactionId");
+  }
+
+  const payment =
+    await PaymentRepository.findPaymentByTransactionId(transactionId);
+
+  if (!payment) {
+    throw new AppError(StatusCodes.NOT_FOUND, "Payment not found");
+  }
+
+  return {
+    status: payment.status,
+    transactionId: payment.transactionId,
+    amount: payment.amount,
+    enrollmentId: payment.enrollment,
+  };
+};
+
 const PaymentService = {
   initPayment,
   successPayment,
@@ -533,6 +598,7 @@ const PaymentService = {
   getInvoiceDownloadUrl,
   handleIPN,
   refundPayment,
+  getPaymentStatus,
 };
 
 export default PaymentService;
