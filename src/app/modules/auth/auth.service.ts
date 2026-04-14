@@ -6,7 +6,7 @@ import validator from "validator";
 import envVariables from "../../config/env.js";
 import { redisClient } from "../../config/redis.config.js";
 import AppError from "../../errorHelpers/AppError.js";
-import { mailQueue } from "../../jobs/mail.queue.js";
+import { sendEmailDirect } from "../../utils/sendEmailDirect.js";
 import { invalidateToken } from "../../utils/tokenBlacklist.js";
 import { createNewAccessToken } from "../../utils/userTokens.js";
 import { IAuthProvider, IsActive } from "../user/user.interface.js";
@@ -140,10 +140,11 @@ const forgotPassword = async (email: string) => {
 
   const resetUILink = `${envVariables.FRONTEND_URL}/reset-password?token=${resetToken}`;
 
-  await mailQueue.add("forgot-password", {
-    type: "forgot-password",
-    payload: {
-      email: isUserExists.email,
+  await sendEmailDirect({
+    to: isUserExists.email,
+    subject: "Password Reset",
+    templateName: "forgetPassword",
+    templateData: {
       name: isUserExists.name,
       resetUILink,
     },
