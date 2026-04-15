@@ -124,10 +124,18 @@ const allowedOrigins = envVariables.FRONTEND_URL.split(",").map((s) =>
   s.trim(),
 );
 
+// Allow all Vercel deployment URLs for the frontend project
+// (e.g. skill-workshop-management-system-fr.vercel.app, skill-workshop-management-system-fr-git-feat-xyz.vercel.app)
+const vercelOriginPattern = /^https:\/\/skill-workshop-management-system-fr(-[\w-]+)?\.vercel\.app$/;
+
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
+      if (
+        !origin ||
+        allowedOrigins.includes(origin) ||
+        vercelOriginPattern.test(origin)
+      ) {
         callback(null, true);
       } else {
         callback(new Error("Not allowed by CORS"));
