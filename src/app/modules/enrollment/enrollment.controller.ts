@@ -70,7 +70,7 @@ const getAllEnrollments = catchAsync(async (req: Request, res: Response) => {
     statusCode: StatusCodes.OK,
     success: true,
     message: "Enrollments fetched successfully",
-    data: enrollments,
+    data: enrollments.data,
     meta: enrollments.meta,
   });
 });

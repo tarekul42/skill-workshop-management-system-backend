@@ -10,16 +10,16 @@ interface AuditQueryParams {
 }
 declare const AuditService: {
     getAuditLogs: (params: AuditQueryParams) => Promise<{
-        logs: (import("./audit.interface.js").IAuditLog & {
+        data: (import("./audit.interface.js").IAuditLog & {
             _id: import("mongoose").Types.ObjectId;
         } & {
             __v: number;
         })[];
-        pagination: {
+        meta: {
             page: number;
             limit: number;
             total: number;
-            totalPages: number;
+            totalPage: number;
         };
     }>;
     getAuditLogById: (id: string) => Promise<import("./audit.interface.js").IAuditLog & {
