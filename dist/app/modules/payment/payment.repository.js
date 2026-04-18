@@ -11,8 +11,15 @@ const findEnrollmentWithUser = async (enrollmentId) => {
         _id: { $eq: new Types.ObjectId(enrollmentId) },
     }).populate("user", "name email phone address");
 };
-const updatePaymentStatus = async (transactionId, status, session) => {
-    return await Payment.findOneAndUpdate({ transactionId: { $eq: transactionId } }, { status }, { returnDocument: "after", runValidators: true, session });
+const updatePaymentStatus = async (transactionId, status, fromStatus, session) => {
+    // Build filter — include prior-state guard when provided for CAS semantics.
+    const filter = {
+        transactionId: { $eq: transactionId },
+    };
+    if (fromStatus !== undefined) {
+        filter.status = { $eq: fromStatus };
+    }
+    return await Payment.findOneAndUpdate(filter, { status }, { returnDocument: "after", runValidators: true, session });
 };
 const updateEnrollmentStatus = async (enrollmentId, status, session) => {
     return await Enrollment.findOneAndUpdate({ _id: { $eq: new Types.ObjectId(enrollmentId) } }, { status }, { returnDocument: "after", runValidators: true, session })

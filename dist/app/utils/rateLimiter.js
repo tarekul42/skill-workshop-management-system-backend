@@ -12,19 +12,14 @@ const createLimiter = (prefix, windowMs, max, message, skipHealth = true) => {
         keyGenerator: (req) => `${ipKeyGenerator(req.ip || "")}:${req.path}`,
         store: new RedisStore({
             sendCommand: async (...args) => {
-                try {
-                    if (redisClient.isOpen) {
-                        return await redisClient.sendCommand(args);
-                    }
+                if (redisClient.isOpen) {
+                    return await redisClient.sendCommand(args);
                 }
-                catch {
-                    // Log is skipped to avoid noise, passOnStoreError handles it
-                }
-                // Return neutral values for library initialization/execution
+                // Return neutral values for library initialization/execution if closed
                 if (args[0] === "SCRIPT" && args[1] === "LOAD") {
                     return "0000000000000000000000000000000000000000";
                 }
-                return 0;
+                throw new Error("Redis client is not connected");
             },
             prefix,
         }),

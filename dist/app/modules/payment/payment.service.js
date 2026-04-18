@@ -98,18 +98,17 @@ const successPayment = async (query, body) => {
     }
     const session = await PaymentRepository.startTransaction();
     try {
-        // Use conditional update: only update if status is still UNPAID
-        const updatedPayment = await PaymentRepository.updatePaymentStatus(transactionId, PAYMENT_STATUS.PAID, session);
+        // CAS update: only transitions UNPAID → PAID. A concurrent IPN or retry
+        // that already moved the status will cause this to return null — safe to
+        // treat as idempotent success without overwriting the later state.
+        const updatedPayment = await PaymentRepository.updatePaymentStatus(transactionId, PAYMENT_STATUS.PAID, PAYMENT_STATUS.UNPAID, session);
         if (!updatedPayment) {
-            throw new AppError(StatusCodes.NOT_FOUND, "Payment not found");
-        }
-        // If another process already updated this, skip
-        if (updatedPayment.status !== PAYMENT_STATUS.PAID) {
+            // Either not found, or another callback already processed it.
             await session.abortTransaction();
             session.endSession();
             return {
                 success: true,
-                message: "Payment is being processed",
+                message: "Payment already processed",
             };
         }
         const updatedEnrollment = await PaymentRepository.updateEnrollmentStatus(String(updatedPayment.enrollment), ENROLLMENT_STATUS.COMPLETE, session);
@@ -164,7 +163,10 @@ const failPayment = async (query) => {
     }
     const session = await PaymentRepository.startTransaction();
     try {
-        const updatedPayment = await PaymentRepository.updatePaymentStatus(transactionId, PAYMENT_STATUS.FAILED, session);
+        // CAS update: only transitions UNPAID → FAILED (defense-in-depth; pre-check
+        // above already guards against non-UNPAID states, but the atomic guard
+        // closes the TOCTOU window).
+        const updatedPayment = await PaymentRepository.updatePaymentStatus(transactionId, PAYMENT_STATUS.FAILED, PAYMENT_STATUS.UNPAID, session);
         if (!updatedPayment) {
             throw new AppError(StatusCodes.NOT_FOUND, "Payment not found");
         }
@@ -208,7 +210,10 @@ const cancelPayment = async (query) => {
     }
     const session = await PaymentRepository.startTransaction();
     try {
-        const updatedPayment = await PaymentRepository.updatePaymentStatus(transactionId, PAYMENT_STATUS.CANCELLED, session);
+        // CAS update: only transitions UNPAID → CANCELLED (defense-in-depth; pre-check
+        // above already guards against non-UNPAID states, but the atomic guard
+        // closes the TOCTOU window).
+        const updatedPayment = await PaymentRepository.updatePaymentStatus(transactionId, PAYMENT_STATUS.CANCELLED, PAYMENT_STATUS.UNPAID, session);
         if (!updatedPayment) {
             throw new AppError(StatusCodes.NOT_FOUND, "Payment not found");
         }
@@ -298,10 +303,15 @@ const handleIPN = async (body) => {
         }
         const session = await PaymentRepository.startTransaction();
         try {
-            const updatedPayment = await PaymentRepository.updatePaymentStatus(transactionId, PAYMENT_STATUS.PAID, session);
-            if (updatedPayment) {
-                await PaymentRepository.updateEnrollmentStatus(String(updatedPayment.enrollment), ENROLLMENT_STATUS.COMPLETE, session);
+            // CAS update: only transitions UNPAID → PAID to prevent IPN/success-URL races.
+            const updatedPayment = await PaymentRepository.updatePaymentStatus(transactionId, PAYMENT_STATUS.PAID, PAYMENT_STATUS.UNPAID, session);
+            if (!updatedPayment) {
+                // Another callback already processed this payment — skip silently.
+                await session.abortTransaction();
+                session.endSession();
+                return { received: true };
             }
+            await PaymentRepository.updateEnrollmentStatus(String(updatedPayment.enrollment), ENROLLMENT_STATUS.COMPLETE, session);
             await session.commitTransaction();
             session.endSession();
         }
@@ -316,7 +326,8 @@ const handleIPN = async (body) => {
     else if (status === "FAILED") {
         const session = await PaymentRepository.startTransaction();
         try {
-            const updatedPayment = await PaymentRepository.updatePaymentStatus(transactionId, PAYMENT_STATUS.FAILED, session);
+            // CAS update: only transitions UNPAID → FAILED.
+            const updatedPayment = await PaymentRepository.updatePaymentStatus(transactionId, PAYMENT_STATUS.FAILED, PAYMENT_STATUS.UNPAID, session);
             if (updatedPayment) {
                 await PaymentRepository.updateEnrollmentStatus(String(updatedPayment.enrollment), ENROLLMENT_STATUS.FAILED, session);
             }
@@ -352,12 +363,25 @@ const refundPayment = async (paymentId, userId, reason) => {
     }
     const session = await PaymentRepository.startTransaction();
     try {
-        const updatedPayment = await PaymentRepository.updatePaymentStatus(payment.transactionId, PAYMENT_STATUS.REFUNDED, session);
-        if (updatedPayment) {
-            await PaymentRepository.updateEnrollmentStatus(String(updatedPayment.enrollment), ENROLLMENT_STATUS.CANCEL, session);
+        // CAS update: only transitions PAID → REFUNDED to prevent double-refunds.
+        const updatedPayment = await PaymentRepository.updatePaymentStatus(payment.transactionId, PAYMENT_STATUS.REFUNDED, PAYMENT_STATUS.PAID, session);
+        if (!updatedPayment) {
+            // Another request already refunded this payment.
+            await session.abortTransaction();
+            session.endSession();
+            throw new AppError(StatusCodes.CONFLICT, "Payment has already been refunded");
         }
+        await PaymentRepository.updateEnrollmentStatus(String(updatedPayment.enrollment), ENROLLMENT_STATUS.CANCEL, session);
         await session.commitTransaction();
         session.endSession();
+        // Decrement workshop's currentEnrollments after successful refund commit
+        // (mirrors the logic in failPayment and cancelPayment).
+        const enrollmentWithWorkshop = await PaymentRepository.findEnrollmentWithUser(String(updatedPayment.enrollment));
+        if (enrollmentWithWorkshop?.workshop) {
+            await WorkShop.findByIdAndUpdate(enrollmentWithWorkshop.workshop, {
+                $inc: { currentEnrollments: -1 },
+            });
+        }
         await auditLogger({
             action: AuditAction.UPDATE,
             collectionName: "Payment",
