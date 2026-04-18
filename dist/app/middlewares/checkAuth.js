@@ -9,7 +9,7 @@ const checkAuth = (...authRoles) => async (req, _res, next) => {
     try {
         let accessToken = req.headers.authorization;
         if (!accessToken) {
-            throw new AppError(StatusCodes.FORBIDDEN, "Access token is missing");
+            throw new AppError(StatusCodes.UNAUTHORIZED, "Access token is missing");
         }
         if (accessToken.startsWith("Bearer ")) {
             const parts = accessToken.split(" ");
@@ -20,7 +20,7 @@ const checkAuth = (...authRoles) => async (req, _res, next) => {
         }
         const verifiedToken = verifyToken(accessToken, envVariables.JWT_ACCESS_SECRET);
         if (!verifiedToken) {
-            throw new AppError(StatusCodes.FORBIDDEN, "Invalid access token");
+            throw new AppError(StatusCodes.UNAUTHORIZED, "Invalid access token");
         }
         const blacklisted = await isTokenBlacklisted(accessToken);
         if (blacklisted) {
