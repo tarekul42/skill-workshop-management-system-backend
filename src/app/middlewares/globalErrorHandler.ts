@@ -20,12 +20,17 @@ const globalErrorHandler = (
 ) => {
   logger.error(
     {
-      message: err instanceof Error ? err.message : String(err),
+      message: err instanceof Error ? err.message : JSON.stringify(err, Object.getOwnPropertyNames(err)),
       name: err instanceof Error ? err.name : "UnknownError",
       stack: err instanceof Error ? err.stack : undefined,
     },
     "Global error caught",
   );
+
+  // TEMPORARY DEBUG: Write the error to a file so we can read it
+  import("fs").then(fs => {
+    fs.writeFileSync("error.log", `ERROR: ${err instanceof Error ? err.stack : JSON.stringify(err, Object.getOwnPropertyNames(err))}\n\n`);
+  });
 
   let statusCode = StatusCodes.INTERNAL_SERVER_ERROR;
   let message = "Something went wrong!!!";
@@ -90,7 +95,7 @@ const globalErrorHandler = (
     responseBody.err =
       err instanceof Error
         ? { name: err.name, message: err.message }
-        : { message: String(err) };
+        : { message: JSON.stringify(err, Object.getOwnPropertyNames(err)) };
     responseBody.stack = err instanceof Error ? err.stack : null;
   }
 
