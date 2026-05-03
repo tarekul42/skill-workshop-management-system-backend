@@ -198,7 +198,10 @@ const getSingleWorkshop = async (slugOrId: string) => {
     ? { $or: [{ _id: slugOrId }, { slug: slugOrId }] }
     : { slug: slugOrId };
 
-  const workshop = await WorkShop.findOne(query);
+  const workshop = await WorkShop.findOne(query).populate(
+    "createdBy",
+    "name email picture expertise bio",
+  );
 
   if (!workshop) {
     throw new AppError(StatusCodes.NOT_FOUND, "Workshop not found");

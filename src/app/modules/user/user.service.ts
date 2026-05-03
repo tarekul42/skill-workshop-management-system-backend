@@ -18,7 +18,7 @@ import {
 import User from "./user.model.js";
 
 const createUser = async (payload: Partial<IUser>) => {
-  const { name, email, password, ...rest } = payload;
+  const { name, email, password, role, ...rest } = payload;
 
   if (typeof email !== "string" || email.trim().length === 0) {
     throw new AppError(StatusCodes.BAD_REQUEST, "Valid email is required");
@@ -32,6 +32,12 @@ const createUser = async (payload: Partial<IUser>) => {
 
   if (isUserExists) {
     throw new AppError(StatusCodes.BAD_REQUEST, "User already exists");
+  }
+
+  // Ensure role is valid for public registration (STUDENT or INSTRUCTOR)
+  let assignedRole = UserRole.STUDENT;
+  if (role === UserRole.INSTRUCTOR || role === UserRole.STUDENT) {
+    assignedRole = role;
   }
 
   const authProvider: IAuthProvider = {
@@ -48,6 +54,7 @@ const createUser = async (payload: Partial<IUser>) => {
     name,
     email,
     password: hashedPassword,
+    role: assignedRole,
     auths: [authProvider],
     ...rest,
   });
@@ -150,7 +157,7 @@ const updateUser = async (
 
   const sensitiveFields = ["isDeleted", "isActive", "isVerified", "role"];
 
-  const allowedFields = ["name", "phone", "age", "address"];
+  const allowedFields = ["name", "phone", "age", "address", "expertise", "bio"];
 
   if (isAdmin) {
     allowedFields.push(...sensitiveFields);
