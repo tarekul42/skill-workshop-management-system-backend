@@ -23,7 +23,7 @@ declare const PaymentRepository: {
     } & {
         id: string;
     }) | null>;
-    updatePaymentStatus: (transactionId: string, status: PAYMENT_STATUS, session?: ClientSession) => Promise<(import("mongoose").Document<unknown, {}, import("./payment.interface.js").IPayment, {}, import("mongoose").DefaultSchemaOptions> & import("./payment.interface.js").IPayment & Required<{
+    updatePaymentStatus: (transactionId: string, status: PAYMENT_STATUS, fromStatus?: PAYMENT_STATUS, session?: ClientSession) => Promise<(import("mongoose").Document<unknown, {}, import("./payment.interface.js").IPayment, {}, import("mongoose").DefaultSchemaOptions> & import("./payment.interface.js").IPayment & Required<{
         _id: Types.ObjectId;
     }> & {
         __v: number;

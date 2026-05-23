@@ -112,9 +112,11 @@ const updateEnrollmentStatus = async (enrollmentId, status, userId, userRole) =>
     return updatedEnrollment;
 };
 const cancelEnrollment = async (enrollmentId, userId) => {
-    // Atomic: check status AND update in a single operation to prevent race conditions
+    // Atomic: check ownership + status AND update in a single operation to prevent
+    // both race conditions and write-then-authorize vulnerabilities.
     const updatedEnrollment = await Enrollment.findOneAndUpdate({
         _id: new Types.ObjectId(enrollmentId),
+        user: new Types.ObjectId(userId),
         status: { $in: [ENROLLMENT_STATUS.PENDING, ENROLLMENT_STATUS.COMPLETE] },
     }, { status: ENROLLMENT_STATUS.CANCEL }, { returnDocument: "after", runValidators: true });
     if (!updatedEnrollment) {

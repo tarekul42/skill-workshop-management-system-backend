@@ -19,10 +19,18 @@ const findEnrollmentWithUser = async (enrollmentId: string) => {
 const updatePaymentStatus = async (
   transactionId: string,
   status: PAYMENT_STATUS,
+  fromStatus?: PAYMENT_STATUS,
   session?: ClientSession,
 ) => {
+  // Build filter — include prior-state guard when provided for CAS semantics.
+  const filter: Record<string, unknown> = {
+    transactionId: { $eq: transactionId },
+  };
+  if (fromStatus !== undefined) {
+    filter.status = { $eq: fromStatus };
+  }
   return await Payment.findOneAndUpdate(
-    { transactionId: { $eq: transactionId } },
+    filter,
     { status },
     { returnDocument: "after", runValidators: true, session },
   );

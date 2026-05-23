@@ -99,12 +99,12 @@ const getAuditLogs = async (params: AuditQueryParams) => {
   ]);
 
   return {
-    logs,
-    pagination: {
+    data: logs,
+    meta: {
       page,
       limit,
       total,
-      totalPages: Math.ceil(total / limit),
+      totalPage: Math.ceil(total / limit),
     },
   };
 };

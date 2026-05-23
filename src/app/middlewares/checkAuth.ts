@@ -15,7 +15,7 @@ const checkAuth =
       let accessToken = req.headers.authorization;
 
       if (!accessToken) {
-        throw new AppError(StatusCodes.FORBIDDEN, "Access token is missing");
+        throw new AppError(StatusCodes.UNAUTHORIZED, "Access token is missing");
       }
 
       if (accessToken.startsWith("Bearer ")) {
@@ -35,7 +35,7 @@ const checkAuth =
       ) as JwtPayload;
 
       if (!verifiedToken) {
-        throw new AppError(StatusCodes.FORBIDDEN, "Invalid access token");
+        throw new AppError(StatusCodes.UNAUTHORIZED, "Invalid access token");
       }
 
       const blacklisted = await isTokenBlacklisted(accessToken);

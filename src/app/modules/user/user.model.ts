@@ -34,6 +34,8 @@ const userSchema = new Schema<IUser>(
       enum: Object.values(UserRole),
       default: UserRole.STUDENT,
     },
+    expertise: { type: String },
+    bio: { type: String },
     auths: {
       type: [authProviderSchema],
       validate: {

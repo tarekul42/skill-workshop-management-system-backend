@@ -60,12 +60,12 @@ const getAuditLogs = async (params) => {
         AuditLog.countDocuments(filter),
     ]);
     return {
-        logs,
-        pagination: {
+        data: logs,
+        meta: {
             page,
             limit,
             total,
-            totalPages: Math.ceil(total / limit),
+            totalPage: Math.ceil(total / limit),
         },
     };
 };
