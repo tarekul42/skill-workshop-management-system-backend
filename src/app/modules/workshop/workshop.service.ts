@@ -1,5 +1,6 @@
 import { StatusCodes } from "http-status-codes";
 import { JwtPayload } from "jsonwebtoken";
+import mongoose from "mongoose";
 import { deleteImageFromCloudinary } from "../../config/cloudinary.config.js";
 import { redisClient } from "../../config/redis.config.js";
 import AppError from "../../errorHelpers/AppError.js";
@@ -192,8 +193,15 @@ const createWorkshop = async (payload: IWorkshop) => {
   return workshop;
 };
 
-const getSingleWorkshop = async (slug: string) => {
-  const workshop = await WorkShop.findOne({ slug: { $eq: slug } });
+const getSingleWorkshop = async (slugOrId: string) => {
+  const query = mongoose.Types.ObjectId.isValid(slugOrId)
+    ? { $or: [{ _id: slugOrId }, { slug: slugOrId }] }
+    : { slug: slugOrId };
+
+  const workshop = await WorkShop.findOne(query).populate(
+    "createdBy",
+    "name email picture expertise bio",
+  );
 
   if (!workshop) {
     throw new AppError(StatusCodes.NOT_FOUND, "Workshop not found");
