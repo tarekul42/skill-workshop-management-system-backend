@@ -158,12 +158,28 @@ const successPayment = async (
     );
 
     if (!updatedPayment) {
-      // Either not found, or another callback already processed it.
+      // CAS miss can happen if another callback processed this payment first.
+      // Preserve idempotency for already-paid records, but do not report
+      // success if the payment was moved to FAILED/CANCELLED.
       await session.abortTransaction();
       session.endSession();
+
+      const latestPayment =
+        await PaymentRepository.findPaymentByTransactionId(transactionId);
+      if (!latestPayment) {
+        throw new AppError(StatusCodes.NOT_FOUND, "Payment not found");
+      }
+
+      if (latestPayment.status === PAYMENT_STATUS.PAID) {
+        return {
+          success: true,
+          message: "Payment already processed",
+        };
+      }
+
       return {
-        success: true,
-        message: "Payment already processed",
+        success: false,
+        message: `Payment already processed as ${latestPayment.status.toLowerCase()}`,
       };
     }
 
@@ -248,7 +264,12 @@ const failPayment = async (query: Record<string, string>) => {
     );
 
     if (!updatedPayment) {
-      throw new AppError(StatusCodes.NOT_FOUND, "Payment not found");
+      await session.abortTransaction();
+      session.endSession();
+      return {
+        success: false,
+        message: "Payment already processed",
+      };
     }
 
     await PaymentRepository.updateEnrollmentStatus(
@@ -320,7 +341,12 @@ const cancelPayment = async (query: Record<string, string>) => {
     );
 
     if (!updatedPayment) {
-      throw new AppError(StatusCodes.NOT_FOUND, "Payment not found");
+      await session.abortTransaction();
+      session.endSession();
+      return {
+        success: false,
+        message: "Payment already processed",
+      };
     }
 
     await PaymentRepository.updateEnrollmentStatus(
