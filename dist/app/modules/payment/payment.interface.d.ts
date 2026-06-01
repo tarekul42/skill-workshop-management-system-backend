@@ -15,6 +15,8 @@ interface IPayment {
     paymentGatewayData?: Record<string, unknown>;
     invoiceUrl?: string;
     status: PAYMENT_STATUS;
+    createdAt?: Date;
+    updatedAt?: Date;
 }
 interface IPaymentPopulated extends Omit<IPayment, "enrollment"> {
     enrollment: IEnrollment;

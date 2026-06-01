@@ -391,13 +391,14 @@ const getInvoiceDownloadUrl = async (
     throw new AppError(StatusCodes.NOT_FOUND, "Payment not found");
   }
 
+  const enrollment = await PaymentRepository.findEnrollmentWithUser(
+    String(payment.enrollment),
+  );
+
   const isAdmin =
     userRole === UserRole.ADMIN || userRole === UserRole.SUPER_ADMIN;
   if (!isAdmin) {
-    const enrollment = await PaymentRepository.findEnrollmentWithUser(
-      String(payment.enrollment),
-    );
-    if (!enrollment || String(enrollment.user) !== userId) {
+    if (!enrollment || String(enrollment.user._id) !== userId) {
       throw new AppError(
         StatusCodes.FORBIDDEN,
         "You can only access your own invoices",
@@ -405,11 +406,12 @@ const getInvoiceDownloadUrl = async (
     }
   }
 
-  if (!payment.invoiceUrl) {
-    throw new AppError(StatusCodes.NOT_FOUND, "Invoice not found");
-  }
 
-  return payment.invoiceUrl;
+  return {
+    invoiceUrl: payment.invoiceUrl,
+    payment,
+    enrollment,
+  };
 };
 
 const handleIPN = async (body: Record<string, string>) => {

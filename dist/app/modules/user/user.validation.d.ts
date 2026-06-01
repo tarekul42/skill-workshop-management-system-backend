@@ -1,4 +1,5 @@
 import z from "zod";
+import { UserRole } from "./user.interface.js";
 /**
  * Shared password complexity rules.
  * Reused across registration, change-password, and set-password flows.
@@ -11,6 +12,12 @@ declare const createUserZodSchema: z.ZodObject<{
     phone: z.ZodOptional<z.ZodString>;
     age: z.ZodOptional<z.ZodNumber>;
     address: z.ZodOptional<z.ZodString>;
+    role: z.ZodOptional<z.ZodEnum<{
+        INSTRUCTOR: UserRole.INSTRUCTOR;
+        STUDENT: UserRole.STUDENT;
+    }>>;
+    expertise: z.ZodOptional<z.ZodString>;
+    bio: z.ZodOptional<z.ZodString>;
 }, z.z.core.$strip>;
 declare const updateUserZodSchema: z.ZodObject<{
     name: z.ZodOptional<z.ZodString>;
@@ -25,6 +32,8 @@ declare const updateUserZodSchema: z.ZodObject<{
     role: z.ZodOptional<z.ZodEnum<{
         [x: string]: string;
     }>>;
+    expertise: z.ZodOptional<z.ZodString>;
+    bio: z.ZodOptional<z.ZodString>;
 }, z.z.core.$strip>;
 declare const changePasswordZodSchema: z.ZodObject<{
     oldPassword: z.ZodString;

@@ -28,6 +28,8 @@ interface IUser {
     isActive?: IsActive;
     isVerified?: boolean;
     role: UserRole;
+    expertise?: string;
+    bio?: string;
     auths: IAuthProvider[];
     enrollments?: Types.ObjectId[];
     instructors?: Types.ObjectId[];

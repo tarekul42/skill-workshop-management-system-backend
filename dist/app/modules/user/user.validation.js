@@ -41,6 +41,9 @@ const createUserZodSchema = z.object({
         .string("Address must be string")
         .max(200, { message: "Address cannot exceed 200 characters." })
         .optional(),
+    role: z.enum([UserRole.INSTRUCTOR, UserRole.STUDENT]).optional(),
+    expertise: z.string("Expertise must be string").max(100).optional(),
+    bio: z.string("Bio must be string").max(500).optional(),
 });
 const updateUserZodSchema = z.object({
     name: z
@@ -66,6 +69,8 @@ const updateUserZodSchema = z.object({
     isActive: z.enum(Object.values(IsActive)).optional(),
     isVerified: z.boolean("isVerified must be true or false").optional(),
     role: z.enum(Object.values(UserRole)).optional(),
+    expertise: z.string("Expertise must be string").max(100).optional(),
+    bio: z.string("Bio must be string").max(500).optional(),
 });
 const changePasswordZodSchema = z.object({
     oldPassword: z.string().min(1, "Old password is required"),
