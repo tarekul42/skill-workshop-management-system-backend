@@ -58,10 +58,11 @@ const createEnrollmentWithPayment = async (
   }
 
   // Guard: Prevent duplicate active enrollment for this user + workshop
+  const activeStatuses: ENROLLMENT_STATUS[] = [ENROLLMENT_STATUS.PENDING, ENROLLMENT_STATUS.COMPLETE];
   const existingEnrollment = await Enrollment.findOne({
     user: { $eq: userId },
     workshop: { $eq: workshopId },
-    status: { $in: ["PENDING", "COMPLETE"] },
+    status: { $in: activeStatuses },
   }).session(session);
 
   if (existingEnrollment) {

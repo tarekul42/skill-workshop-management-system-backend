@@ -44,7 +44,7 @@ const findPaymentById = async (paymentId) => {
     }
     return await Payment.findOne({
         _id: { $eq: new Types.ObjectId(paymentId) },
-    }).select("invoiceUrl");
+    });
 };
 const findPaymentByTransactionId = async (transactionId) => {
     return await Payment.findOne({

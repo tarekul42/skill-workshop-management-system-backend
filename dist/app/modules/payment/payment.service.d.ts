@@ -1,4 +1,3 @@
-import { Types } from "mongoose";
 import { PAYMENT_STATUS } from "./payment.interface.js";
 declare const PaymentService: {
     initPayment: (enrollmentId: string, userId: string) => Promise<{
@@ -17,24 +16,21 @@ declare const PaymentService: {
         message: string;
     }>;
     getInvoiceDownloadUrl: (paymentId: string, userId: string, userRole: string) => Promise<{
-        invoiceUrl: string | null;
-        payment: {
-            status: PAYMENT_STATUS;
-            amount: number;
-            createdAt: Date | undefined;
-            transactionId: string;
+        invoiceUrl: string | undefined;
+        payment: import("mongoose").Document<unknown, {}, import("./payment.interface.js").IPayment, {}, import("mongoose").DefaultSchemaOptions> & import("./payment.interface.js").IPayment & Required<{
+            _id: import("mongoose").Types.ObjectId;
+        }> & {
+            __v: number;
+        } & {
+            id: string;
         };
-        enrollment: {
-            studentCount: number;
-            workshop: {
-                title: string | undefined;
-            };
-            user: {
-                name: string | undefined;
-                email: string | undefined;
-                phone: string | undefined;
-            };
-        };
+        enrollment: (import("mongoose").Document<unknown, {}, import("../enrollment/enrollment.interface.js").IEnrollment, {}, import("mongoose").DefaultSchemaOptions> & import("../enrollment/enrollment.interface.js").IEnrollment & Required<{
+            _id: import("mongoose").Types.ObjectId;
+        }> & {
+            __v: number;
+        } & {
+            id: string;
+        }) | null;
     }>;
     handleIPN: (body: Record<string, string>) => Promise<{
         received: boolean;
@@ -47,7 +43,7 @@ declare const PaymentService: {
         status: PAYMENT_STATUS;
         transactionId: string;
         amount: number;
-        enrollmentId: Types.ObjectId;
+        enrollmentId: import("mongoose").Types.ObjectId;
     }>;
 };
 export default PaymentService;
