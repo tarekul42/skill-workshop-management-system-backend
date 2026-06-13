@@ -35,7 +35,7 @@ const enrollmentSchema = new Schema({
 enrollmentSchema.plugin(softDeletePlugin);
 enrollmentSchema.plugin(auditPlugin);
 enrollmentSchema.index({ workshop: 1, user: 1 }, {
-    partialFilterExpression: { status: { $in: ["PENDING", "COMPLETE"] } },
+    partialFilterExpression: { status: { $in: ["PENDING", "COMPLETE"] }, isDeleted: { $ne: true } },
     unique: true,
 });
 const Enrollment = model("Enrollment", enrollmentSchema);

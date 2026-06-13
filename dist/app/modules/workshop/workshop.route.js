@@ -439,7 +439,7 @@ router.post("/create", adminCrudLimiter, checkAuth(UserRole.ADMIN, UserRole.SUPE
  *       404:
  *         $ref: "#/components/responses/NotFoundError"
  */
-router.patch("/:id", adminCrudLimiter, checkAuth(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.INSTRUCTOR), multerUpload.array("files"), validateRequest(updateWorkshopZodSchema), WorkshopController.updateWorkshop);
+router.patch("/:id", adminCrudLimiter, checkAuth(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.INSTRUCTOR), multerUpload.array("files", 10), validateRequest(updateWorkshopZodSchema), WorkshopController.updateWorkshop);
 /**
  * @openapi
  * /workshop/{id}:
