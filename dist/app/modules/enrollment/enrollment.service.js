@@ -33,7 +33,9 @@ const createEnrollment = async (payload, userId) => {
         };
     }
     catch (err) {
-        await session.abortTransaction();
+        if (session.inTransaction()) {
+            await session.abortTransaction();
+        }
         session.endSession();
         throw err;
     }

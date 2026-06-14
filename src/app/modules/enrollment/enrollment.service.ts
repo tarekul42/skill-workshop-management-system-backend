@@ -53,7 +53,9 @@ const createEnrollment = async (
       enrollment: result.enrollment,
     };
   } catch (err) {
-    await session.abortTransaction();
+    if (session.inTransaction()) {
+      await session.abortTransaction();
+    }
     session.endSession();
     throw err;
   }

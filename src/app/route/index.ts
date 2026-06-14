@@ -6,6 +6,8 @@ import EnrollmentRoutes from "../modules/enrollment/enrollment.route.js";
 import { HealthRoutes } from "../modules/health/health.route.js";
 import OTPRoutes from "../modules/otp/otp.route.js";
 import PaymentRoutes from "../modules/payment/payment.route.js";
+import ContactRoutes from "../modules/contact/contact.route.js";
+import ReviewRoutes from "../modules/review/review.route.js";
 import StatsRoutes from "../modules/stats/stats.route.js";
 import UserRoutes from "../modules/user/user.route.js";
 import WorkshopRoutes from "../modules/workshop/workshop.route.js";
@@ -52,6 +54,14 @@ const moduleRoutes = [
   {
     path: "/audit",
     route: AuditRoutes,
+  },
+  {
+    path: "/review",
+    route: ReviewRoutes,
+  },
+  {
+    path: "/contact",
+    route: ContactRoutes,
   },
 ];
 
