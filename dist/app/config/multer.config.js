@@ -4,23 +4,25 @@ import path from "path";
 import { cloudinaryUpload } from "./cloudinary.config.js";
 const storage = new CloudinaryStorage({
     cloudinary: cloudinaryUpload,
-    params: {
-        public_id: (_req, file) => {
-            const fileName = file.originalname
-                .toLowerCase()
-                .replace(/\s+/g, "-") // empty space remove replace with dash
-                .replace(/\./g, "-")
-                .replace(/[^a-z0-9.-]/g, ""); // non alpha numeric - !@#$
-            const parts = file.originalname.split(".");
-            const extension = parts.length > 1 ? parts.pop() : "";
-            const uniqueFileName = Math.random().toString(36).substring(2) +
-                "-" +
-                Date.now() +
-                "-" +
-                fileName +
-                (extension ? "." + extension : "");
-            return uniqueFileName;
-        },
+    params: async (_req, file) => {
+        const fileName = file.originalname
+            .toLowerCase()
+            .replace(/\s+/g, "-") // empty space remove replace with dash
+            .replace(/\./g, "-")
+            .replace(/[^a-z0-9.-]/g, ""); // non alpha numeric - !@#$
+        const parts = file.originalname.split(".");
+        const extension = parts.length > 1 ? parts.pop() : "";
+        const uniqueFileName = Math.random().toString(36).substring(2) +
+            "-" +
+            Date.now() +
+            "-" +
+            fileName +
+            (extension ? "." + extension : "");
+        return {
+            folder: "uploads",
+            public_id: uniqueFileName,
+            resource_type: "auto",
+        };
     },
 });
 const fileFilter = (req, file, cb) => {

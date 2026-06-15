@@ -15,7 +15,23 @@ declare const PaymentService: {
         success: boolean;
         message: string;
     }>;
-    getInvoiceDownloadUrl: (paymentId: string, userId: string, userRole: string) => Promise<string>;
+    getInvoiceDownloadUrl: (paymentId: string, userId: string, userRole: string) => Promise<{
+        invoiceUrl: string | undefined;
+        payment: import("mongoose").Document<unknown, {}, import("./payment.interface.js").IPayment, {}, import("mongoose").DefaultSchemaOptions> & import("./payment.interface.js").IPayment & Required<{
+            _id: import("mongoose").Types.ObjectId;
+        }> & {
+            __v: number;
+        } & {
+            id: string;
+        };
+        enrollment: (import("mongoose").Document<unknown, {}, import("../enrollment/enrollment.interface.js").IEnrollment, {}, import("mongoose").DefaultSchemaOptions> & import("../enrollment/enrollment.interface.js").IEnrollment & Required<{
+            _id: import("mongoose").Types.ObjectId;
+        }> & {
+            __v: number;
+        } & {
+            id: string;
+        }) | null;
+    }>;
     handleIPN: (body: Record<string, string>) => Promise<{
         received: boolean;
     }>;

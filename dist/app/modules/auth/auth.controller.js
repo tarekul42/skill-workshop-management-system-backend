@@ -159,7 +159,10 @@ const googleCallback = catchAsync(async (req, res) => {
                 // Clean up
                 await redisClient.del(`oauth_redirect:${stateParam}`);
                 // Validate against whitelist
-                const sanitized = storedRedirect.replace(/\\/g, "/").replace(/^\/+/, "").replace(/\/+$/, "");
+                const sanitized = storedRedirect
+                    .replace(/\\/g, "/")
+                    .replace(/^\/+/, "")
+                    .replace(/\/+$/, "");
                 if (!sanitized.includes("://") &&
                     !/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(sanitized) &&
                     ALLOWED_REDIRECT_PATHS.some((p) => sanitized === p || sanitized.startsWith(p + "/"))) {

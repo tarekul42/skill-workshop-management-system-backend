@@ -4,13 +4,23 @@ import Enrollment from "../enrollment/enrollment.model.js";
 import { PAYMENT_STATUS } from "./payment.interface.js";
 import Payment from "./payment.model.js";
 
+const isValidObjectId = (id: string): boolean => {
+  return typeof id === "string" && Types.ObjectId.isValid(id);
+};
+
 const findPaymentByEnrollmentId = async (enrollmentId: string) => {
+  if (!isValidObjectId(enrollmentId)) {
+    return null;
+  }
   return await Payment.findOne({
     enrollment: { $eq: new Types.ObjectId(enrollmentId) },
   });
 };
 
 const findEnrollmentWithUser = async (enrollmentId: string) => {
+  if (!isValidObjectId(enrollmentId)) {
+    return null;
+  }
   return await Enrollment.findOne({
     _id: { $eq: new Types.ObjectId(enrollmentId) },
   }).populate("user", "name email phone address");
@@ -41,6 +51,9 @@ const updateEnrollmentStatus = async (
   status: ENROLLMENT_STATUS,
   session?: ClientSession,
 ) => {
+  if (!isValidObjectId(enrollmentId)) {
+    return null;
+  }
   return await Enrollment.findOneAndUpdate(
     { _id: { $eq: new Types.ObjectId(enrollmentId) } },
     { status },
@@ -51,13 +64,13 @@ const updateEnrollmentStatus = async (
 };
 
 const findPaymentById = async (paymentId: string) => {
-  if (!Types.ObjectId.isValid(paymentId)) {
+  if (!isValidObjectId(paymentId)) {
     return null;
   }
 
   return await Payment.findOne({
     _id: { $eq: new Types.ObjectId(paymentId) },
-  }).select("invoiceUrl");
+  });
 };
 
 const findPaymentByTransactionId = async (transactionId: string) => {
@@ -67,7 +80,7 @@ const findPaymentByTransactionId = async (transactionId: string) => {
 };
 
 const findPaymentWithEnrollment = async (paymentId: string) => {
-  if (!Types.ObjectId.isValid(paymentId)) {
+  if (!isValidObjectId(paymentId)) {
     return null;
   }
 

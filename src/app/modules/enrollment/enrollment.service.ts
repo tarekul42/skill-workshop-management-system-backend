@@ -14,6 +14,15 @@ import {
 import Enrollment from "./enrollment.model.js";
 import EnrollmentRepository from "./enrollment.repository.js";
 
+const isTransientTransactionError = (err: unknown): boolean => {
+  if (!(err instanceof Error)) return false;
+  const errObj = err as Error & { code?: number; errorLabels?: string[] };
+  if (errObj.code === 251) return true;
+  if (errObj.errorLabels && errObj.errorLabels.includes("TransientTransactionError")) return true;
+  if (errObj.message && errObj.message.includes("Write conflict")) return true;
+  return false;
+};
+
 const createEnrollment = async (
   payload: Partial<IEnrollment>,
   userId: string,
@@ -29,34 +38,56 @@ const createEnrollment = async (
     );
   }
 
-  const session = await EnrollmentRepository.startTransaction();
+  const MAX_RETRIES = 3;
 
-  try {
-    const result = await EnrollmentRepository.createEnrollmentWithPayment(
-      payload,
-      userId,
-      session,
-    );
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    const session = await EnrollmentRepository.startTransaction();
 
-    await session.commitTransaction();
-    session.endSession();
+    try {
+      const result = await EnrollmentRepository.createEnrollmentWithPayment(
+        payload,
+        userId,
+        session,
+      );
 
-    await auditLogger({
-      action: AuditAction.CREATE,
-      collectionName: "Enrollment",
-      documentId: result.enrollmentId,
-      performedBy: userId,
-    });
+      await session.commitTransaction();
+      session.endSession();
 
-    return {
-      paymentUrl: result.paymentUrl,
-      enrollment: result.enrollment,
-    };
-  } catch (err) {
-    await session.abortTransaction();
-    session.endSession();
-    throw err;
+      await auditLogger({
+        action: AuditAction.CREATE,
+        collectionName: "Enrollment",
+        documentId: result.enrollmentId,
+        performedBy: userId,
+      });
+
+      return {
+        paymentUrl: result.paymentUrl,
+        enrollment: result.enrollment,
+      };
+    } catch (err) {
+      if (session.inTransaction()) {
+        await session.abortTransaction();
+      }
+      session.endSession();
+
+      if (isTransientTransactionError(err) && attempt < MAX_RETRIES) {
+        continue;
+      }
+
+      if (isTransientTransactionError(err)) {
+        throw new AppError(
+          StatusCodes.BAD_REQUEST,
+          "This workshop is fully booked. No seats available.",
+        );
+      }
+      throw err;
+    }
   }
+
+  throw new AppError(
+    StatusCodes.BAD_REQUEST,
+    "This workshop is fully booked. No seats available.",
+  );
 };
 
 const getUserEnrollments = async (userId: string) => {

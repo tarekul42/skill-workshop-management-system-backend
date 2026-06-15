@@ -1,12 +1,21 @@
 import { Types } from "mongoose";
 import Enrollment from "../enrollment/enrollment.model.js";
 import Payment from "./payment.model.js";
+const isValidObjectId = (id) => {
+    return typeof id === "string" && Types.ObjectId.isValid(id);
+};
 const findPaymentByEnrollmentId = async (enrollmentId) => {
+    if (!isValidObjectId(enrollmentId)) {
+        return null;
+    }
     return await Payment.findOne({
         enrollment: { $eq: new Types.ObjectId(enrollmentId) },
     });
 };
 const findEnrollmentWithUser = async (enrollmentId) => {
+    if (!isValidObjectId(enrollmentId)) {
+        return null;
+    }
     return await Enrollment.findOne({
         _id: { $eq: new Types.ObjectId(enrollmentId) },
     }).populate("user", "name email phone address");
@@ -22,17 +31,20 @@ const updatePaymentStatus = async (transactionId, status, fromStatus, session) =
     return await Payment.findOneAndUpdate(filter, { status }, { returnDocument: "after", runValidators: true, session });
 };
 const updateEnrollmentStatus = async (enrollmentId, status, session) => {
+    if (!isValidObjectId(enrollmentId)) {
+        return null;
+    }
     return await Enrollment.findOneAndUpdate({ _id: { $eq: new Types.ObjectId(enrollmentId) } }, { status }, { returnDocument: "after", runValidators: true, session })
         .populate("workshop", "title")
         .populate("user", "name email");
 };
 const findPaymentById = async (paymentId) => {
-    if (!Types.ObjectId.isValid(paymentId)) {
+    if (!isValidObjectId(paymentId)) {
         return null;
     }
     return await Payment.findOne({
         _id: { $eq: new Types.ObjectId(paymentId) },
-    }).select("invoiceUrl");
+    });
 };
 const findPaymentByTransactionId = async (transactionId) => {
     return await Payment.findOne({
@@ -40,7 +52,7 @@ const findPaymentByTransactionId = async (transactionId) => {
     });
 };
 const findPaymentWithEnrollment = async (paymentId) => {
-    if (!Types.ObjectId.isValid(paymentId)) {
+    if (!isValidObjectId(paymentId)) {
         return null;
     }
     return await Payment.findOne({

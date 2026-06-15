@@ -67,6 +67,9 @@ const workshopSchema = new Schema<IWorkshop>(
 workshopSchema.plugin(softDeletePlugin);
 workshopSchema.plugin(auditPlugin);
 
+// Compound index for catalog filtering (category + level) sorted by date
+workshopSchema.index({ category: 1, level: 1, startDate: -1 });
+
 const WorkShop = model<IWorkshop>("Workshop", workshopSchema);
 
 workshopSchema.pre("save", async function () {

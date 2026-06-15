@@ -85,7 +85,8 @@ const successPayment = async (query, body) => {
         typeof paymentWithGatewayData.paymentGatewayData === "object") {
         const gatewayData = paymentWithGatewayData.paymentGatewayData;
         // Verify amount from SSLCommerz matches stored amount
-        const sslAmount = Number(gatewayData.currency_amount) || Number(gatewayData.amount);
+        const sslAmount = Number(gatewayData.currency_amount) ||
+            Number(gatewayData.amount);
         if (sslAmount && Math.abs(sslAmount - existingPayment.amount) > 0.5) {
             logger.warn({
                 msg: "Payment amount mismatch",
@@ -103,12 +104,24 @@ const successPayment = async (query, body) => {
         // treat as idempotent success without overwriting the later state.
         const updatedPayment = await PaymentRepository.updatePaymentStatus(transactionId, PAYMENT_STATUS.PAID, PAYMENT_STATUS.UNPAID, session);
         if (!updatedPayment) {
-            // Either not found, or another callback already processed it.
+            // CAS miss can happen if another callback processed this payment first.
+            // Preserve idempotency for already-paid records, but do not report
+            // success if the payment was moved to FAILED/CANCELLED.
             await session.abortTransaction();
             session.endSession();
+            const latestPayment = await PaymentRepository.findPaymentByTransactionId(transactionId);
+            if (!latestPayment) {
+                throw new AppError(StatusCodes.NOT_FOUND, "Payment not found");
+            }
+            if (latestPayment.status === PAYMENT_STATUS.PAID) {
+                return {
+                    success: true,
+                    message: "Payment already processed",
+                };
+            }
             return {
-                success: true,
-                message: "Payment already processed",
+                success: false,
+                message: `Payment already processed as ${latestPayment.status.toLowerCase()}`,
             };
         }
         const updatedEnrollment = await PaymentRepository.updateEnrollmentStatus(String(updatedPayment.enrollment), ENROLLMENT_STATUS.COMPLETE, session);
@@ -168,7 +181,12 @@ const failPayment = async (query) => {
         // closes the TOCTOU window).
         const updatedPayment = await PaymentRepository.updatePaymentStatus(transactionId, PAYMENT_STATUS.FAILED, PAYMENT_STATUS.UNPAID, session);
         if (!updatedPayment) {
-            throw new AppError(StatusCodes.NOT_FOUND, "Payment not found");
+            await session.abortTransaction();
+            session.endSession();
+            return {
+                success: false,
+                message: "Payment already processed",
+            };
         }
         await PaymentRepository.updateEnrollmentStatus(String(updatedPayment.enrollment), ENROLLMENT_STATUS.FAILED, session);
         await session.commitTransaction();
@@ -215,7 +233,12 @@ const cancelPayment = async (query) => {
         // closes the TOCTOU window).
         const updatedPayment = await PaymentRepository.updatePaymentStatus(transactionId, PAYMENT_STATUS.CANCELLED, PAYMENT_STATUS.UNPAID, session);
         if (!updatedPayment) {
-            throw new AppError(StatusCodes.NOT_FOUND, "Payment not found");
+            await session.abortTransaction();
+            session.endSession();
+            return {
+                success: false,
+                message: "Payment already processed",
+            };
         }
         await PaymentRepository.updateEnrollmentStatus(String(updatedPayment.enrollment), ENROLLMENT_STATUS.CANCEL, session);
         await session.commitTransaction();
@@ -243,17 +266,18 @@ const getInvoiceDownloadUrl = async (paymentId, userId, userRole) => {
     if (!payment) {
         throw new AppError(StatusCodes.NOT_FOUND, "Payment not found");
     }
+    const enrollment = await PaymentRepository.findEnrollmentWithUser(String(payment.enrollment));
     const isAdmin = userRole === UserRole.ADMIN || userRole === UserRole.SUPER_ADMIN;
     if (!isAdmin) {
-        const enrollment = await PaymentRepository.findEnrollmentWithUser(String(payment.enrollment));
-        if (!enrollment || String(enrollment.user) !== userId) {
+        if (!enrollment || String(enrollment.user._id) !== userId) {
             throw new AppError(StatusCodes.FORBIDDEN, "You can only access your own invoices");
         }
     }
-    if (!payment.invoiceUrl) {
-        throw new AppError(StatusCodes.NOT_FOUND, "Invoice not found");
-    }
-    return payment.invoiceUrl;
+    return {
+        invoiceUrl: payment.invoiceUrl,
+        payment,
+        enrollment,
+    };
 };
 const handleIPN = async (body) => {
     const transactionId = (body.tran_id || "").trim();

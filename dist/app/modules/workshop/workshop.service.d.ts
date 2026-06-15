@@ -1,17 +1,18 @@
 import { JwtPayload } from "jsonwebtoken";
+import mongoose from "mongoose";
 import { ISoftDelete } from "../../utils/softDeletePlugin.js";
 import { ILevel, IWorkshop } from "./workshop.interface.js";
 declare const WorkshopService: {
-    createLevel: (payload: ILevel) => Promise<import("mongoose").Document<unknown, {}, ILevel, {}, import("mongoose").DefaultSchemaOptions> & ILevel & {
-        _id: import("mongoose").Types.ObjectId;
+    createLevel: (payload: ILevel) => Promise<mongoose.Document<unknown, {}, ILevel, {}, mongoose.DefaultSchemaOptions> & ILevel & {
+        _id: mongoose.Types.ObjectId;
     } & {
         __v: number;
     } & {
         id: string;
     }>;
     getSingleLevel: (id: string) => Promise<{
-        data: import("mongoose").Document<unknown, {}, ILevel, {}, import("mongoose").DefaultSchemaOptions> & ILevel & {
-            _id: import("mongoose").Types.ObjectId;
+        data: mongoose.Document<unknown, {}, ILevel, {}, mongoose.DefaultSchemaOptions> & ILevel & {
+            _id: mongoose.Types.ObjectId;
         } & {
             __v: number;
         } & {
@@ -19,8 +20,8 @@ declare const WorkshopService: {
         };
     }>;
     getAllLevels: (query: Record<string, string>) => Promise<{
-        data: (import("mongoose").Document<unknown, {}, ILevel, {}, import("mongoose").DefaultSchemaOptions> & ILevel & {
-            _id: import("mongoose").Types.ObjectId;
+        data: (mongoose.Document<unknown, {}, ILevel, {}, mongoose.DefaultSchemaOptions> & ILevel & {
+            _id: mongoose.Types.ObjectId;
         } & {
             __v: number;
         } & {
@@ -33,24 +34,24 @@ declare const WorkshopService: {
             totalPage: number;
         };
     }>;
-    updateLevel: (id: string, payload: Partial<ILevel>) => Promise<(import("mongoose").Document<unknown, {}, ILevel, {}, import("mongoose").DefaultSchemaOptions> & ILevel & {
-        _id: import("mongoose").Types.ObjectId;
+    updateLevel: (id: string, payload: Partial<ILevel>) => Promise<(mongoose.Document<unknown, {}, ILevel, {}, mongoose.DefaultSchemaOptions> & ILevel & {
+        _id: mongoose.Types.ObjectId;
     } & {
         __v: number;
     } & {
         id: string;
     }) | null>;
     deleteLevel: (id: string) => Promise<ISoftDelete>;
-    createWorkshop: (payload: IWorkshop) => Promise<import("mongoose").Document<unknown, {}, IWorkshop, {}, import("mongoose").DefaultSchemaOptions> & IWorkshop & {
-        _id: import("mongoose").Types.ObjectId;
+    createWorkshop: (payload: IWorkshop) => Promise<mongoose.Document<unknown, {}, IWorkshop, {}, mongoose.DefaultSchemaOptions> & IWorkshop & {
+        _id: mongoose.Types.ObjectId;
     } & {
         __v: number;
     } & {
         id: string;
     }>;
-    getSingleWorkshop: (slug: string) => Promise<{
-        data: import("mongoose").Document<unknown, {}, IWorkshop, {}, import("mongoose").DefaultSchemaOptions> & IWorkshop & {
-            _id: import("mongoose").Types.ObjectId;
+    getSingleWorkshop: (slugOrId: string) => Promise<{
+        data: mongoose.Document<unknown, {}, IWorkshop, {}, mongoose.DefaultSchemaOptions> & IWorkshop & {
+            _id: mongoose.Types.ObjectId;
         } & {
             __v: number;
         } & {
@@ -58,8 +59,8 @@ declare const WorkshopService: {
         };
     }>;
     getAllWorkshops: (query: Record<string, string>) => Promise<any>;
-    updateWorkshop: (id: string, payload: Partial<IWorkshop>, currentUser: JwtPayload) => Promise<(import("mongoose").Document<unknown, {}, IWorkshop, {}, import("mongoose").DefaultSchemaOptions> & IWorkshop & {
-        _id: import("mongoose").Types.ObjectId;
+    updateWorkshop: (id: string, payload: Partial<IWorkshop>, currentUser: JwtPayload) => Promise<(mongoose.Document<unknown, {}, IWorkshop, {}, mongoose.DefaultSchemaOptions> & IWorkshop & {
+        _id: mongoose.Types.ObjectId;
     } & {
         __v: number;
     } & {

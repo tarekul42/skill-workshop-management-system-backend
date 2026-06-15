@@ -1,6 +1,10 @@
 import bcrypt from "bcryptjs";
 import envVariables from "../config/env.js";
-import { IAuthProvider, IUser, UserRole } from "../modules/user/user.interface.js";
+import {
+  IAuthProvider,
+  IUser,
+  UserRole,
+} from "../modules/user/user.interface.js";
 import User from "../modules/user/user.model.js";
 import logger from "./logger.js";
 

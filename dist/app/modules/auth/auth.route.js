@@ -293,7 +293,10 @@ router.get("/google", authLimiter, async (req, res, next) => {
         await redisClient.set(`oauth_redirect:${state}`, redirect, { EX: 600 });
     }
     catch (err) {
-        logger.error({ msg: "[Google OAuth] Failed to store state in Redis", err });
+        logger.error({
+            msg: "[Google OAuth] Failed to store state in Redis",
+            err,
+        });
         return res.redirect(`${envVariables.FRONTEND_URL}/login?error=${encodeURIComponent("Authentication service temporarily unavailable")}`);
     }
     // Pass state as a plain string so passport-oauth2 sends it as-is
@@ -328,7 +331,10 @@ router.get("/google/callback", authLimiter, async (req, res, next) => {
     try {
         const exists = await redisClient.get(`oauth_state:${queryState}`);
         if (!exists) {
-            logger.warn({ msg: "[Google OAuth] Invalid or expired state", state: queryState });
+            logger.warn({
+                msg: "[Google OAuth] Invalid or expired state",
+                state: queryState,
+            });
             return res.redirect(`${envVariables.FRONTEND_URL}/login?error=${encodeURIComponent("Invalid or expired OAuth state. Please try again.")}`);
         }
         // Delete state immediately — one-time use (prevents replay attacks)
@@ -342,7 +348,8 @@ router.get("/google/callback", authLimiter, async (req, res, next) => {
     // We inject our verified state into the session so passport's internal
     // state check also passes (it compares req.session[oauth2state] === query state).
     if (req.session) {
-        req.session["oauth2state"] = queryState;
+        req.session["oauth2state"] =
+            queryState;
         // Ensure session is saved before passing to passport
         await new Promise((resolve, reject) => {
             req.session.save((err) => (err ? reject(err) : resolve()));
@@ -350,7 +357,10 @@ router.get("/google/callback", authLimiter, async (req, res, next) => {
     }
     passport.authenticate("google", (err, user, info) => {
         if (err) {
-            logger.error({ msg: "[Google OAuth] Internal error", err: err.message || err });
+            logger.error({
+                msg: "[Google OAuth] Internal error",
+                err: err.message || err,
+            });
             return res.redirect(`${envVariables.FRONTEND_URL}/login?error=${encodeURIComponent(`OAuth error: ${err.message || "Internal server error"}`)}`);
         }
         if (!user) {

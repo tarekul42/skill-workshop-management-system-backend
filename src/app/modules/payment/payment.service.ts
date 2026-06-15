@@ -101,9 +101,8 @@ const successPayment = async (
   }
 
   // Check if payment is already paid (idempotent — handles race with IPN)
-  const existingPayment = await PaymentRepository.findPaymentByTransactionId(
-    transactionId,
-  );
+  const existingPayment =
+    await PaymentRepository.findPaymentByTransactionId(transactionId);
 
   if (!existingPayment) {
     throw new AppError(StatusCodes.NOT_FOUND, "Payment not found");
@@ -132,7 +131,9 @@ const successPayment = async (
   ) {
     const gatewayData = paymentWithGatewayData.paymentGatewayData;
     // Verify amount from SSLCommerz matches stored amount
-    const sslAmount = Number((gatewayData as Record<string, unknown>).currency_amount) || Number((gatewayData as Record<string, unknown>).amount);
+    const sslAmount =
+      Number((gatewayData as Record<string, unknown>).currency_amount) ||
+      Number((gatewayData as Record<string, unknown>).amount);
     if (sslAmount && Math.abs(sslAmount - existingPayment.amount) > 0.5) {
       logger.warn({
         msg: "Payment amount mismatch",
@@ -234,9 +235,8 @@ const failPayment = async (query: Record<string, string>) => {
   }
 
   // Check current payment status to prevent overwriting a successful IPN
-  const existingPayment = await PaymentRepository.findPaymentByTransactionId(
-    transactionId,
-  );
+  const existingPayment =
+    await PaymentRepository.findPaymentByTransactionId(transactionId);
 
   if (!existingPayment) {
     throw new AppError(StatusCodes.NOT_FOUND, "Payment not found");
@@ -311,9 +311,8 @@ const cancelPayment = async (query: Record<string, string>) => {
   }
 
   // Check current payment status to prevent overwriting a successful IPN
-  const existingPayment = await PaymentRepository.findPaymentByTransactionId(
-    transactionId,
-  );
+  const existingPayment =
+    await PaymentRepository.findPaymentByTransactionId(transactionId);
 
   if (!existingPayment) {
     throw new AppError(StatusCodes.NOT_FOUND, "Payment not found");
@@ -391,13 +390,14 @@ const getInvoiceDownloadUrl = async (
     throw new AppError(StatusCodes.NOT_FOUND, "Payment not found");
   }
 
+  const enrollment = await PaymentRepository.findEnrollmentWithUser(
+    String(payment.enrollment),
+  );
+
   const isAdmin =
     userRole === UserRole.ADMIN || userRole === UserRole.SUPER_ADMIN;
   if (!isAdmin) {
-    const enrollment = await PaymentRepository.findEnrollmentWithUser(
-      String(payment.enrollment),
-    );
-    if (!enrollment || String(enrollment.user) !== userId) {
+    if (!enrollment || String(enrollment.user._id) !== userId) {
       throw new AppError(
         StatusCodes.FORBIDDEN,
         "You can only access your own invoices",
@@ -405,11 +405,11 @@ const getInvoiceDownloadUrl = async (
     }
   }
 
-  if (!payment.invoiceUrl) {
-    throw new AppError(StatusCodes.NOT_FOUND, "Invoice not found");
-  }
-
-  return payment.invoiceUrl;
+  return {
+    invoiceUrl: payment.invoiceUrl,
+    payment,
+    enrollment,
+  };
 };
 
 const handleIPN = async (body: Record<string, string>) => {
@@ -467,10 +467,7 @@ const handleIPN = async (body: Record<string, string>) => {
             expectedAmount: paymentWithGatewayData.amount,
             sslAmount,
           });
-          throw new AppError(
-            StatusCodes.BAD_REQUEST,
-            "IPN amount mismatch",
-          );
+          throw new AppError(StatusCodes.BAD_REQUEST, "IPN amount mismatch");
         }
       }
     }
@@ -586,7 +583,10 @@ const refundPayment = async (
       // Another request already refunded this payment.
       await session.abortTransaction();
       session.endSession();
-      throw new AppError(StatusCodes.CONFLICT, "Payment has already been refunded");
+      throw new AppError(
+        StatusCodes.CONFLICT,
+        "Payment has already been refunded",
+      );
     }
 
     await PaymentRepository.updateEnrollmentStatus(

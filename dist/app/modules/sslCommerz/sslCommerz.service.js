@@ -2,6 +2,7 @@ import axios from "axios";
 import { StatusCodes } from "http-status-codes";
 import envVariables from "../../config/env.js";
 import AppError from "../../errorHelpers/AppError.js";
+import { redisClient } from "../../config/redis.config.js";
 import logger from "../../utils/logger.js";
 import Payment from "../payment/payment.model.js";
 const sslPaymentInit = async (payload) => {
@@ -72,6 +73,18 @@ const sslPaymentInit = async (payload) => {
     }
 };
 const validatePayment = async (payload) => {
+    // Distributed lock: prevent concurrent IPN + callback from both hitting
+    // the SSLCommerz validation API for the same val_id simultaneously.
+    const lockKey = `lock:payment:val_id:${payload.val_id}`;
+    const acquired = await redisClient.set(lockKey, "locked", { NX: true, EX: 30 });
+    if (!acquired) {
+        logger.info({
+            msg: "Payment validation already in progress for this val_id, skipping duplicate",
+            val_id: payload.val_id,
+            tran_id: payload.tran_id,
+        });
+        return;
+    }
     try {
         const response = await axios({
             method: "GET",

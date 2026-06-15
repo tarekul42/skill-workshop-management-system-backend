@@ -1,4 +1,4 @@
-import { model, Schema } from "mongoose";
+import mongoose, { model, Schema } from "mongoose";
 import auditPlugin from "../../utils/auditPlugin.js";
 import softDeletePlugin from "../../utils/softDeletePlugin.js";
 import { IAuthProvider, IsActive, IUser, UserRole } from "./user.interface.js";
@@ -65,6 +65,20 @@ userSchema.plugin(auditPlugin);
 userSchema.index({ isDeleted: 1, isActive: 1, role: 1 });
 userSchema.index({ isDeleted: 1, isVerified: 1 });
 userSchema.index({ name: "text", email: "text", address: "text" });
+
+// Cascade soft delete: when a user is soft-deleted, mark their enrollments
+// and reviews as deleted too so they don't appear in aggregations or lists.
+userSchema.pre("save", async function (this: mongoose.Document) {
+  const doc = this as mongoose.Document & { isDeleted: boolean };
+  if (doc.isModified("isDeleted") && doc.isDeleted) {
+    const Enrollment = mongoose.model("Enrollment");
+    const Review = mongoose.model("Review");
+    await Promise.all([
+      Enrollment.updateMany({ user: doc._id }, { isDeleted: true, deletedAt: new Date() }),
+      Review.updateMany({ user: doc._id }, { isDeleted: true, deletedAt: new Date() }),
+    ]);
+  }
+});
 
 const User = model<IUser>("User", userSchema);
 

@@ -88,32 +88,32 @@ const helmetOptions =
   envVariables.NODE_ENV === "production"
     ? {}
     : {
-      hsts: false,
-      contentSecurityPolicy: {
-        directives: {
-          defaultSrc: ["'self'"],
-          scriptSrc: [
-            "'self'",
-            "'unsafe-inline'",
-            "'unsafe-eval'",
-            "https://vercel.live",
-            "https://cdnjs.cloudflare.com",
-          ],
-          styleSrc: [
-            "'self'",
-            "'unsafe-inline'",
-            "https://cdnjs.cloudflare.com",
-          ],
-          imgSrc: ["'self'", "data:", "validator.swagger.io"],
-          connectSrc: [
-            "'self'",
-            "https://vercel.live",
-            "https://cdnjs.cloudflare.com",
-          ],
-          frameSrc: ["'self'", "https://vercel.live"],
+        hsts: false,
+        contentSecurityPolicy: {
+          directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: [
+              "'self'",
+              "'unsafe-inline'",
+              "'unsafe-eval'",
+              "https://vercel.live",
+              "https://cdnjs.cloudflare.com",
+            ],
+            styleSrc: [
+              "'self'",
+              "'unsafe-inline'",
+              "https://cdnjs.cloudflare.com",
+            ],
+            imgSrc: ["'self'", "data:", "validator.swagger.io"],
+            connectSrc: [
+              "'self'",
+              "https://vercel.live",
+              "https://cdnjs.cloudflare.com",
+            ],
+            frameSrc: ["'self'", "https://vercel.live"],
+          },
         },
-      },
-    };
+      };
 
 app.use(helmet(helmetOptions));
 
@@ -126,7 +126,8 @@ const allowedOrigins = envVariables.FRONTEND_URL.split(",").map((s) =>
 
 // Allow all Vercel deployment URLs for the frontend project
 // (e.g. skill-workshop-management-system-fr.vercel.app, skill-workshop-management-system-fr-git-feat-xyz.vercel.app)
-const vercelOriginPattern = /^https:\/\/skill-workshop-management-system-fr(-[\w-]+)?\.vercel\.app$/;
+const vercelOriginPattern =
+  /^https:\/\/skill-workshop-management-system-fr(-[\w-]+)?\.vercel\.app$/;
 
 app.use(
   cors({

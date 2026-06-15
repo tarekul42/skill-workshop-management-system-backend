@@ -483,7 +483,7 @@ router.patch(
   "/:id",
   adminCrudLimiter,
   checkAuth(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.INSTRUCTOR),
-  multerUpload.array("files"),
+  multerUpload.array("files", 10),
   validateRequest(updateWorkshopZodSchema),
   WorkshopController.updateWorkshop,
 );

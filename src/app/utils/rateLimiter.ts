@@ -26,12 +26,12 @@ const createLimiter = (
         if (redisClient.isOpen) {
           return await redisClient.sendCommand(args);
         }
-        
+
         // Return neutral values for library initialization/execution if closed
         if (args[0] === "SCRIPT" && args[1] === "LOAD") {
           return "0000000000000000000000000000000000000000";
         }
-        
+
         throw new Error("Redis client is not connected");
       },
       prefix,

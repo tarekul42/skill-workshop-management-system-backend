@@ -41,10 +41,14 @@ const createEnrollmentWithPayment = async (payload, userId, session) => {
         throw new AppError(StatusCodes.BAD_REQUEST, "Workshop price is not set.");
     }
     // Guard: Prevent duplicate active enrollment for this user + workshop
+    const activeStatuses = [
+        ENROLLMENT_STATUS.PENDING,
+        ENROLLMENT_STATUS.COMPLETE,
+    ];
     const existingEnrollment = await Enrollment.findOne({
         user: { $eq: userId },
         workshop: { $eq: workshopId },
-        status: { $in: ["PENDING", "COMPLETE"] },
+        status: { $in: activeStatuses },
     }).session(session);
     if (existingEnrollment) {
         throw new AppError(StatusCodes.BAD_REQUEST, "You already have an active enrollment for this workshop.");

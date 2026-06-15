@@ -19,7 +19,7 @@ async function prepareServerlessConnections() {
       if (mongoose.connection.readyState !== 0) {
         await mongoose.disconnect();
       }
-      
+
       logger.info({ msg: "[Serverless] Connecting to MongoDB Atlas..." });
       await mongoose.connect(envVariables.DATABASE_URL, {
         serverSelectionTimeoutMS: 8000, // Fail fast to prevent Vercel 10s execution timeout
@@ -44,7 +44,7 @@ async function prepareServerlessConnections() {
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   await prepareServerlessConnections();
-  
+
   // Delegate the fully prepared request to Express
-  return app(req as any, res as any);
+  return app(req, res);
 }

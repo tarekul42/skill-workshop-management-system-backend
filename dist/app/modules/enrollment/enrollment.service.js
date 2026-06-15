@@ -9,6 +9,18 @@ import { WorkShop } from "../workshop/workshop.model.js";
 import { ENROLLMENT_STATUS, } from "./enrollment.interface.js";
 import Enrollment from "./enrollment.model.js";
 import EnrollmentRepository from "./enrollment.repository.js";
+const isTransientTransactionError = (err) => {
+    if (!(err instanceof Error))
+        return false;
+    const errObj = err;
+    if (errObj.code === 251)
+        return true;
+    if (errObj.errorLabels && errObj.errorLabels.includes("TransientTransactionError"))
+        return true;
+    if (errObj.message && errObj.message.includes("Write conflict"))
+        return true;
+    return false;
+};
 const createEnrollment = async (payload, userId) => {
     if (!payload.workshop) {
         throw new AppError(StatusCodes.BAD_REQUEST, "Workshop ID is required.");
@@ -16,27 +28,39 @@ const createEnrollment = async (payload, userId) => {
     if (typeof payload.workshop !== "string") {
         throw new AppError(StatusCodes.BAD_REQUEST, "Workshop ID must be a string.");
     }
-    const session = await EnrollmentRepository.startTransaction();
-    try {
-        const result = await EnrollmentRepository.createEnrollmentWithPayment(payload, userId, session);
-        await session.commitTransaction();
-        session.endSession();
-        await auditLogger({
-            action: AuditAction.CREATE,
-            collectionName: "Enrollment",
-            documentId: result.enrollmentId,
-            performedBy: userId,
-        });
-        return {
-            paymentUrl: result.paymentUrl,
-            enrollment: result.enrollment,
-        };
+    const MAX_RETRIES = 3;
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+        const session = await EnrollmentRepository.startTransaction();
+        try {
+            const result = await EnrollmentRepository.createEnrollmentWithPayment(payload, userId, session);
+            await session.commitTransaction();
+            session.endSession();
+            await auditLogger({
+                action: AuditAction.CREATE,
+                collectionName: "Enrollment",
+                documentId: result.enrollmentId,
+                performedBy: userId,
+            });
+            return {
+                paymentUrl: result.paymentUrl,
+                enrollment: result.enrollment,
+            };
+        }
+        catch (err) {
+            if (session.inTransaction()) {
+                await session.abortTransaction();
+            }
+            session.endSession();
+            if (isTransientTransactionError(err) && attempt < MAX_RETRIES) {
+                continue;
+            }
+            if (isTransientTransactionError(err)) {
+                throw new AppError(StatusCodes.BAD_REQUEST, "This workshop is fully booked. No seats available.");
+            }
+            throw err;
+        }
     }
-    catch (err) {
-        await session.abortTransaction();
-        session.endSession();
-        throw err;
-    }
+    throw new AppError(StatusCodes.BAD_REQUEST, "This workshop is fully booked. No seats available.");
 };
 const getUserEnrollments = async (userId) => {
     const enrollment = await Enrollment.find({ user: userId })
