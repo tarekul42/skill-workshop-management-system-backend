@@ -91,6 +91,7 @@ router.post(
  */
 router.get(
   "/",
+  adminCrudLimiter,
   checkAuth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
   ContactController.getAllContacts,
 );
@@ -117,6 +118,7 @@ router.get(
  */
 router.get(
   "/:contactId",
+  adminCrudLimiter,
   checkAuth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
   ContactController.getContactById,
 );
