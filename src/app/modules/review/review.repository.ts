@@ -121,9 +121,18 @@ const getStatsByWorkshop = async (
 };
 
 const updateById = async (reviewId: string, payload: Partial<IReview>) => {
+  const plainPayload = Object.entries(payload ?? {}).reduce<
+    Record<string, unknown>
+  >((acc, [key, value]) => {
+    if (!key.startsWith("$") && !key.includes(".")) {
+      acc[key] = value;
+    }
+    return acc;
+  }, {});
+
   return await Review.findOneAndUpdate(
     { _id: new Types.ObjectId(reviewId) },
-    payload,
+    { $set: plainPayload },
     { returnDocument: "after", runValidators: true },
   ).populate("user", "name picture");
 };
