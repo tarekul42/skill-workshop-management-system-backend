@@ -15,8 +15,19 @@ import {
 import ReviewRepository from "./review.repository.js";
 
 const createReview = async (payload: Partial<IReview>, userId: string) => {
+  const workshopIdValue =
+    payload.workshop instanceof Types.ObjectId
+      ? payload.workshop.toString()
+      : String(payload.workshop);
+
+  if (!Types.ObjectId.isValid(workshopIdValue)) {
+    throw new AppError(StatusCodes.BAD_REQUEST, "Invalid workshop id");
+  }
+
+  const workshopObjectId = new Types.ObjectId(workshopIdValue);
+
   // Verify workshop exists
-  const workshop = await WorkShop.findById(payload.workshop);
+  const workshop = await WorkShop.findById(workshopObjectId);
   if (!workshop) {
     throw new AppError(StatusCodes.NOT_FOUND, "Workshop not found");
   }
@@ -30,7 +41,7 @@ const createReview = async (payload: Partial<IReview>, userId: string) => {
   // Verify user has an approved enrollment for this workshop
   const enrollment = await Enrollment.findOne({
     user: userId,
-    workshop: payload.workshop,
+    workshop: workshopObjectId,
     status: {
       $in: [ENROLLMENT_STATUS.COMPLETE, ENROLLMENT_STATUS.PENDING],
     },
@@ -46,7 +57,7 @@ const createReview = async (payload: Partial<IReview>, userId: string) => {
   // Check for duplicate review
   const existing = await ReviewRepository.findByUserAndWorkshop(
     userId,
-    String(payload.workshop),
+    workshopObjectId.toString(),
   );
   if (existing) {
     throw new AppError(
@@ -57,6 +68,7 @@ const createReview = async (payload: Partial<IReview>, userId: string) => {
 
   const review = await ReviewRepository.create({
     ...payload,
+    workshop: workshopObjectId,
     user: new Types.ObjectId(userId),
     status: REVIEW_STATUS.APPROVED,
   });
