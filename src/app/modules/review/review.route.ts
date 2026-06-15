@@ -54,10 +54,7 @@ const router = express.Router();
  *       404:
  *         $ref: "#/components/responses/NotFoundError"
  */
-router.get(
-  "/workshop/:workshopId",
-  ReviewController.getWorkshopReviews,
-);
+router.get("/workshop/:workshopId", ReviewController.getWorkshopReviews);
 
 /**
  * @openapi

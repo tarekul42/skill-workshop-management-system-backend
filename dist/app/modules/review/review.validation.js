@@ -17,22 +17,9 @@ const createReviewZodSchema = z.object({
         .max(2000, "Review content must be at most 2000 characters"),
 });
 const updateReviewZodSchema = z.object({
-    rating: z
-        .number()
-        .int()
-        .min(1)
-        .max(5)
-        .optional(),
-    title: z
-        .string()
-        .min(3)
-        .max(120)
-        .optional(),
-    content: z
-        .string()
-        .min(10)
-        .max(2000)
-        .optional(),
+    rating: z.number().int().min(1).max(5).optional(),
+    title: z.string().min(3).max(120).optional(),
+    content: z.string().min(10).max(2000).optional(),
 });
 const updateReviewStatusZodSchema = z.object({
     status: z.enum(Object.values(REVIEW_STATUS)),

@@ -41,17 +41,19 @@ const getWorkshopReviews = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-const getWorkshopReviewStats = catchAsync(async (req: Request, res: Response) => {
-  const workshopId = parseStringParam(req.params.workshopId, "workshopId");
-  const result = await ReviewService.getWorkshopReviewStats(workshopId);
+const getWorkshopReviewStats = catchAsync(
+  async (req: Request, res: Response) => {
+    const workshopId = parseStringParam(req.params.workshopId, "workshopId");
+    const result = await ReviewService.getWorkshopReviewStats(workshopId);
 
-  sendResponse(res, {
-    statusCode: StatusCodes.OK,
-    success: true,
-    message: "Review stats fetched successfully",
-    data: result,
-  });
-});
+    sendResponse(res, {
+      statusCode: StatusCodes.OK,
+      success: true,
+      message: "Review stats fetched successfully",
+      data: result,
+    });
+  },
+);
 
 const updateReview = catchAsync(async (req: Request, res: Response) => {
   const userId = (req.user as JwtPayload).userId;
@@ -89,22 +91,24 @@ const deleteReview = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-const getUserReviewForWorkshop = catchAsync(async (req: Request, res: Response) => {
-  const userId = (req.user as JwtPayload).userId;
-  const workshopId = parseStringParam(req.params.workshopId, "workshopId");
+const getUserReviewForWorkshop = catchAsync(
+  async (req: Request, res: Response) => {
+    const userId = (req.user as JwtPayload).userId;
+    const workshopId = parseStringParam(req.params.workshopId, "workshopId");
 
-  const result = await ReviewService.getUserReviewForWorkshop(
-    workshopId,
-    userId,
-  );
+    const result = await ReviewService.getUserReviewForWorkshop(
+      workshopId,
+      userId,
+    );
 
-  sendResponse(res, {
-    statusCode: StatusCodes.OK,
-    success: true,
-    message: "User review fetched successfully",
-    data: result,
-  });
-});
+    sendResponse(res, {
+      statusCode: StatusCodes.OK,
+      success: true,
+      message: "User review fetched successfully",
+      data: result,
+    });
+  },
+);
 
 const ReviewController = {
   createReview,

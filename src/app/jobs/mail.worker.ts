@@ -53,7 +53,9 @@ export const mailWorker = new Worker(
           if (pdfBufferData) {
             pdfBuffer = Buffer.from(pdfBufferData as string, "base64");
           } else {
-            pdfBuffer = await generatePDF(invoiceData as unknown as IInvoiceData);
+            pdfBuffer = await generatePDF(
+              invoiceData as unknown as IInvoiceData,
+            );
           }
 
           // Upload to Cloudinary if not already done or if we want to ensure it's there
@@ -64,7 +66,10 @@ export const mailWorker = new Worker(
 
           if (cloudinaryResult) {
             await Payment.findOneAndUpdate(
-              { transactionId: (invoiceData as unknown as IInvoiceData).transactionId },
+              {
+                transactionId: (invoiceData as unknown as IInvoiceData)
+                  .transactionId,
+              },
               { invoiceUrl: cloudinaryResult.secure_url },
             );
           }

@@ -19,28 +19,13 @@ const createReviewZodSchema = z.object({
 });
 
 const updateReviewZodSchema = z.object({
-  rating: z
-    .number()
-    .int()
-    .min(1)
-    .max(5)
-    .optional(),
-  title: z
-    .string()
-    .min(3)
-    .max(120)
-    .optional(),
-  content: z
-    .string()
-    .min(10)
-    .max(2000)
-    .optional(),
+  rating: z.number().int().min(1).max(5).optional(),
+  title: z.string().min(3).max(120).optional(),
+  content: z.string().min(10).max(2000).optional(),
 });
 
 const updateReviewStatusZodSchema = z.object({
-  status: z.enum(
-    Object.values(REVIEW_STATUS) as [string, ...string[]],
-  ),
+  status: z.enum(Object.values(REVIEW_STATUS) as [string, ...string[]]),
 });
 
 const getReviewsQueryZodSchema = z.object({

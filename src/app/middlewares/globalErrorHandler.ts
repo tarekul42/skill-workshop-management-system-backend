@@ -20,7 +20,10 @@ const globalErrorHandler = (
 ) => {
   logger.error(
     {
-      message: err instanceof Error ? err.message : JSON.stringify(err, Object.getOwnPropertyNames(err)),
+      message:
+        err instanceof Error
+          ? err.message
+          : JSON.stringify(err, Object.getOwnPropertyNames(err)),
       name: err instanceof Error ? err.name : "UnknownError",
       stack: err instanceof Error ? err.stack : undefined,
     },

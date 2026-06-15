@@ -368,10 +368,7 @@ const updateWorkshop = async (
       sanitizedBenefits.length !== payload.benefits.length &&
       payload.benefits.length > 0
     ) {
-      throw new AppError(
-        StatusCodes.BAD_REQUEST,
-        "Invalid benefits format",
-      );
+      throw new AppError(StatusCodes.BAD_REQUEST, "Invalid benefits format");
     }
     safePayload.benefits = sanitizedBenefits;
   }
@@ -383,10 +380,7 @@ const updateWorkshop = async (
       sanitizedSyllabus.length !== payload.syllabus.length &&
       payload.syllabus.length > 0
     ) {
-      throw new AppError(
-        StatusCodes.BAD_REQUEST,
-        "Invalid syllabus format",
-      );
+      throw new AppError(StatusCodes.BAD_REQUEST, "Invalid syllabus format");
     }
     safePayload.syllabus = sanitizedSyllabus;
   }

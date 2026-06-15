@@ -36,6 +36,7 @@ import { generateToken } from "../../src/app/utils/jwt";
 // Another approach is to mock the module BEFORE importing app.
 import { mailQueue } from "../../src/app/jobs/mail.queue";
 import * as sslServiceModule from "../../src/app/modules/sslCommerz/sslCommerz.service";
+import { IsActive, UserRole } from "../../src/app/modules/user/user.interface";
 import * as sendEmailDirectModule from "../../src/app/utils/sendEmailDirect";
 
 // Create spies on the actual imported modules that the app uses.
@@ -97,11 +98,11 @@ describe("Integration: Enrollment -> Payment Flow", () => {
       name: "Test Student",
       email: "student@integration.test",
       password: "Password123!", // assuming hashing happens in pre-save
-      role: "STUDENT",
+      role: UserRole.STUDENT,
       phone: "1234567890",
       address: "123 Test St",
       isVerified: true,
-      isActive: "ACTIVE",
+      isActive: IsActive.ACTIVE,
     });
     userId = student._id.toString();
 

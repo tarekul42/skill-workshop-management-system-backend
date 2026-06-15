@@ -85,7 +85,8 @@ const successPayment = async (query, body) => {
         typeof paymentWithGatewayData.paymentGatewayData === "object") {
         const gatewayData = paymentWithGatewayData.paymentGatewayData;
         // Verify amount from SSLCommerz matches stored amount
-        const sslAmount = Number(gatewayData.currency_amount) || Number(gatewayData.amount);
+        const sslAmount = Number(gatewayData.currency_amount) ||
+            Number(gatewayData.amount);
         if (sslAmount && Math.abs(sslAmount - existingPayment.amount) > 0.5) {
             logger.warn({
                 msg: "Payment amount mismatch",

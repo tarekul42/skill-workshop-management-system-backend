@@ -46,7 +46,10 @@ export const mailWorker = new Worker(MAIL_QUEUE, async (job) => {
                 // Upload to Cloudinary if not already done or if we want to ensure it's there
                 const cloudinaryResult = await uploadBufferToCloudinary(pdfBuffer, "invoice");
                 if (cloudinaryResult) {
-                    await Payment.findOneAndUpdate({ transactionId: invoiceData.transactionId }, { invoiceUrl: cloudinaryResult.secure_url });
+                    await Payment.findOneAndUpdate({
+                        transactionId: invoiceData
+                            .transactionId,
+                    }, { invoiceUrl: cloudinaryResult.secure_url });
                 }
                 await sendEmail({
                     to: payload.email,

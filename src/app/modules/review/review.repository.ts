@@ -8,20 +8,14 @@ const findById = async (reviewId: string) => {
   });
 };
 
-const findByUserAndWorkshop = async (
-  userId: string,
-  workshopId: string,
-) => {
+const findByUserAndWorkshop = async (userId: string, workshopId: string) => {
   return await Review.findOne({
     user: new Types.ObjectId(userId),
     workshop: new Types.ObjectId(workshopId),
   });
 };
 
-const create = async (
-  payload: Partial<IReview>,
-  session?: ClientSession,
-) => {
+const create = async (payload: Partial<IReview>, session?: ClientSession) => {
   const [review] = await Review.create([payload], { session });
   return review;
 };
@@ -126,10 +120,7 @@ const getStatsByWorkshop = async (
   };
 };
 
-const updateById = async (
-  reviewId: string,
-  payload: Partial<IReview>,
-) => {
+const updateById = async (reviewId: string, payload: Partial<IReview>) => {
   return await Review.findOneAndUpdate(
     { _id: new Types.ObjectId(reviewId) },
     payload,

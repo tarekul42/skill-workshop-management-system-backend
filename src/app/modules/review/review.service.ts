@@ -3,24 +3,28 @@ import { Types } from "mongoose";
 import AppError from "../../errorHelpers/AppError.js";
 import auditLogger from "../../utils/auditLogger.js";
 import { AuditAction } from "../audit/audit.interface.js";
-import Enrollment from "../enrollment/enrollment.model.js";
 import { ENROLLMENT_STATUS } from "../enrollment/enrollment.interface.js";
+import Enrollment from "../enrollment/enrollment.model.js";
 import { isAdminRole } from "../user/user.interface.js";
 import { WorkShop } from "../workshop/workshop.model.js";
-import { type IReview, type IReviewStats, REVIEW_STATUS } from "./review.interface.js";
+import {
+  type IReview,
+  type IReviewStats,
+  REVIEW_STATUS,
+} from "./review.interface.js";
 import ReviewRepository from "./review.repository.js";
 
-const createReview = async (
-  payload: Partial<IReview>,
-  userId: string,
-) => {
+const createReview = async (payload: Partial<IReview>, userId: string) => {
   // Verify workshop exists
   const workshop = await WorkShop.findById(payload.workshop);
   if (!workshop) {
     throw new AppError(StatusCodes.NOT_FOUND, "Workshop not found");
   }
   if (workshop.isDeleted) {
-    throw new AppError(StatusCodes.BAD_REQUEST, "This workshop is no longer available");
+    throw new AppError(
+      StatusCodes.BAD_REQUEST,
+      "This workshop is no longer available",
+    );
   }
 
   // Verify user has an approved enrollment for this workshop
@@ -156,10 +160,7 @@ const deleteReview = async (
   return null;
 };
 
-const getUserReviewForWorkshop = async (
-  workshopId: string,
-  userId: string,
-) => {
+const getUserReviewForWorkshop = async (workshopId: string, userId: string) => {
   return await ReviewRepository.findByUserAndWorkshop(userId, workshopId);
 };
 

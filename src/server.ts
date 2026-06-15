@@ -4,7 +4,6 @@ import app from "./app.js";
 import envVariables from "./app/config/env.js";
 import { connectRedis, redisClient } from "./app/config/redis.config.js";
 import { mailQueue } from "./app/jobs/mail.queue.js";
-import { mailWorker } from "./app/jobs/mail.worker.js";
 import logger from "./app/utils/logger.js";
 import seedSuperAdmin from "./app/utils/seedSuperAdmin.js";
 
@@ -36,10 +35,12 @@ async function gracefulShutdown(exitCode: number) {
       logger.info({ msg: "HTTP server closed" });
     }
 
-    // 2. Close BullMQ worker and queue
-    // Close worker first to stop processing new jobs
-    await mailWorker.close();
-    logger.info({ msg: "BullMQ worker closed" });
+    // 2. Close BullMQ worker and queue (only if worker is running)
+    if (process.env.RUN_WORKER === "true") {
+      const { mailWorker } = await import("./app/jobs/mail.worker.js");
+      await mailWorker.close();
+      logger.info({ msg: "BullMQ worker closed" });
+    }
 
     // Close queue to release redis connection
     await mailQueue.close();
@@ -93,6 +94,11 @@ const startServer = async () => {
   }
   await startServer();
   await seedSuperAdmin();
+
+  if (process.env.RUN_WORKER === "true") {
+    await import("./app/jobs/mail.worker.js");
+    logger.info({ msg: "BullMQ worker initialized (RUN_WORKER=true)" });
+  }
 })();
 
 process.on("unhandledRejection", (error) => {

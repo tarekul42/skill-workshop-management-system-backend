@@ -218,16 +218,23 @@ const googleCallback = catchAsync(async (req: Request, res: Response) => {
   const stateParam = req.query.state as string | undefined;
   if (stateParam) {
     try {
-      const storedRedirect = await redisClient.get(`oauth_redirect:${stateParam}`);
+      const storedRedirect = await redisClient.get(
+        `oauth_redirect:${stateParam}`,
+      );
       if (storedRedirect) {
         // Clean up
         await redisClient.del(`oauth_redirect:${stateParam}`);
         // Validate against whitelist
-        const sanitized = storedRedirect.replace(/\\/g, "/").replace(/^\/+/, "").replace(/\/+$/, "");
+        const sanitized = storedRedirect
+          .replace(/\\/g, "/")
+          .replace(/^\/+/, "")
+          .replace(/\/+$/, "");
         if (
           !sanitized.includes("://") &&
           !/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(sanitized) &&
-          ALLOWED_REDIRECT_PATHS.some((p) => sanitized === p || sanitized.startsWith(p + "/"))
+          ALLOWED_REDIRECT_PATHS.some(
+            (p) => sanitized === p || sanitized.startsWith(p + "/"),
+          )
         ) {
           redirectTo = sanitized;
         }
@@ -268,9 +275,13 @@ const googleCallback = catchAsync(async (req: Request, res: Response) => {
 
   try {
     // Store code → payload in Redis with short TTL (2 minutes)
-    await redisClient.set(`auth_code:${authCode}`, JSON.stringify(codePayload), {
-      EX: 120,
-    });
+    await redisClient.set(
+      `auth_code:${authCode}`,
+      JSON.stringify(codePayload),
+      {
+        EX: 120,
+      },
+    );
   } catch (err) {
     logger.error({ msg: "Failed to store auth code", err });
     throw new AppError(
@@ -280,9 +291,7 @@ const googleCallback = catchAsync(async (req: Request, res: Response) => {
   }
 
   // ── 4. Redirect to frontend with the one-time code (safe — code is useless without the exchange endpoint) ──
-  res.redirect(
-    `${envVariables.FRONTEND_URL}/${redirectTo}?code=${authCode}`,
-  );
+  res.redirect(`${envVariables.FRONTEND_URL}/${redirectTo}?code=${authCode}`);
 });
 
 /**
@@ -294,7 +303,10 @@ const exchangeAuthCode = catchAsync(async (req: Request, res: Response) => {
   const { code } = req.body;
 
   if (!code || typeof code !== "string") {
-    throw new AppError(StatusCodes.BAD_REQUEST, "Authorization code is required");
+    throw new AppError(
+      StatusCodes.BAD_REQUEST,
+      "Authorization code is required",
+    );
   }
 
   // Retrieve and immediately delete the code (one-time use)
@@ -311,7 +323,10 @@ const exchangeAuthCode = catchAsync(async (req: Request, res: Response) => {
   }
 
   if (!payload) {
-    throw new AppError(StatusCodes.BAD_REQUEST, "Invalid or expired authorization code");
+    throw new AppError(
+      StatusCodes.BAD_REQUEST,
+      "Invalid or expired authorization code",
+    );
   }
 
   let tokenData: Record<string, unknown>;
