@@ -67,9 +67,7 @@ const getUserEnrollments = async (userId) => {
         .populate("user", "name email phone")
         .populate("workshop", "title price images location startDate")
         .populate("payment", "status amount transactionId");
-    return {
-        data: enrollment,
-    };
+    return enrollment;
 };
 const getSingleEnrollment = async (enrollmentId, userId, userRole) => {
     const enrollment = await Enrollment.findOne({

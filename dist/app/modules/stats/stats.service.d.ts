@@ -3,5 +3,6 @@ declare const StatsService: {
     getWorkshopStats: () => Promise<any>;
     getEnrollmentStats: () => Promise<any>;
     getPaymentStats: () => Promise<any>;
+    getTrends: () => Promise<any>;
 };
 export default StatsService;

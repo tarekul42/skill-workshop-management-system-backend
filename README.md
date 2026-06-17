@@ -404,12 +404,24 @@ METRICS_API_KEY=your-metrics-api-key-min-32-chars
 
 ---
 
+## Testing
+
+The project uses **Bun's built-in test runner** with **Supertest** for HTTP integration tests and **MongoDB Memory Server** for isolated database testing. Tests are located in the `tests/` directory.
+
+```bash
+bun test          # Run all tests
+bun test --watch  # Run tests in watch mode
+```
+
+**CI Pipeline**: Tests automatically run on pull requests to `main`/`master` via GitHub Actions, with MongoDB and Redis services provisioned in the workflow.
+
 ## Scripts
 
 ```bash
 bun run dev      # Start development server
 bun run build    # Build for production
 bun run start    # Start production server
+bun test         # Run all tests
 bun run lint     # Run ESLint
 ```
 

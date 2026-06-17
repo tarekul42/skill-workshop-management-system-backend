@@ -21,6 +21,22 @@ const startTransaction = async () => {
   session.startTransaction();
   return session;
 };
+
+const reserveSeat = async (
+  workshopId: string,
+  maxSeats: number,
+): Promise<boolean> => {
+  const result = await WorkShop.findOneAndUpdate(
+    {
+      _id: { $eq: workshopId },
+      currentEnrollments: { $lt: maxSeats },
+    },
+    { $inc: { currentEnrollments: 1 } },
+    { returnDocument: "after" },
+  );
+  return result !== null;
+};
+
 const findWorkshopById = async (workshopId: string, session: ClientSession) => {
   return await WorkShop.findById(workshopId)
     .select("price maxSeats")
@@ -73,26 +89,6 @@ const createEnrollmentWithPayment = async (
       StatusCodes.BAD_REQUEST,
       "You already have an active enrollment for this workshop.",
     );
-  }
-
-  // Atomic capacity check using findOneAndUpdate
-  // This prevents TOCTOU race conditions under high concurrency
-  if (workshop.maxSeats != null) {
-    const workshopWithCapacity = await WorkShop.findOneAndUpdate(
-      {
-        _id: { $eq: workshopId },
-        currentEnrollments: { $lt: workshop.maxSeats },
-      },
-      { $inc: { currentEnrollments: 1 } },
-      { session, returnDocument: "after" },
-    );
-
-    if (!workshopWithCapacity) {
-      throw new AppError(
-        StatusCodes.BAD_REQUEST,
-        "This workshop is fully booked. No seats available.",
-      );
-    }
   }
 
   if (!payload.studentCount || payload.studentCount <= 0) {
@@ -157,6 +153,7 @@ const createEnrollmentWithPayment = async (
 const EnrollmentRepository = {
   startTransaction,
   createEnrollmentWithPayment,
+  reserveSeat,
 };
 
 export default EnrollmentRepository;

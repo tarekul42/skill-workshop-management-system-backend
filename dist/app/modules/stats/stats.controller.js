@@ -38,10 +38,20 @@ const getWorkshopStats = catchAsync(async (req, res) => {
         data: stats,
     });
 });
+const getTrends = catchAsync(async (req, res) => {
+    const stats = await StatsService.getTrends();
+    sendResponse(res, {
+        success: true,
+        statusCode: StatusCodes.OK,
+        message: "Trend data retrieved successfully",
+        data: stats,
+    });
+});
 const StatsController = {
     getEnrollmentStatus,
     getPaymentStatus,
     getUserStats,
     getWorkshopStats,
+    getTrends,
 };
 export default StatsController;

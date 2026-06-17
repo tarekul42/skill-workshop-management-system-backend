@@ -1,8 +1,49 @@
 import express from "express";
+import rateLimit from "express-rate-limit";
 import checkAuth from "../../middlewares/checkAuth.js";
 import { adminCrudLimiter } from "../../utils/rateLimiter.js";
 import { UserRole } from "../user/user.interface.js";
 import StatsController from "./stats.controller.js";
+
+let limiterInitialized: ReturnType<typeof rateLimit> | null = null;
+
+const statsLimiter: express.RequestHandler = (req, res, next) => {
+  if (limiterInitialized) {
+    return limiterInitialized(req, res, next);
+  }
+
+  const init = async () => {
+    try {
+      const { redisClient } = await import("../../config/redis.config.js");
+      const { RedisStore } = await import("rate-limit-redis");
+      const store = new RedisStore({
+        sendCommand: (...args: string[]) => redisClient.sendCommand(args),
+        prefix: "rl:stats:",
+      });
+      limiterInitialized = rateLimit({
+        standardHeaders: true,
+        legacyHeaders: false,
+        windowMs: 15 * 60 * 1000,
+        max: 100,
+        message: { status: 429, message: "Too many requests, please try again later." },
+        store,
+        passOnStoreError: true,
+      });
+    } catch {
+      limiterInitialized = rateLimit({
+        standardHeaders: true,
+        legacyHeaders: false,
+        windowMs: 15 * 60 * 1000,
+        max: 100,
+        message: { status: 429, message: "Too many requests, please try again later." },
+        passOnStoreError: true,
+      });
+    }
+    limiterInitialized(req, res, next);
+  };
+
+  init();
+};
 
 const router = express.Router();
 
@@ -303,6 +344,60 @@ router.get(
   checkAuth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
   adminCrudLimiter,
   StatsController.getWorkshopStats,
+);
+
+/**
+ * @openapi
+ * /stats/trends:
+ *   get:
+ *     summary: Get monthly and daily trend data for charts
+ *     tags: [Stats]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Trend data retrieved successfully
+ *       401:
+ *         $ref: "#/components/responses/UnauthorizedError"
+ *       403:
+ *         $ref: "#/components/responses/ForbiddenError"
+ *       429:
+ *         $ref: "#/components/responses/TooManyRequestsError"
+ *       500:
+ *         $ref: "#/components/responses/InternalServerError"
+ */
+router.get(
+  "/trends",
+  statsLimiter,
+  checkAuth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
+  StatsController.getTrends,
+);
+
+/**
+ * @openapi
+ * /stats/dashboard:
+ *   get:
+ *     summary: Consolidated admin dashboard (all stats in one call)
+ *     tags: [Stats]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Consolidated dashboard data
+ *       401:
+ *         $ref: "#/components/responses/UnauthorizedError"
+ *       403:
+ *         $ref: "#/components/responses/ForbiddenError"
+ *       429:
+ *         $ref: "#/components/responses/TooManyRequestsError"
+ *       500:
+ *         $ref: "#/components/responses/InternalServerError"
+ */
+router.get(
+  "/dashboard",
+  statsLimiter,
+  checkAuth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
+  StatsController.getAdminDashboard,
 );
 
 const StatsRoutes = router;

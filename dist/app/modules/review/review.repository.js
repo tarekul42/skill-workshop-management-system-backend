@@ -102,7 +102,13 @@ const getStatsByWorkshop = async (workshopId) => {
     };
 };
 const updateById = async (reviewId, payload) => {
-    return await Review.findOneAndUpdate({ _id: new Types.ObjectId(reviewId) }, payload, { returnDocument: "after", runValidators: true }).populate("user", "name picture");
+    const plainPayload = Object.entries(payload ?? {}).reduce((acc, [key, value]) => {
+        if (!key.startsWith("$") && !key.includes(".")) {
+            acc[key] = value;
+        }
+        return acc;
+    }, {});
+    return await Review.findOneAndUpdate({ _id: new Types.ObjectId(reviewId) }, { $set: plainPayload }, { returnDocument: "after", runValidators: true }).populate("user", "name picture");
 };
 const deleteById = async (reviewId) => {
     return await Review.findOneAndDelete({

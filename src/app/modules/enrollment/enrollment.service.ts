@@ -14,15 +14,6 @@ import {
 import Enrollment from "./enrollment.model.js";
 import EnrollmentRepository from "./enrollment.repository.js";
 
-const isTransientTransactionError = (err: unknown): boolean => {
-  if (!(err instanceof Error)) return false;
-  const errObj = err as Error & { code?: number; errorLabels?: string[] };
-  if (errObj.code === 251) return true;
-  if (errObj.errorLabels && errObj.errorLabels.includes("TransientTransactionError")) return true;
-  if (errObj.message && errObj.message.includes("Write conflict")) return true;
-  return false;
-};
-
 const createEnrollment = async (
   payload: Partial<IEnrollment>,
   userId: string,
@@ -38,56 +29,67 @@ const createEnrollment = async (
     );
   }
 
-  const MAX_RETRIES = 3;
+  const workshopId = String(payload.workshop);
 
-  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
-    const session = await EnrollmentRepository.startTransaction();
+  const workshop = await WorkShop.findById(workshopId).select("maxSeats");
+  if (!workshop) {
+    throw new AppError(StatusCodes.NOT_FOUND, "Workshop not found.");
+  }
 
-    try {
-      const result = await EnrollmentRepository.createEnrollmentWithPayment(
-        payload,
-        userId,
-        session,
+  let seatReserved = false;
+  if (workshop.maxSeats != null) {
+    seatReserved = await EnrollmentRepository.reserveSeat(
+      workshopId,
+      workshop.maxSeats,
+    );
+    if (!seatReserved) {
+      throw new AppError(
+        StatusCodes.BAD_REQUEST,
+        "This workshop is fully booked. No seats available.",
       );
-
-      await session.commitTransaction();
-      session.endSession();
-
-      await auditLogger({
-        action: AuditAction.CREATE,
-        collectionName: "Enrollment",
-        documentId: result.enrollmentId,
-        performedBy: userId,
-      });
-
-      return {
-        paymentUrl: result.paymentUrl,
-        enrollment: result.enrollment,
-      };
-    } catch (err) {
-      if (session.inTransaction()) {
-        await session.abortTransaction();
-      }
-      session.endSession();
-
-      if (isTransientTransactionError(err) && attempt < MAX_RETRIES) {
-        continue;
-      }
-
-      if (isTransientTransactionError(err)) {
-        throw new AppError(
-          StatusCodes.BAD_REQUEST,
-          "This workshop is fully booked. No seats available.",
-        );
-      }
-      throw err;
     }
   }
 
-  throw new AppError(
-    StatusCodes.BAD_REQUEST,
-    "This workshop is fully booked. No seats available.",
-  );
+  const releaseSeat = async () => {
+    if (seatReserved) {
+      await WorkShop.findByIdAndUpdate(workshopId, {
+        $inc: { currentEnrollments: -1 },
+      });
+      seatReserved = false;
+    }
+  };
+
+  const session = await EnrollmentRepository.startTransaction();
+
+  try {
+    const result = await EnrollmentRepository.createEnrollmentWithPayment(
+      payload,
+      userId,
+      session,
+    );
+
+    await session.commitTransaction();
+    session.endSession();
+
+    await auditLogger({
+      action: AuditAction.CREATE,
+      collectionName: "Enrollment",
+      documentId: result.enrollmentId,
+      performedBy: userId,
+    });
+
+    return {
+      paymentUrl: result.paymentUrl,
+      enrollment: result.enrollment,
+    };
+  } catch (err) {
+    if (session.inTransaction()) {
+      await session.abortTransaction();
+    }
+    session.endSession();
+    await releaseSeat();
+    throw err;
+  }
 };
 
 const getUserEnrollments = async (userId: string) => {
@@ -96,9 +98,7 @@ const getUserEnrollments = async (userId: string) => {
     .populate("workshop", "title price images location startDate")
     .populate("payment", "status amount transactionId");
 
-  return {
-    data: enrollment,
-  };
+  return enrollment;
 };
 
 const getSingleEnrollment = async (
