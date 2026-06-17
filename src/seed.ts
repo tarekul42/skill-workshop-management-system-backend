@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 import dotenv from "dotenv";
@@ -20,13 +19,9 @@ import Payment from "./app/modules/payment/payment.model.js";
 import Review from "./app/modules/review/review.model.js";
 import Contact from "./app/modules/contact/contact.model.js";
 
-// ── Enums ────────────────────────────────────────────────────────────
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const ENROLLMENT_STATUSES = ["PENDING", "CANCEL", "COMPLETE", "FAILED"] as const;
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const PAYMENT_STATUSES = ["PAID", "UNPAID", "CANCELLED", "FAILED", "REFUNDED"] as const;
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const REVIEW_STATUSES = ["PENDING", "APPROVED", "REJECTED"] as const;
+type EnrollmentStatus = "PENDING" | "CANCEL" | "COMPLETE" | "FAILED";
+type PaymentStatus = "PAID" | "UNPAID" | "CANCELLED" | "FAILED" | "REFUNDED";
+type ReviewStatus = "PENDING" | "APPROVED" | "REJECTED";
 
 const PASSWORD = "Seed@123";
 
@@ -347,7 +342,7 @@ async function seed() {
   console.log("Seeding Enrollments & Payments...");
 
   // Distribute statuses: 4 COMPLETE, 3 PENDING, 3 CANCEL, 2 FAILED
-  const enrollmentStatuses: { es: typeof ENROLLMENT_STATUSES[number]; ps: typeof PAYMENT_STATUSES[number] }[] = [
+  const enrollmentStatuses: { es: EnrollmentStatus; ps: PaymentStatus }[] = [
     { es: "COMPLETE", ps: "PAID" },
     { es: "COMPLETE", ps: "PAID" },
     { es: "COMPLETE", ps: "PAID" },
@@ -426,7 +421,7 @@ async function seed() {
   console.log("Seeding Reviews...");
   const reviewDocs = [];
   for (let i = 0; i < 12; i++) {
-    const status: typeof REVIEW_STATUSES[number] = i < 2 ? "PENDING" : "APPROVED";
+    const status: ReviewStatus = i < 2 ? "PENDING" : "APPROVED";
     reviewDocs.push({
       user: students[i % students.length]._id,
       workshop: workshops[i % workshops.length]._id,
