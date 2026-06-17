@@ -245,21 +245,25 @@ router.get(
         : "degraded";
 
     res.status(200).json({
-      status: overallStatus,
-      timestamp: new Date().toISOString(),
-      uptime: process.uptime(),
-      responseTimeMs: Date.now() - startedAt,
-      redis: {
-        memoryBytes: redisMemoryBytes,
-        connected: redisClient.isOpen,
-      },
-      database: {
-        connected: mongoose.connection.readyState === 1,
-        latencyMs: dbLatencyMs,
-      },
-      queue: {
-        name: mailQueue.name,
-        length: queueLength,
+      success: true,
+      message: "Health check completed",
+      data: {
+        status: overallStatus,
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+        responseTimeMs: Date.now() - startedAt,
+        redis: {
+          memoryBytes: redisMemoryBytes,
+          connected: redisClient.isOpen,
+        },
+        database: {
+          connected: mongoose.connection.readyState === 1,
+          latencyMs: dbLatencyMs,
+        },
+        queue: {
+          name: mailQueue.name,
+          length: queueLength,
+        },
       },
     });
   },

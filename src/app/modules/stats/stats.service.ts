@@ -450,11 +450,140 @@ const getPaymentStats = async () => {
   return result;
 };
 
+const getTrends = async () => {
+  const CACHE_KEY = "stats:admin:trends";
+  const CACHE_TTL = 300;
+  try {
+    const cached = await redisClient.get(CACHE_KEY);
+    if (cached) return JSON.parse(cached);
+  } catch {
+    // Falls through to DB operation
+  }
+
+  const now = new Date();
+
+  const sixMonthsAgo = new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000);
+  const fourteenDaysAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
+
+  const enrollmentTrendsPromise = Enrollment.aggregate([
+    { $match: { createdAt: { $gte: sixMonthsAgo }, isDeleted: { $ne: true } } },
+    {
+      $group: {
+        _id: { year: { $year: "$createdAt" }, month: { $month: "$createdAt" } },
+        count: { $sum: 1 },
+      },
+    },
+    { $sort: { "_id.year": 1, "_id.month": 1 } },
+  ]);
+
+  const dailyEnrollmentsPromise = Enrollment.aggregate([
+    { $match: { createdAt: { $gte: fourteenDaysAgo }, isDeleted: { $ne: true } } },
+    {
+      $group: {
+        _id: {
+          year: { $year: "$createdAt" },
+          month: { $month: "$createdAt" },
+          day: { $dayOfMonth: "$createdAt" },
+        },
+        count: { $sum: 1 },
+      },
+    },
+    { $sort: { "_id.year": 1, "_id.month": 1, "_id.day": 1 } },
+  ]);
+
+  const revenueTrendsPromise = Payment.aggregate([
+    { $match: { createdAt: { $gte: sixMonthsAgo }, status: PAYMENT_STATUS.PAID } },
+    {
+      $group: {
+        _id: { year: { $year: "$createdAt" }, month: { $month: "$createdAt" } },
+        revenue: { $sum: "$amount" },
+      },
+    },
+    { $sort: { "_id.year": 1, "_id.month": 1 } },
+  ]);
+
+  const userTrendsPromise = User.aggregate([
+    { $match: { createdAt: { $gte: sixMonthsAgo }, isDeleted: { $ne: true } } },
+    {
+      $group: {
+        _id: { year: { $year: "$createdAt" }, month: { $month: "$createdAt" } },
+        count: { $sum: 1 },
+      },
+    },
+    { $sort: { "_id.year": 1, "_id.month": 1 } },
+  ]);
+
+  const [
+    enrollmentTrends,
+    dailyEnrollments,
+    revenueTrends,
+    userTrends,
+  ] = await Promise.all([
+    enrollmentTrendsPromise,
+    dailyEnrollmentsPromise,
+    revenueTrendsPromise,
+    userTrendsPromise,
+  ]);
+
+  const result = {
+    enrollmentTrends,
+    dailyEnrollments,
+    revenueTrends,
+    userTrends,
+  };
+  try {
+    await redisClient.set(CACHE_KEY, JSON.stringify(result), { EX: CACHE_TTL });
+  } catch {
+    // Falls through
+  }
+  return result;
+};
+
+// ─── Consolidated Admin Dashboard ─────────────────────────────────────
+
+const getAdminDashboard = async () => {
+  const CACHE_KEY = "stats:admin:dashboard";
+  const CACHE_TTL = 300;
+
+  try {
+    const cached = await redisClient.get(CACHE_KEY);
+    if (cached) return JSON.parse(cached);
+  } catch {
+    // Falls through
+  }
+
+  const [users, workshops, enrollments, payments, trends] = await Promise.all([
+    getUsersStats(),
+    getWorkshopStats(),
+    getEnrollmentStats(),
+    getPaymentStats(),
+    getTrends(),
+  ]);
+
+  const result = {
+    users,
+    workshops,
+    enrollments,
+    payments,
+    trends,
+  };
+
+  try {
+    await redisClient.set(CACHE_KEY, JSON.stringify(result), { EX: CACHE_TTL });
+  } catch {
+    // Falls through
+  }
+
+  return result;
+};
+
 const StatsService = {
   getUsersStats,
   getWorkshopStats,
   getEnrollmentStats,
   getPaymentStats,
+  getTrends,
+  getAdminDashboard,
 };
 
 export default StatsService;

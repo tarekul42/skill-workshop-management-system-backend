@@ -78,7 +78,7 @@ router.post("/", adminCrudLimiter, validateRequest(createContactZodSchema), Cont
  *       403:
  *         $ref: "#/components/responses/ForbiddenError"
  */
-router.get("/", checkAuth(UserRole.ADMIN, UserRole.SUPER_ADMIN), ContactController.getAllContacts);
+router.get("/", adminCrudLimiter, checkAuth(UserRole.ADMIN, UserRole.SUPER_ADMIN), ContactController.getAllContacts);
 /**
  * @openapi
  * /contact/{contactId}:
@@ -99,7 +99,7 @@ router.get("/", checkAuth(UserRole.ADMIN, UserRole.SUPER_ADMIN), ContactControll
  *       404:
  *         $ref: "#/components/responses/NotFoundError"
  */
-router.get("/:contactId", checkAuth(UserRole.ADMIN, UserRole.SUPER_ADMIN), ContactController.getContactById);
+router.get("/:contactId", adminCrudLimiter, checkAuth(UserRole.ADMIN, UserRole.SUPER_ADMIN), ContactController.getContactById);
 /**
  * @openapi
  * /contact/{contactId}/read:
@@ -120,7 +120,7 @@ router.get("/:contactId", checkAuth(UserRole.ADMIN, UserRole.SUPER_ADMIN), Conta
  *       404:
  *         $ref: "#/components/responses/NotFoundError"
  */
-router.patch("/:contactId/read", checkAuth(UserRole.ADMIN, UserRole.SUPER_ADMIN), ContactController.markAsRead);
+router.patch("/:contactId/read", adminCrudLimiter, checkAuth(UserRole.ADMIN, UserRole.SUPER_ADMIN), ContactController.markAsRead);
 /**
  * @openapi
  * /contact/{contactId}:
@@ -141,6 +141,6 @@ router.patch("/:contactId/read", checkAuth(UserRole.ADMIN, UserRole.SUPER_ADMIN)
  *       404:
  *         $ref: "#/components/responses/NotFoundError"
  */
-router.delete("/:contactId", checkAuth(UserRole.ADMIN, UserRole.SUPER_ADMIN), ContactController.deleteContact);
+router.delete("/:contactId", adminCrudLimiter, checkAuth(UserRole.ADMIN, UserRole.SUPER_ADMIN), ContactController.deleteContact);
 const ContactRoutes = router;
 export default ContactRoutes;

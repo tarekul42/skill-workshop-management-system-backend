@@ -305,6 +305,60 @@ router.get(
   StatsController.getWorkshopStats,
 );
 
+/**
+ * @openapi
+ * /stats/trends:
+ *   get:
+ *     summary: Get monthly and daily trend data for charts
+ *     tags: [Stats]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Trend data retrieved successfully
+ *       401:
+ *         $ref: "#/components/responses/UnauthorizedError"
+ *       403:
+ *         $ref: "#/components/responses/ForbiddenError"
+ *       429:
+ *         $ref: "#/components/responses/TooManyRequestsError"
+ *       500:
+ *         $ref: "#/components/responses/InternalServerError"
+ */
+router.get(
+  "/trends",
+  checkAuth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
+  adminCrudLimiter,
+  StatsController.getTrends,
+);
+
+/**
+ * @openapi
+ * /stats/dashboard:
+ *   get:
+ *     summary: Consolidated admin dashboard (all stats in one call)
+ *     tags: [Stats]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Consolidated dashboard data
+ *       401:
+ *         $ref: "#/components/responses/UnauthorizedError"
+ *       403:
+ *         $ref: "#/components/responses/ForbiddenError"
+ *       429:
+ *         $ref: "#/components/responses/TooManyRequestsError"
+ *       500:
+ *         $ref: "#/components/responses/InternalServerError"
+ */
+router.get(
+  "/dashboard",
+  checkAuth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
+  adminCrudLimiter,
+  StatsController.getAdminDashboard,
+);
+
 const StatsRoutes = router;
 
 export default StatsRoutes;

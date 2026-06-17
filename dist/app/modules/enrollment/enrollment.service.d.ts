@@ -11,15 +11,13 @@ declare const EnrollmentService: {
             id: string;
         }) | null;
     }>;
-    getUserEnrollments: (userId: string) => Promise<{
-        data: (import("mongoose").Document<unknown, {}, IEnrollment, {}, import("mongoose").DefaultSchemaOptions> & IEnrollment & Required<{
-            _id: Types.ObjectId;
-        }> & {
-            __v: number;
-        } & {
-            id: string;
-        })[];
-    }>;
+    getUserEnrollments: (userId: string) => Promise<(import("mongoose").Document<unknown, {}, IEnrollment, {}, import("mongoose").DefaultSchemaOptions> & IEnrollment & Required<{
+        _id: Types.ObjectId;
+    }> & {
+        __v: number;
+    } & {
+        id: string;
+    })[]>;
     getSingleEnrollment: (enrollmentId: string, userId: string, userRole: string) => Promise<IEnrollmentPopulated>;
     getAllEnrollments: (query: Record<string, string>) => Promise<{
         data: (import("mongoose").Document<unknown, {}, IEnrollment, {}, import("mongoose").DefaultSchemaOptions> & IEnrollment & Required<{

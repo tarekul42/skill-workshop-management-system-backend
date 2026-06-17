@@ -48,11 +48,35 @@ const getWorkshopStats = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getTrends = catchAsync(async (req: Request, res: Response) => {
+  const stats = await StatsService.getTrends();
+
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: "Trend data retrieved successfully",
+    data: stats,
+  });
+});
+
+const getAdminDashboard = catchAsync(async (req: Request, res: Response) => {
+  const stats = await StatsService.getAdminDashboard();
+
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: "Admin dashboard data retrieved successfully",
+    data: stats,
+  });
+});
+
 const StatsController = {
   getEnrollmentStatus,
   getPaymentStatus,
   getUserStats,
   getWorkshopStats,
+  getTrends,
+  getAdminDashboard,
 };
 
 export default StatsController;

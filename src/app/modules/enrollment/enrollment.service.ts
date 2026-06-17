@@ -96,9 +96,7 @@ const getUserEnrollments = async (userId: string) => {
     .populate("workshop", "title price images location startDate")
     .populate("payment", "status amount transactionId");
 
-  return {
-    data: enrollment,
-  };
+  return enrollment;
 };
 
 const getSingleEnrollment = async (

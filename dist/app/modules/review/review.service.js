@@ -10,8 +10,15 @@ import { WorkShop } from "../workshop/workshop.model.js";
 import { REVIEW_STATUS, } from "./review.interface.js";
 import ReviewRepository from "./review.repository.js";
 const createReview = async (payload, userId) => {
+    const workshopIdValue = payload.workshop instanceof Types.ObjectId
+        ? payload.workshop.toString()
+        : String(payload.workshop);
+    if (!Types.ObjectId.isValid(workshopIdValue)) {
+        throw new AppError(StatusCodes.BAD_REQUEST, "Invalid workshop id");
+    }
+    const workshopObjectId = new Types.ObjectId(workshopIdValue);
     // Verify workshop exists
-    const workshop = await WorkShop.findById(payload.workshop);
+    const workshop = await WorkShop.findById(workshopObjectId);
     if (!workshop) {
         throw new AppError(StatusCodes.NOT_FOUND, "Workshop not found");
     }
@@ -21,7 +28,7 @@ const createReview = async (payload, userId) => {
     // Verify user has an approved enrollment for this workshop
     const enrollment = await Enrollment.findOne({
         user: userId,
-        workshop: payload.workshop,
+        workshop: workshopObjectId,
         status: {
             $in: [ENROLLMENT_STATUS.COMPLETE, ENROLLMENT_STATUS.PENDING],
         },
@@ -30,12 +37,13 @@ const createReview = async (payload, userId) => {
         throw new AppError(StatusCodes.FORBIDDEN, "You must be enrolled in this workshop to leave a review");
     }
     // Check for duplicate review
-    const existing = await ReviewRepository.findByUserAndWorkshop(userId, String(payload.workshop));
+    const existing = await ReviewRepository.findByUserAndWorkshop(userId, workshopObjectId.toString());
     if (existing) {
         throw new AppError(StatusCodes.CONFLICT, "You have already reviewed this workshop. You can edit your existing review.");
     }
     const review = await ReviewRepository.create({
         ...payload,
+        workshop: workshopObjectId,
         user: new Types.ObjectId(userId),
         status: REVIEW_STATUS.APPROVED,
     });
