@@ -32,7 +32,7 @@ const { doubleCsrfProtection, generateCsrfToken } = doubleCsrf({
   cookieName: "__csrf",
   cookieOptions: {
     httpOnly: true,
-    sameSite: isProduction ? "strict" : "lax",
+    sameSite: isProduction ? "none" : "lax",
     secure: isProduction,
     path: "/",
   },
