@@ -83,37 +83,34 @@ app.use((req, res, next) => {
 });
 
 // ──── Security Headers ────
-// contentSecurityPolicy is configured to allow swagger-ui-express assets
-const helmetOptions =
-  envVariables.NODE_ENV === "production"
-    ? {}
-    : {
-        hsts: false,
-        contentSecurityPolicy: {
-          directives: {
-            defaultSrc: ["'self'"],
-            scriptSrc: [
-              "'self'",
-              "'unsafe-inline'",
-              "'unsafe-eval'",
-              "https://vercel.live",
-              "https://cdnjs.cloudflare.com",
-            ],
-            styleSrc: [
-              "'self'",
-              "'unsafe-inline'",
-              "https://cdnjs.cloudflare.com",
-            ],
-            imgSrc: ["'self'", "data:", "validator.swagger.io"],
-            connectSrc: [
-              "'self'",
-              "https://vercel.live",
-              "https://cdnjs.cloudflare.com",
-            ],
-            frameSrc: ["'self'", "https://vercel.live"],
-          },
-        },
-      };
+// contentSecurityPolicy allows swagger-ui-express assets and Vercel platform scripts
+const helmetOptions = {
+  hsts: envVariables.NODE_ENV !== "production" ? false : undefined,
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: [
+        "'self'",
+        "'unsafe-inline'",
+        "'unsafe-eval'",
+        "https://vercel.live",
+        "https://cdnjs.cloudflare.com",
+      ],
+      styleSrc: [
+        "'self'",
+        "'unsafe-inline'",
+        "https://cdnjs.cloudflare.com",
+      ],
+      imgSrc: ["'self'", "data:", "validator.swagger.io"],
+      connectSrc: [
+        "'self'",
+        "https://vercel.live",
+        "https://cdnjs.cloudflare.com",
+      ],
+      frameSrc: ["'self'", "https://vercel.live"],
+    },
+  },
+};
 
 app.use(helmet(helmetOptions));
 
