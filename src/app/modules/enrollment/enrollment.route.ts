@@ -107,7 +107,7 @@ router.post(
 router.get(
   "/",
   adminCrudLimiter,
-  checkAuth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
+  checkAuth(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.INSTRUCTOR),
   EnrollmentController.getAllEnrollments,
 );
 
