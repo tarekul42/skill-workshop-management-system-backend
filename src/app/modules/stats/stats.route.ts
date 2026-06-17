@@ -1,24 +1,49 @@
 import express from "express";
 import rateLimit from "express-rate-limit";
-import { RedisStore } from "rate-limit-redis";
 import checkAuth from "../../middlewares/checkAuth.js";
-import { redisClient } from "../../config/redis.config.js";
 import { adminCrudLimiter } from "../../utils/rateLimiter.js";
 import { UserRole } from "../user/user.interface.js";
 import StatsController from "./stats.controller.js";
 
-const statsLimiter = rateLimit({
-  standardHeaders: true,
-  legacyHeaders: false,
-  windowMs: 15 * 60 * 1000,
-  max: 100,
-  message: { status: 429, message: "Too many requests, please try again later." },
-  store: new RedisStore({
-    sendCommand: (...args) => redisClient.sendCommand(args),
-    prefix: "rl:stats:",
-  }),
-  passOnStoreError: true,
-});
+let limiterInitialized: ReturnType<typeof rateLimit> | null = null;
+
+const statsLimiter: express.RequestHandler = (req, res, next) => {
+  if (limiterInitialized) {
+    return limiterInitialized(req, res, next);
+  }
+
+  const init = async () => {
+    try {
+      const { redisClient } = await import("../../config/redis.config.js");
+      const { RedisStore } = await import("rate-limit-redis");
+      const store = new RedisStore({
+        sendCommand: (...args: string[]) => redisClient.sendCommand(args),
+        prefix: "rl:stats:",
+      });
+      limiterInitialized = rateLimit({
+        standardHeaders: true,
+        legacyHeaders: false,
+        windowMs: 15 * 60 * 1000,
+        max: 100,
+        message: { status: 429, message: "Too many requests, please try again later." },
+        store,
+        passOnStoreError: true,
+      });
+    } catch {
+      limiterInitialized = rateLimit({
+        standardHeaders: true,
+        legacyHeaders: false,
+        windowMs: 15 * 60 * 1000,
+        max: 100,
+        message: { status: 429, message: "Too many requests, please try again later." },
+        passOnStoreError: true,
+      });
+    }
+    limiterInitialized(req, res, next);
+  };
+
+  init();
+};
 
 const router = express.Router();
 
