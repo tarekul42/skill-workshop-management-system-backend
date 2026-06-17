@@ -127,7 +127,6 @@ const startServer = async () => {
   try {
     await tryListen(Number(envVariables.PORT));
   } catch (error) {
-    const msg = error instanceof Error ? error.message : "Unknown error";
     logger.error({ msg: "Failed to start server", err: error });
     process.exit(1);
   }

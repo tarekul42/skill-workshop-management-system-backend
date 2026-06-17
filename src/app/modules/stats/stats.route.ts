@@ -1,8 +1,24 @@
 import express from "express";
+import rateLimit from "express-rate-limit";
+import { RedisStore } from "rate-limit-redis";
 import checkAuth from "../../middlewares/checkAuth.js";
+import { redisClient } from "../../config/redis.config.js";
 import { adminCrudLimiter } from "../../utils/rateLimiter.js";
 import { UserRole } from "../user/user.interface.js";
 import StatsController from "./stats.controller.js";
+
+const statsLimiter = rateLimit({
+  standardHeaders: true,
+  legacyHeaders: false,
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  message: { status: 429, message: "Too many requests, please try again later." },
+  store: new RedisStore({
+    sendCommand: (...args) => redisClient.sendCommand(args),
+    prefix: "rl:stats:",
+  }),
+  passOnStoreError: true,
+});
 
 const router = express.Router();
 
@@ -327,8 +343,8 @@ router.get(
  */
 router.get(
   "/trends",
+  statsLimiter,
   checkAuth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
-  adminCrudLimiter,
   StatsController.getTrends,
 );
 
@@ -354,8 +370,8 @@ router.get(
  */
 router.get(
   "/dashboard",
+  statsLimiter,
   checkAuth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
-  adminCrudLimiter,
   StatsController.getAdminDashboard,
 );
 
