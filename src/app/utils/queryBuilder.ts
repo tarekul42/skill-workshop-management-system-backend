@@ -85,6 +85,11 @@ class QueryBuilder<T> {
     return this;
   }
 
+  lean(): this {
+    this.modelQuery = this.modelQuery.lean() as Query<T[], T>;
+    return this;
+  }
+
   build() {
     return this.modelQuery;
   }

@@ -110,6 +110,27 @@ const getUserReviewForWorkshop = catchAsync(
   },
 );
 
+const updateReviewStatus = catchAsync(async (req: Request, res: Response) => {
+  const userId = (req.user as JwtPayload).userId;
+  const userRole = (req.user as JwtPayload).role as string;
+  const reviewId = parseStringParam(req.params.reviewId, "reviewId");
+  const { status } = req.body;
+
+  const result = await ReviewService.updateReviewStatus(
+    reviewId,
+    status,
+    userId,
+    userRole,
+  );
+
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: "Review status updated successfully",
+    data: result,
+  });
+});
+
 const ReviewController = {
   createReview,
   deleteReview,
@@ -117,6 +138,7 @@ const ReviewController = {
   getWorkshopReviewStats,
   getWorkshopReviews,
   updateReview,
+  updateReviewStatus,
 };
 
 export default ReviewController;

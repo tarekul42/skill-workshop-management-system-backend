@@ -6,6 +6,7 @@ interface IErrorSources {
 interface IGenericErrorResponse {
   statusCode: number;
   message: string;
+  code?: string;
   errorSources?: IErrorSources[];
 }
 

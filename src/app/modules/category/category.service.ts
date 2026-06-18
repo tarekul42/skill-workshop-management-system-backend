@@ -50,7 +50,8 @@ const getAllCategories = async (query: Record<string, string>) => {
     .filter()
     .sort()
     .fields()
-    .paginate();
+    .paginate()
+    .lean();
 
   const [data, meta] = await Promise.all([
     categoriesData.build(),

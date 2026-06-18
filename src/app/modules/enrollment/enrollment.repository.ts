@@ -4,8 +4,6 @@ import AppError from "../../errorHelpers/AppError.js";
 import { getTransactionId } from "../../utils/getTransactionId.js";
 import { PAYMENT_STATUS } from "../payment/payment.interface.js";
 import Payment from "../payment/payment.model.js";
-import { ISSLCommerz } from "../sslCommerz/sslCommerz.interface.js";
-import SSLService from "../sslCommerz/sslCommerz.service.js";
 import User from "../user/user.model.js";
 import { WorkShop } from "../workshop/workshop.model.js";
 import { ENROLLMENT_STATUS, IEnrollment } from "./enrollment.interface.js";
@@ -132,20 +130,16 @@ const createEnrollmentWithPayment = async (
     .populate("workshop", "title price")
     .populate("payment");
 
-  const sslPayload: ISSLCommerz = {
-    address: user.address as string,
-    email: user.email,
-    phoneNumber: user.phone as string,
-    name: user.name,
-    amount,
-    transactionId,
-  };
-
-  const sslPayment = await SSLService.sslPaymentInit(sslPayload);
-
   return {
     enrollmentId: enrollment._id,
-    paymentUrl: sslPayment.GatewayPageURL,
+    amount,
+    transactionId,
+    userInfo: {
+      address: user.address as string,
+      email: user.email,
+      phoneNumber: user.phone as string,
+      name: user.name,
+    },
     enrollment: updatedEnrollment,
   };
 };
