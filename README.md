@@ -1,439 +1,227 @@
-# Skill Workshop Management System (Backend)
+# Skill Workshop Management System — Backend
 
-> **Empowering experts and seekers with a secure, high-performance educational ecosystem.**
+> A production-ready, highly secure, and scalable Node.js/TypeScript backend for an educational workshop platform. Built with **Bun**, **Express 5**, **MongoDB**, **Redis**, and **BullMQ**. Features RBAC, automated OTP verification, SSLCommerz payments with PDF invoices, Prometheus observability, and a component-based modular architecture across 13 modules.
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Node.js Version](https://img.shields.io/badge/Node.js-20.x-green.svg)](https://nodejs.org/)
-[![MongoDB](https://img.shields.io/badge/Database-MongoDB-47A048.svg)](https://www.mongodb.com/)
-[![Redis](https://img.shields.io/badge/Cache-Redis-DC382D.svg)](https://redis.io/)
-
----
-
-### 🎯 Pro-Level Summary
-
-This repository houses the backend infrastructure for the **Skill Workshop Management System**. It is architected for maximum performance and security, bridging the gap between industry experts and students through a feature-rich RESTful API. This system emphasizes production-ready execution, emphasizing **security**, **scalability**, and **modular design**.
+[![Live API Docs](https://img.shields.io/badge/API_Docs-Swagger-85EA2D?style=flat-square&logo=swagger&logoColor=black)](https://skill-workshop-management-system-backend.up.railway.app/api-docs)
+[![Frontend Repo](https://img.shields.io/badge/Frontend_Repo-GitHub-181717?style=flat-square&logo=github&logoColor=white)](https://github.com/tarekul42/skill-workshop-management-system-frontend)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
 
 ---
 
-## Features
+## 📋 Overview
 
-- **Workshop Lifecycle Management**: Complete CRUD operations with advanced querying, filtering, and pagination.
-- **Role-Based Access Control (RBAC)**: Fine-grained permissions for Admins and Students.
-- **Automated OTP System**: Secure account verification and password resets using high-speed Redis storage.
-- **Payment Gateway Integration**: Production-ready SSLCommerz integration with transaction logging and status tracking.
-- **Asset Pipeline**: Automated image uploads and management via Cloudinary.
-- **Rate Limiting**: Integrated security middleware to prevent brute-force attacks and API abuse.
-- **Multi-Modal Authentication**: JWT, Google OAuth 2.0, and credentials-based login.
-- **Invoice Generation**: PDF invoice generation for payments.
-- **Structured Logging (Pino)**: High-performance, JSON-based logging for production-grade observability.
-- **Background Jobs (BullMQ)**: Asynchronous processing for emails, PDF generation, and time-consuming tasks.
-- **Soft Deletes**: Data recovery and audit-ready deletion mechanism for core models.
-- **Audit Trail System**: Real-time logging of all write operations (Create, Update, Delete) with entity-level tracking for accountability.
-- **Observability & Metrics**: Integrated Prometheus metrics for real-time monitoring of HTTP traffic, database latency, and background job queues.
-- **CI/CD Pipeline**: Automated GitHub Actions workflows for continuous integration, linting, building, and security scanning (CodeQL).
+This is the backend infrastructure for the **Skill Workshop Management System** — a platform that bridges industry experts and students through workshops. The API handles authentication (JWT + Google OAuth 2.0), OTP-verified registration, workshop lifecycle management, SSLCommerz payments with PDF invoice generation, enrollment transactions with snapshot isolation, role-based access control, audit trails, and real-time Prometheus metrics.
+
+The codebase follows a **Component-Based Modular Architecture** — each of the 13 modules (`auth`, `user`, `workshop`, `category`, `enrollment`, `otp`, `payment`, `sslCommerz`, `stats`, `review`, `audit`, `contact`, `health`) ships its own interfaces, models, services, controllers, routes, and validations. This keeps the codebase maintainable as it scales.
+
+The backend is deployed on **Railway** with full observability via Prometheus metrics at `/metrics` (API-key protected).
 
 ---
 
-## Technical Stack
+## 🛠️ Tech Stack
 
-| Category       | Technology                              |
-| -------------- | --------------------------------------- |
-| Runtime        | Bun (Optimized performance)             |
-| Framework      | Express.js                              |
-| Language       | TypeScript                              |
-| Database       | MongoDB (Mongoose)                      |
-| Cache          | Redis                                   |
-| Queue          | BullMQ (Redis-backed background jobs)   |
-| Authentication | JWT, Passport.js (Local + Google OAuth) |
-| Logging        | Pino & Pino-Pretty                      |
-| Validation     | Zod                                     |
-| File Storage   | Cloudinary                              |
-| Email          | Nodemailer                              |
-| Payment        | SSLCommerz                              |
-| Observability  | Prometheus (prom-client)                |
-| CI/CD          | GitHub Actions                          |
-
-### Architecture
-
-The codebase adheres to a **Component-Based Modular Architecture**. Each domain (User, Workshop, Enrollment, Payment, etc.) is encapsulated within its own module, containing:
-
-- **Interfaces**: Defining clear data contracts.
-- **Models**: Handling data persistence and relationships.
-- **Services**: Encapsulating core business logic.
-- **Controllers**: Managing request orchestration.
-- **Routes**: Defining API endpoints.
-- **Validations**: Ensuring data integrity via Zod schemas.
+| Category | Technology |
+|----------|-----------|
+| Runtime | Bun |
+| Framework | Express.js 5 |
+| Language | TypeScript 6 |
+| Database | MongoDB (Mongoose 9) |
+| Cache | Redis 5 |
+| Queue | BullMQ (Redis-backed background jobs) |
+| Auth | JWT + Passport.js (Local + Google OAuth 2.0) |
+| Validation | Zod 4 |
+| Logging | Pino + Pino-Pretty |
+| File Storage | Cloudinary (multer-storage-cloudinary) |
+| Email | Nodemailer |
+| Payments | SSLCommerz |
+| PDF | pdfkit (invoice generation) |
+| Observability | Prometheus (prom-client) |
+| API Docs | Swagger/OpenAPI (swagger-ui-express) |
+| Security | helmet, hpp, cors, express-rate-limit, csrf-csrf, cookie-parser |
+| Containerization | Docker + Docker Compose |
+| CI/CD | GitHub Actions |
 
 ---
 
-## Project Structure
+## ✨ Main Features
 
-```
-src/
-├── app/
-│   ├── config/              # Configuration files
-│   │   ├── cloudinary.config.ts
-│   │   ├── csrf.config.ts
-│   │   ├── env.ts
-│   │   ├── multer.config.ts
-│   │   ├── passport.ts
-│   │   └── redis.config.ts
-│   ├── constants.ts         # App-wide constants
-│   ├── errorHelpers/        # Custom error classes
-│   ├── helpers/             # Error handling utilities
-│   ├── interfaces/          # TypeScript interfaces
-│   ├── middlewares/         # Express middlewares
-│   │   ├── checkAuth.ts
-│   │   ├── globalErrorHandler.ts
-│   │   ├── notFound.ts
-│   │   └── validateRequest.ts
-│   ├── modules/              # Feature modules
-│   │   ├── auth/             # Authentication
-│   │   ├── category/         # Workshop categories
-│   │   ├── enrollment/       # Workshop enrollments
-│   │   ├── otp/              # OTP verification
-│   │   ├── payment/           # Payment processing
-│   │   ├── sslCommerz/       # SSLCommerz integration
-│   │   ├── stats/            # Analytics & statistics
-│   │   ├── user/             # User management
-│   │   └── workshop/         # Workshop management
-│   ├── route/               # Route definitions
-│   ├── types/               # Type definitions
-│   └── utils/               # Utility functions
-├── server.ts                # Application entry point
-└── app.ts                   # Express app setup
-```
+- **Component-Based Modular Architecture** — 13 self-contained modules, each with its own interfaces → models → services → controllers → routes → validations
+- **Multi-modal authentication** — JWT access + refresh token rotation, Google OAuth 2.0, credentials-based login, token blacklisting with `jti` claims
+- **Automated OTP system** — Redis-backed OTP for account verification and password resets, with TTL expiry
+- **SSLCommerz payment integration** — production-ready payment gateway with transaction logging, IPN validation, success/fail/cancel callbacks, and PDF invoice generation (pdfkit)
+- **Snapshot isolation for enrollments** — collision-safe transaction IDs prevent overselling workshops under concurrent enrollment requests
+- **Consolidated admin analytics** — single `/api/v1/stats/dashboard` endpoint replaces 7 separate admin calls (6× faster, no client-side N+1 composition)
+- **Audit trail system** — real-time logging of all write operations (Create, Update, Delete) with entity-level tracking for accountability
+- **Background jobs via BullMQ** — asynchronous processing for emails, PDF generation, and time-consuming tasks
+- **Prometheus observability** — `/metrics` endpoint (API-key protected) exposes HTTP traffic, database latency, Redis stats, and BullMQ queue lengths
+- **Soft deletes** — data recovery and audit-ready deletion mechanism for core models
+- **Rate limiting** — general (60/min), auth (10/15min), admin limiter — all Redis-backed via `rate-limit-redis`
+- **CSRF protection** — double-CSRF pattern via `csrf-csrf`
+- **Swagger/OpenAPI 3.0 docs** — interactive API documentation at `/api-docs`
+- **Docker + Docker Compose** — one-command local setup with MongoDB 7, Redis 7, and the backend
 
 ---
 
-## Getting Started
+## 📦 Main Dependencies
 
-### Prerequisites
+### Runtime Dependencies
+| Package | Purpose |
+|---------|---------|
+| `express@^5.2.1` | Web framework |
+| `mongoose@^9.6.2` | MongoDB ODM |
+| `redis@^5.12.1` + `connect-redis@^9.0.0` | Redis client + session store |
+| `bullmq@^5.77.1` | Background job queue |
+| `jsonwebtoken@^9.0.3` | JWT auth |
+| `passport@^0.7.0` + `passport-local` + `passport-google-oauth20` | Authentication strategies |
+| `bcryptjs@^3.0.3` | Password hashing |
+| `zod@^4.4.3` | Schema validation |
+| `cloudinary@^2.10.0` + `multer@^2.1.1` + `multer-storage-cloudinary@^4.0.0` | File uploads |
+| `nodemailer@^8.0.8` | Transactional emails |
+| `pdfkit@^0.17.2` | PDF invoice generation |
+| `sslcommerz` (via `axios@^1.16.1`) | Payment gateway integration |
+| `prom-client@^15.1.3` | Prometheus metrics |
+| `pino@^10.3.1` + `pino-pretty@^13.1.3` | Structured logging |
+| `helmet@^8.2.0` + `hpp@^0.2.3` | Security headers + HTTP parameter pollution |
+| `express-rate-limit@^8.5.2` + `rate-limit-redis@^4.3.1` | Redis-backed rate limiting |
+| `csrf-csrf@^4.0.3` | CSRF protection (double-CSRF) |
+| `cookie-parser@^1.4.7` + `express-session@^1.19.0` | Cookies + sessions |
+| `swagger-jsdoc@^6.3.0` + `swagger-ui-express@^5.0.1` | API docs |
+| `ejs@^4.0.1` | Email template rendering |
+| `validator@^13.15.35` | String validation |
+| `http-status-codes@^2.3.0` | HTTP status constants |
 
-- **Node.js**: v20 or higher
-- **MongoDB**: Local instance or MongoDB Atlas URI
-- **Redis**: Local instance or Redis Cloud URI
-- **Package Manager**: `bun` (Recommended)
+### Dev Dependencies (key ones)
+| Package | Purpose |
+|---------|---------|
+| `typescript@^6.0.3` | Type safety |
+| `eslint@^10.4.0` + `typescript-eslint@^8.59.4` | Linting |
+| `supertest@^7.2.2` | HTTP assertion testing |
+| `mongodb-memory-server@^11.1.0` | In-memory MongoDB for tests |
+| `bun-types@^1.3.14` | Bun type definitions |
 
-### Installation
+---
 
-1. **Clone the repository**:
+## 🚀 Run Locally
 
-   ```bash
-   git clone https://github.com/tarekul42/skill-workshop-management-system-backend
-   cd skill-workshop-management-system-backend
-   ```
-
-2. **Install dependencies**:
-
-   ```bash
-   bun install
-   ```
-
-3. **Environment Setup**:
-   Create a `.env` file based on the template below.
-
-### Run
-
-**Development:**
+### Option A: Docker Compose (recommended — one command)
 
 ```bash
+# 1. Clone
+git clone https://github.com/tarekul42/skill-workshop-management-system-backend.git
+cd skill-workshop-management-system-backend
+
+# 2. Configure environment
+cp .env.example .env
+# Edit .env with your values (see table below)
+
+# 3. Start everything (MongoDB + Redis + backend)
+bun run docker:up
+```
+
+This spins up:
+- **MongoDB 7** on port `27020`
+- **Redis 7** on port `6379`
+- **Backend** on port `5000`
+
+### Option B: Manual setup (without Docker)
+
+#### Prerequisites
+- [Bun](https://bun.sh/) 1.x+
+- [MongoDB](https://www.mongodb.com/try/download/community) 7+ running locally (or MongoDB Atlas)
+- [Redis](https://redis.io/download/) 7+ running locally (or Upstash/Redis Cloud)
+
+#### Steps
+
+```bash
+# 1. Clone
+git clone https://github.com/tarekul42/skill-workshop-management-system-backend.git
+cd skill-workshop-management-system-backend
+
+# 2. Install dependencies
+bun install
+
+# 3. Configure environment
+cp .env.example .env
+# Edit .env — see required variables below
+
+# 4. Seed the database (creates super admin + demo data)
+bun run seed
+
+# 5. Run dev server (with hot reload)
 bun run dev
 ```
 
-**Production:**
+Server starts at http://localhost:5000
 
-```bash
-bun run build
-bun start
-```
+### Environment Variables (required)
 
----
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `PORT` | Server port | `5000` |
+| `NODE_ENV` | Environment | `development` |
+| `DATABASE_URL` | MongoDB connection string | `mongodb://localhost:27017/skill-workshop-management-system` |
+| `BCRYPT_SALT_ROUND` | Bcrypt salt rounds | `12` |
+| `JWT_ACCESS_SECRET` | Access token secret (min 32 chars) | `openssl rand -base64 32` |
+| `JWT_REFRESH_SECRET` | Refresh token secret (min 32 chars) | `openssl rand -base64 32` |
+| `SUPER_ADMIN_EMAIL` | Super admin email | `admin@example.com` |
+| `SUPER_ADMIN_PASSWORD` | Super admin password | `Admin@123456` |
+| `GOOGLE_CLIENT_ID` | Google OAuth client ID | (from Google Cloud Console) |
+| `GOOGLE_CLIENT_SECRET` | Google OAuth client secret | (from Google Cloud Console) |
+| `EXPRESS_SESSION_SECRET` | Session secret (min 32 chars) | `openssl rand -base64 32` |
+| `FRONTEND_URL` | Frontend URL (CORS) | `http://localhost:3000` |
+| `SSL_STORE_ID` | SSLCommerz store ID | (from SSLCommerz sandbox) |
+| `SSL_STORE_PASS` | SSLCommerz store password | (from SSLCommerz sandbox) |
+| `CLOUDINARY_CLOUD_NAME` | Cloudinary cloud name | (from Cloudinary dashboard) |
+| `CLOUDINARY_API_KEY` | Cloudinary API key | (from Cloudinary dashboard) |
+| `CLOUDINARY_API_SECRET` | Cloudinary API secret | (from Cloudinary dashboard) |
+| `SMTP_HOST` | SMTP host | `smtp.gmail.com` |
+| `SMTP_USER` | SMTP user | `you@gmail.com` |
+| `SMTP_PASS` | SMTP password | (Gmail App Password) |
+| `SMTP_PORT` | SMTP port | `465` |
+| `REDIS_HOST` | Redis host | `localhost` |
+| `REDIS_PORT` | Redis port | `6379` |
+| `CSRF_SECRET` | CSRF secret (min 32 chars) | `openssl rand -base64 32` |
+| `RESET_PASSWORD_SECRET` | Reset password secret | `openssl rand -base64 32` |
+| `METRICS_API_KEY` | API key for `/metrics` endpoint | `openssl rand -base64 32` |
 
-## API Documentation
+### Available Scripts
 
-The API is fully documented using **Swagger / OpenAPI 3.0**. You can explore the interactive documentation, test endpoints, and view data models at:
-
-- **Local:** [http://localhost:5000/api-docs](http://localhost:5000/api-docs)
-- **Production:** [https://skill-workshop-management-system-backend.up.railway.app/api-docs](https://skill-workshop-management-system-backend.up.railway.app/api-docs)
-
-### API Versioning
-
-The API supports multiple versions to ensure backward compatibility:
-
-- **v1 (Stable)**: The current stable version of the API. Accessible via `/api/v1/*`.
-- **v2 (Beta)**: Used for introducing breaking changes safely. Accessible via `/api/v2/*`.
-
-**Header-based versioning**: Clients can also specify the version using the `X-API-Version` header.
-
-### Observability & Metrics
-
-System metrics are exposed for Prometheus scraping at the `/metrics` endpoint. This includes:
-
-- HTTP request duration and status codes.
-- Database connection latency.
-- Redis memory usage.
-- Background job queue lengths.
-
----
-
-## API Endpoints
-
-### Authentication (`/api/v1/auth`)
-
-| Method | Endpoint                | Description            | Access |
-| ------ | ----------------------- | ---------------------- | ------ |
-| POST   | `/auth/login`           | Login with credentials | Public |
-| POST   | `/auth/refresh-token`   | Get new access token   | Public |
-| POST   | `/auth/logout`          | Logout user            | Public |
-| POST   | `/auth/change-password` | Change password        | Auth   |
-| POST   | `/auth/set-password`    | Set new password       | Auth   |
-| POST   | `/auth/forgot-password` | Request password reset | Public |
-| POST   | `/auth/reset-password`  | Reset password         | Auth   |
-| GET    | `/auth/google`          | Google OAuth login     | Public |
-| GET    | `/auth/google/callback` | Google OAuth callback  | Public |
-
-### Users (`/api/v1/user`)
-
-| Method | Endpoint          | Description              | Access |
-| ------ | ----------------- | ------------------------ | ------ |
-| POST   | `/user/register`  | Register new user        | Public |
-| GET    | `/user/me`        | Get current user profile | Auth   |
-| GET    | `/user/all-users` | Get all users            | Admin  |
-| GET    | `/user/:id`       | Get single user          | Admin  |
-| PATCH  | `/user/:id`       | Update user              | Auth   |
-
-### Workshops (`/api/v1/workshop`)
-
-| Method | Endpoint                 | Description         | Access |
-| ------ | ------------------------ | ------------------- | ------ |
-| GET    | `/workshop`              | Get all workshops   | Public |
-| GET    | `/workshop/:slug`        | Get single workshop | Public |
-| POST   | `/workshop/create`       | Create workshop     | Admin  |
-| PATCH  | `/workshop/:id`          | Update workshop     | Admin  |
-| DELETE | `/workshop/:id`          | Delete workshop     | Admin  |
-| GET    | `/workshop/levels`       | Get all levels      | Public |
-| POST   | `/workshop/create-level` | Create level        | Admin  |
-
-### Categories (`/api/v1/category`)
-
-| Method | Endpoint           | Description          | Access |
-| ------ | ------------------ | -------------------- | ------ |
-| GET    | `/category`        | Get all categories   | Public |
-| GET    | `/category/:slug`  | Get category by slug | Public |
-| POST   | `/category/create` | Create category      | Admin  |
-| PATCH  | `/category/:id`    | Update category      | Admin  |
-| DELETE | `/category/:id`    | Delete category      | Admin  |
-
-### Enrollments (`/api/v1/enrollment`)
-
-| Method | Endpoint             | Description            | Access |
-| ------ | -------------------- | ---------------------- | ------ |
-| GET    | `/enrollment`        | Get user enrollments   | Auth   |
-| GET    | `/enrollment/:id`    | Get enrollment details | Auth   |
-| POST   | `/enrollment/create` | Create enrollment      | Auth   |
-| DELETE | `/enrollment/:id`    | Cancel enrollment      | Auth   |
-
-### Payments (`/api/v1/payment`)
-
-| Method | Endpoint                              | Description              | Access |
-| ------ | ------------------------------------- | ------------------------ | ------ |
-| POST   | `/payment/init-payment/:enrollmentId` | Initialize payment       | Auth   |
-| POST   | `/payment/success`                    | Payment success callback | Public |
-| POST   | `/payment/fail`                       | Payment fail callback    | Public |
-| POST   | `/payment/cancel`                     | Payment cancel callback  | Public |
-| GET    | `/payment/invoice/:paymentId`         | Download invoice         | Auth   |
-| POST   | `/payment/validate-payment`           | Validate payment         | Auth   |
-
-### OTP (`/api/v1/otp`)
-
-| Method | Endpoint      | Description       | Access |
-| ------ | ------------- | ----------------- | ------ |
-| POST   | `/otp/send`   | Send OTP to email | Public |
-| POST   | `/otp/verify` | Verify OTP        | Public |
-
-### Stats (`/api/v1/stats`)
-
-| Method | Endpoint            | Description           | Access |
-| ------ | ------------------- | --------------------- | ------ |
-| GET    | `/stats/enrollment` | Enrollment statistics | Admin  |
-| GET    | `/stats/payment`    | Payment statistics    | Admin  |
-| GET    | `/stats/users`      | User statistics       | Admin  |
-| GET    | `/stats/workshops`  | Workshop statistics   | Admin  |
-
-### Health (`/api/v1/health`)
-
-| Method | Endpoint                | Description                                        | Access |
-| ------ | ----------------------- | -------------------------------------------------- | ------ |
-| GET    | `/health/`              | Root health endpoint                               | Public |
-| GET    | `/health/ping`          | Simple health ping                                 | Public |
-| GET    | `/health/check-version` | Get API version                                    | Public |
-| GET    | `/health/health-check`  | Detailed health status                             | Public |
-| GET    | `/health/dashboard`     | Infrastructure health dashboard (Redis, DB, queue) | Admin  |
-
-### Audit (`/api/v1/audit`)
-
-| Method | Endpoint     | Description          | Access |
-| ------ | ------------ | -------------------- | ------ |
-| GET    | `/audit`     | List all audit logs  | Admin  |
-| GET    | `/audit/:id` | Get single audit log | Admin  |
-
-### Infrastructure & Misc
-
-| Method | Endpoint             | Description                 | Access  |
-| ------ | -------------------- | --------------------------- | ------- |
-| GET    | `/metrics`           | Prometheus metrics scraping | API Key |
-| GET    | `/api/v1/csrf-token` | Generate new CSRF token     | Public  |
+| Command | Description |
+|---------|-------------|
+| `bun run dev` | Start dev server with hot reload |
+| `bun run build` | TypeScript compile + copy email templates |
+| `bun run start` | Start production server from `dist/` |
+| `bun run seed` | Seed database with super admin + demo data |
+| `bun run seed:fresh` | Fresh seed (drops existing data first) |
+| `bun run seed:clear` | Clear all seeded data |
+| `bun run lint` | Run ESLint |
+| `bun run test` | Run tests with Bun test runner |
+| `bun run docker:up` | Start everything via Docker Compose |
 
 ---
 
----
+## 🔗 Links
 
-## Security Features
-
-The system implements multiple layers of security to protect data and ensuring system integrity:
-
-- **CSRF Protection**: Prevents cross-site request forgery using `csrf-csrf` (Double CSRF pattern). [Learn more about how to use CSRF tokens here](./docs/CSRF.md).
-- **Rate Limiting**: Protects against brute-force and DDoS attacks via `express-rate-limit` with Redis storage.
-  - **General Limiter**: 60 requests per minute.
-  - **Auth Limiter**: 10 attempts per 15 minutes for login/refresh.
-  - **Admin Limiter**: Applied to Audit and other sensitive admin routes.
-- **Role-Based Access Control (RBAC)**: Strict permission checks for `STUDENT`, `ADMIN`, and `SUPER_ADMIN` with centralized helper logic.
-- **Token Blacklisting**: Implemented a Redis-based blacklist to invalidate tokens upon logout or password changes, preventing session hijacking.
-- **Dedicated Reset Secret**: Decoupled password reset tokens from access tokens by using a dedicated secret (`RESET_PASSWORD_SECRET`).
-- **Metrics Protection**: Secured the Prometheus `/metrics` endpoint with a mandatory API key check.
-- **Redirect Validation**: Enforced an allowlist for OAuth redirects to prevent Open Redirect vulnerabilities.
-- **Improved Token Security**: Added unique `jti` claims to all JWTs and enforced strict cookie `maxAge` and `path` settings.
-- **Data Integrity & Consistency**:
-  - **Snapshot Isolation**: Enrollment transactions use MongoDB `snapshot` read concern to prevent race conditions.
-  - **Unique Constraints**: Partial unique indexes prevent duplicate active enrollments at the database level.
-  - **Collision-Safe IDs**: Cryptographically secure transaction ID generation using `crypto.randomBytes`.
-- **Cache Reliability**: Automated cache invalidation for workshop listings upon create, update, or delete operations.
-- **Enhanced Validation**: Strict length limits on unbounded string and array fields to prevent resource exhaustion attacks.
+| Resource | URL |
+|----------|-----|
+| 📚 **API Docs (Swagger)** | https://skill-workshop-management-system-backend.up.railway.app/api-docs |
+| 📊 **Metrics** (API-key protected) | https://skill-workshop-management-system-backend.up.railway.app/metrics |
+| 🖥️ **Frontend Repo** | https://github.com/tarekul42/skill-workshop-management-system-frontend |
+| 🌐 **Live Frontend** | https://skill-workshop-management-system-frontend.vercel.app |
+| 📧 **Contact** | tarekulrifat142@gmail.com |
 
 ---
 
-## Database & Redis
+## 📄 License
 
-This project requires both a document database and a key-value store:
-
-- **MongoDB**: Used for primary data persistence (Workshops, Users, Enrollments).
-- **Redis**: Used for high-speed operations:
-  - **Session Management**: Storing user sessions.
-  - **OTP Storage**: Temporary storage for verification codes.
-  - **Rate Limiting**: Tracking request counts across server instances.
-  - **Caching**: Performance optimization for workshop listings.
-  - **Background Jobs**: Persistent storage and state management for BullMQ tasks.
+MIT © Tarekul Islam Rifat
 
 ---
 
-## Database Models
+<div align="center">
 
-- **User**: id, name, email, password, role (STUDENT/ADMIN/SUPER_ADMIN), image, isVerified, createdAt, updatedAt
-- **Workshop**: title, slug, description, thumbnail, category, level, duration, capacity, enrolledCount, price, prerequisites, schedule, status, createdBy
-- **Category**: name, slug, description, image, parentId, isActive
-- **Enrollment**: userId, workshopId, status (PENDING/CONFIRMED/CANCELLED), paymentStatus
-- **Payment**: enrollmentId, transactionId, amount, currency, paymentMethod, status, responseData
-- **Level**: name, order, description
+**⭐ If this project helped you, give it a star!**
 
----
+Built by [Tarekul Islam Rifat](https://github.com/tarekul42)
 
-## Environment Variables
-
-Create a `.env` file with the following variables:
-
-```env
-PORT=5000
-NODE_ENV=development
-DATABASE_URL=mongodb://localhost:27017/skill-workshop-management-system
-BCRYPT_SALT_ROUND=12
-JWT_ACCESS_SECRET=your-access-secret-min-32-chars
-JWT_ACCESS_EXPIRES=15m
-JWT_REFRESH_SECRET=your-refresh-secret-min-32-chars
-JWT_REFRESH_EXPIRES=7d
-SUPER_ADMIN_EMAIL=admin@example.com
-SUPER_ADMIN_PASSWORD=Admin@123456
-GOOGLE_CLIENT_ID=your-google-client-id
-GOOGLE_CLIENT_SECRET=your-google-client-secret
-GOOGLE_CALLBACK_URL=http://localhost:5000/api/v1/auth/google/callback
-EXPRESS_SESSION_SECRET=your-session-secret-min-32-chars
-FRONTEND_URL=http://localhost:3000
-BACKEND_DEV_URL=http://localhost:5000
-BACKEND_PROD_URL=https://your-domain.com
-SSL_STORE_ID=your-ssl-store-id
-SSL_STORE_PASS=your-ssl-store-password
-SSL_PAYMENT_API=https://sandbox.sslcommerz.com/gwprocess/v4/api.php
-SSL_VALIDATION_API=https://sandbox.sslcommerz.com/validator/api/validationserverAPI.php
-SSL_IPN_URL=http://localhost:5000/api/v1/payment/validate-payment
-SSL_SUCCESS_BACKEND_URL=http://localhost:5000/api/v1/payment/success
-SSL_FAIL_BACKEND_URL=http://localhost:5000/api/v1/payment/fail
-SSL_CANCEL_BACKEND_URL=http://localhost:5000/api/v1/payment/cancel
-SSL_SUCCESS_FRONTEND_URL=http://localhost:3000/payment/success
-SSL_FAIL_FRONTEND_URL=http://localhost:3000/payment/fail
-SSL_CANCEL_FRONTEND_URL=http://localhost:3000/payment/cancel
-CLOUDINARY_CLOUD_NAME=your-cloud-name
-CLOUDINARY_API_KEY=your-api-key
-CLOUDINARY_API_SECRET=your-api-secret
-SMTP_USER=your-smtp-user@gmail.com
-SMTP_PASS=your-smtp-password
-SMTP_PORT=465
-SMTP_HOST=smtp.gmail.com
-SMTP_FROM=noreply@example.com
-REDIS_HOST=localhost
-REDIS_PORT=6379
-REDIS_USERNAME=
-REDIS_PASSWORD=
-CSRF_SECRET=your-csrf-secret-min-32-chars
-RESET_PASSWORD_SECRET=your-reset-password-secret-min-32-chars
-METRICS_API_KEY=your-metrics-api-key-min-32-chars
-```
-
----
-
-## Security
-
-- **JWT Authentication**: Access/refresh token system
-- **Password Hashing**: bcryptjs
-- **Rate Limiting**: Request throttling
-- **CSRF Protection**: Built-in token validation
-- **Input Validation**: Zod schema validation
-- **NoSQL Injection Prevention**: Custom MongoDB sanitizer middleware stripping `$` and `.` operators
-- **Helmet.js**: Security headers
-- **HPP Protection**: HTTP Parameter Pollution prevention
-- **Structured Logging**: Production-grade monitoring and audit trails via Pino
-
----
-
-## Testing
-
-The project uses **Bun's built-in test runner** with **Supertest** for HTTP integration tests and **MongoDB Memory Server** for isolated database testing. Tests are located in the `tests/` directory.
-
-```bash
-bun test          # Run all tests
-bun test --watch  # Run tests in watch mode
-```
-
-**CI Pipeline**: Tests automatically run on pull requests to `main`/`master` via GitHub Actions, with MongoDB and Redis services provisioned in the workflow.
-
-## Scripts
-
-```bash
-bun run dev      # Start development server
-bun run build    # Build for production
-bun run start    # Start production server
-bun test         # Run all tests
-bun run lint     # Run ESLint
-```
-
----
-
-## License
-
-This project is licensed under the **MIT License**.
-
----
-
-## Contact
-
-**Project Lead**: [Tarekul Islam Rifat]  
-**Email**: [tarekulrifat142@gmail.com](mailto:tarekulrifat142@gmail.com)
+</div>
