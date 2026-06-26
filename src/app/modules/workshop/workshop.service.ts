@@ -21,6 +21,7 @@ import { Level, WorkShop } from "./workshop.model.js";
  * Invalidates all workshop list cache keys using Redis SCAN.
  */
 const invalidateWorkshopCache = async () => {
+  if (!redisClient.isOpen) return;
   const pattern = "workshops:list:*";
   try {
     const keys: string[] = [];
@@ -86,7 +87,8 @@ const getAllLevels = async (query: Record<string, string>) => {
     .filter()
     .sort()
     .fields()
-    .paginate();
+    .paginate()
+    .lean();
 
   const [data, meta] = await Promise.all([
     levels.build(),
@@ -231,7 +233,8 @@ const getAllWorkshops = async (query: Record<string, string>) => {
     .filter()
     .sort()
     .fields()
-    .paginate();
+    .paginate()
+    .lean();
 
   const [data, meta] = await Promise.all([
     workshops.build(),

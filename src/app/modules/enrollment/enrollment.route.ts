@@ -69,7 +69,7 @@ const router = express.Router();
 router.post(
   "/",
   adminCrudLimiter,
-  checkAuth(...Object.values(UserRole)),
+  checkAuth(UserRole.STUDENT),
   validateRequest(createEnrollmentZodSchema),
   EnrollmentController.createEnrollment,
 );
@@ -244,7 +244,7 @@ router.get(
 router.patch(
   "/:enrollmentId/status",
   adminCrudLimiter,
-  checkAuth(...Object.values(UserRole)),
+  checkAuth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
   validateRequest(updateEnrollmentStatusZodSchema),
   EnrollmentController.updateEnrollmentStatus,
 );

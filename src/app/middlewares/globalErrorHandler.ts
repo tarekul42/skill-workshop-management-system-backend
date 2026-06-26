@@ -32,60 +32,81 @@ const globalErrorHandler = (
 
   let statusCode = StatusCodes.INTERNAL_SERVER_ERROR;
   let message = "Something went wrong!!!";
+  let code: string | undefined;
   let errorSources: IErrorSources[] = [];
 
-  if (err instanceof AppError) {
-    statusCode = err.statusCode;
-    message = err.message;
-  } else if (err instanceof ZodError) {
-    const simplifiedError = handleZodError(err);
-    statusCode = simplifiedError.statusCode;
-    message = simplifiedError.message;
-    errorSources = simplifiedError.errorSources as IErrorSources[];
-  } else if (err instanceof mongoose.Error.CastError) {
-    const simplifiedError = handleCastError(err);
-    statusCode = simplifiedError.statusCode;
-    message = simplifiedError.message;
-  } else if (err instanceof mongoose.Error.ValidationError) {
-    const simplifiedError = handleValidationError(err);
-    statusCode = simplifiedError.statusCode;
-    message = simplifiedError.message;
-    errorSources = simplifiedError.errorSources as IErrorSources[];
-  } else if (err instanceof Error) {
-    const errorObj = err as Error & { code?: string | number };
-    const errName = errorObj.name || "";
-    const errMessage = errorObj.message || "";
-
-    if (
-      errName === "MulterError" ||
-      errMessage.includes("Invalid file type") ||
-      errMessage.includes("Unexpected field") ||
-      errMessage.includes("Invalid image file")
-    ) {
-      statusCode = StatusCodes.BAD_REQUEST;
-      message = errMessage;
-    } else if (errorObj.code === "EBADCSRFTOKEN") {
-      statusCode = StatusCodes.FORBIDDEN;
-      message =
-        "Invalid CSRF token. Please ensure you have fetched a new token and included it in the 'x-csrf-token' header.";
-    } else if (errorObj.code === 11000) {
-      const simplifiedError = handleDuplicateError(err);
+  try {
+    if (err instanceof AppError) {
+      statusCode = err.statusCode;
+      message = err.message;
+      code = err.code;
+    } else if (err instanceof ZodError) {
+      const simplifiedError = handleZodError(err);
       statusCode = simplifiedError.statusCode;
       message = simplifiedError.message;
-    } else {
-      message = err.message || "Something went wrong!!!";
+      code = simplifiedError.code;
+      errorSources = simplifiedError.errorSources as IErrorSources[];
+    } else if (err instanceof mongoose.Error.CastError) {
+      const simplifiedError = handleCastError();
+      statusCode = simplifiedError.statusCode;
+      message = simplifiedError.message;
+      code = simplifiedError.code;
+    } else if (err instanceof mongoose.Error.ValidationError) {
+      const simplifiedError = handleValidationError(err);
+      statusCode = simplifiedError.statusCode;
+      message = simplifiedError.message;
+      code = simplifiedError.code;
+      errorSources = simplifiedError.errorSources as IErrorSources[];
+    } else if (err instanceof Error) {
+      const errorObj = err as Error & { code?: string | number };
+      const errName = errorObj.name || "";
+      const errMessage = errorObj.message || "";
+
+      if (
+        errName === "MulterError" ||
+        errMessage.includes("Invalid file type") ||
+        errMessage.includes("Unexpected field") ||
+        errMessage.includes("Invalid image file")
+      ) {
+        statusCode = StatusCodes.BAD_REQUEST;
+        message = errMessage;
+        code = "MULTER_ERROR";
+      } else if (errorObj.code === "EBADCSRFTOKEN") {
+        statusCode = StatusCodes.FORBIDDEN;
+        code = "CSRF_TOKEN_INVALID";
+        message =
+          "Invalid CSRF token. Please ensure you have fetched a new token and included it in the 'x-csrf-token' header.";
+      } else if (errorObj.code === 11000) {
+        const simplifiedError = handleDuplicateError();
+        statusCode = simplifiedError.statusCode;
+        message = simplifiedError.message;
+        code = simplifiedError.code;
+      } else {
+        code = "UNEXPECTED_ERROR";
+        message = err.message || "Something went wrong!!!";
+      }
     }
+  } catch (handlerErr) {
+    logger.error(
+      { err: handlerErr, originalErr: err },
+      "Error handler threw an exception",
+    );
+    statusCode = StatusCodes.INTERNAL_SERVER_ERROR;
+    message = "An unexpected error occurred while handling your request.";
+    code = "ERROR_HANDLER_FAILURE";
   }
 
   const responseBody: {
     success: boolean;
     message: string;
+    code?: string;
     errorSources: IErrorSources[];
     err?: { name: string; message: string } | { message: string };
     stack?: string | null;
   } = {
     success: false,
     message,
+    code,
     errorSources,
   };
 

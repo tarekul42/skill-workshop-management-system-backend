@@ -31,7 +31,7 @@ const createUser = async (payload: Partial<IUser>) => {
   const isUserExists = await User.findOne({ email: { $eq: email } });
 
   if (isUserExists) {
-    throw new AppError(StatusCodes.BAD_REQUEST, "User already exists");
+    throw new AppError(StatusCodes.CONFLICT, "User already exists");
   }
 
   // Ensure role is valid for public registration (STUDENT or INSTRUCTOR)
@@ -93,7 +93,8 @@ const getAllUsers = async (query: Record<string, string>) => {
     .filter()
     .sort()
     .fields()
-    .paginate();
+    .paginate()
+    .lean();
 
   const [data, meta] = await Promise.all([
     usersData.build(),

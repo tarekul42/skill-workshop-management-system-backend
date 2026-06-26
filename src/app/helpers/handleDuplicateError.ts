@@ -1,13 +1,11 @@
 import { StatusCodes } from "http-status-codes";
 import { IGenericErrorResponse } from "../interfaces/error.types.js";
 
-const handleDuplicateError = (err: Error): IGenericErrorResponse => {
-  const matchedArray = err.message.match(/"([^"]*)"/);
-  const fieldName = matchedArray ? matchedArray[1] : "field";
-
+const handleDuplicateError = (): IGenericErrorResponse => {
   return {
-    statusCode: StatusCodes.BAD_REQUEST,
-    message: `Duplicate key error. Please provide a unique value for ${fieldName}. Err: ${err.message}`,
+    statusCode: StatusCodes.CONFLICT,
+    message: "A record with that value already exists. Please use a different value.",
+    code: "DUPLICATE_KEY",
   };
 };
 

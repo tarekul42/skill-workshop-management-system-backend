@@ -1,13 +1,10 @@
 import { StatusCodes } from "http-status-codes";
-import mongoose from "mongoose";
 import { IGenericErrorResponse } from "../interfaces/error.types.js";
 
-const handleCastError = (
-  err: mongoose.Error.CastError,
-): IGenericErrorResponse => {
+const handleCastError = (): IGenericErrorResponse => {
   return {
     statusCode: StatusCodes.BAD_REQUEST,
-    message: `Invalid MongoDB ObjectId. Please provide a valid ObjectId. Err: ${err.message}`,
+    message: `Invalid ID format. Please provide a valid ID.`,
   };
 };
 

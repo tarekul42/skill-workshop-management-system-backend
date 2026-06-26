@@ -4,6 +4,8 @@ import AppError from "../../errorHelpers/AppError.js";
 import auditLogger from "../../utils/auditLogger.js";
 import QueryBuilder from "../../utils/queryBuilder.js";
 import { AuditAction } from "../audit/audit.interface.js";
+import { ISSLCommerz } from "../sslCommerz/sslCommerz.interface.js";
+import SSLService from "../sslCommerz/sslCommerz.service.js";
 import { isAdminRole } from "../user/user.interface.js";
 import { WorkShop } from "../workshop/workshop.model.js";
 import {
@@ -68,6 +70,17 @@ const createEnrollment = async (
       session,
     );
 
+    const sslPayload: ISSLCommerz = {
+      address: result.userInfo.address,
+      email: result.userInfo.email,
+      phoneNumber: result.userInfo.phoneNumber,
+      name: result.userInfo.name,
+      amount: result.amount,
+      transactionId: result.transactionId,
+    };
+
+    const sslPayment = await SSLService.sslPaymentInit(sslPayload);
+
     await session.commitTransaction();
     session.endSession();
 
@@ -79,7 +92,7 @@ const createEnrollment = async (
     });
 
     return {
-      paymentUrl: result.paymentUrl,
+      paymentUrl: sslPayment.GatewayPageURL,
       enrollment: result.enrollment,
     };
   } catch (err) {
@@ -96,7 +109,8 @@ const getUserEnrollments = async (userId: string) => {
   const enrollment = await Enrollment.find({ user: userId })
     .populate("user", "name email phone")
     .populate("workshop", "title price images location startDate")
-    .populate("payment", "status amount transactionId");
+    .populate("payment", "status amount transactionId")
+    .lean();
 
   return enrollment;
 };
@@ -136,7 +150,7 @@ const getSingleEnrollment = async (
 const getAllEnrollments = async (query: Record<string, string>) => {
   const queryBuilder = new QueryBuilder(Enrollment.find(), query);
 
-  const enrollmentsData = queryBuilder.filter().sort().fields().paginate();
+  const enrollmentsData = queryBuilder.filter().sort().fields().paginate().lean();
 
   const [data, meta] = await Promise.all([
     enrollmentsData
