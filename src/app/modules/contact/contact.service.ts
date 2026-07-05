@@ -13,7 +13,7 @@ const getAllContacts = async (query: Record<string, string>) => {
   const limit = Math.max(1, Number(query.limit) || 10);
   const skip = (page - 1) * limit;
 
-  const filter: Record<string, unknown> = {};
+  const filter: Record<string, unknown> = { isDeleted: { $ne: true } };
   if (query.isRead !== undefined) {
     filter.isRead = query.isRead === "true";
   }
@@ -55,7 +55,11 @@ const markAsRead = async (contactId: string) => {
 };
 
 const deleteContact = async (contactId: string) => {
-  const contact = await Contact.findByIdAndDelete(contactId);
+  const contact = await Contact.findByIdAndUpdate(
+    contactId,
+    { isDeleted: true, deletedAt: new Date() },
+    { returnDocument: "after", runValidators: true },
+  );
   if (!contact) {
     throw new AppError(StatusCodes.NOT_FOUND, "Contact message not found");
   }

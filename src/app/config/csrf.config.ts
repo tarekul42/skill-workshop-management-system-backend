@@ -47,7 +47,8 @@ const { doubleCsrfProtection, generateCsrfToken } = doubleCsrf({
   getCsrfTokenFromRequest: (req) => req.headers["x-csrf-token"] as string,
   skipCsrfProtection: (req) => {
     if (envVariables.NODE_ENV === "test") return true;
-    const isExempt = CSRF_EXEMPT_PATHS.some((path) => req.path === path);
+    const normalized = req.path.replace(/\/+$/, "") || "/";
+    const isExempt = CSRF_EXEMPT_PATHS.some((path) => normalized === path);
     return isExempt;
   },
 });

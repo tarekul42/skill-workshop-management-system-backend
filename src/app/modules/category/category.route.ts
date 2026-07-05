@@ -132,7 +132,7 @@ router.get("/", publicLimiter, CategoryController.getAllCategories);
  *       500:
  *         $ref: "#/components/responses/InternalServerError"
  */
-router.get("/:slug", CategoryController.getSingleCategory);
+router.get("/:slug", publicLimiter, CategoryController.getSingleCategory);
 
 /**
  * @openapi

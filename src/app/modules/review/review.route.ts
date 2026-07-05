@@ -77,6 +77,7 @@ router.get("/workshop/:workshopId", publicLimiter, ReviewController.getWorkshopR
  */
 router.get(
   "/workshop/:workshopId/stats",
+  publicLimiter,
   ReviewController.getWorkshopReviewStats,
 );
 
