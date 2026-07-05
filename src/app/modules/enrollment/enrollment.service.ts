@@ -196,6 +196,15 @@ const updateEnrollmentStatus = async (
     throw new AppError(StatusCodes.GONE, "Enrollment has been deleted");
   }
 
+  // Prevent backward or illegal status transitions.
+  // Once an enrollment leaves PENDING it must not regress.
+  if (enrollment.status !== ENROLLMENT_STATUS.PENDING) {
+    throw new AppError(
+      StatusCodes.BAD_REQUEST,
+      `Cannot change status from ${enrollment.status}. Only PENDING enrollments can be updated.`,
+    );
+  }
+
   const updatedEnrollment = await Enrollment.findOneAndUpdate(
     { _id: { $eq: new Types.ObjectId(enrollmentId) } },
     { status },
@@ -230,7 +239,9 @@ const cancelEnrollment = async (enrollmentId: string, userId: string) => {
   );
 
   if (!updatedEnrollment) {
-    // Either not found or not PENDING/COMPLETE — determine which
+    // The atomic query included both userId and allowed statuses; a null result
+    // means ownership, status, or existence failed. Re-fetch to give a specific
+    // error message (the user field is immutable so there is no TOCTOU concern).
     const existing = await Enrollment.findById(enrollmentId);
     if (!existing) {
       throw new AppError(StatusCodes.NOT_FOUND, "Enrollment not found");
@@ -254,14 +265,6 @@ const cancelEnrollment = async (enrollmentId: string, userId: string) => {
       );
     }
     throw new AppError(StatusCodes.NOT_FOUND, "Enrollment not found");
-  }
-
-  // Verify ownership
-  if (String(updatedEnrollment.user) !== userId) {
-    throw new AppError(
-      StatusCodes.FORBIDDEN,
-      "You can only cancel your own enrollments",
-    );
   }
 
   // Decrement the workshop's currentEnrollments counter

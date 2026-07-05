@@ -70,22 +70,24 @@ const verifyOtp = async (email: string, otp: string) => {
 
   const attemptsKey = `otp_attempts:${normalizedEmail}`;
 
-  // Check OTP hash FIRST, only increment counter on failure
+  // Increment the attempt counter BEFORE checking the hash.
+  // Redis INCR is atomic so concurrent requests are serialised — this closes the
+  // TOCTOU window where multiple bad guesses could race past the hash check
+  // before any of them increments the counter.
+  const attemptCount = await redisClient.incr(attemptsKey);
+  if (attemptCount === 1) {
+    await redisClient.expire(attemptsKey, OTP_EXPIRATION);
+  }
+
+  if (attemptCount > 5) {
+    await redisClient.del([redisKey, attemptsKey]);
+    throw new AppError(
+      StatusCodes.TOO_MANY_REQUESTS,
+      "Too many failed attempts. Please request a new OTP.",
+    );
+  }
+
   if (savedOtp !== hashOtp(otp)) {
-    const attempts = await redisClient.incr(attemptsKey);
-
-    if (attempts === 1) {
-      await redisClient.expire(attemptsKey, OTP_EXPIRATION);
-    }
-
-    if (attempts > 5) {
-      await redisClient.del([redisKey, attemptsKey]);
-      throw new AppError(
-        StatusCodes.TOO_MANY_REQUESTS,
-        "Too many failed attempts. Please request a new OTP.",
-      );
-    }
-
     throw new AppError(StatusCodes.UNAUTHORIZED, "Invalid OTP");
   }
 

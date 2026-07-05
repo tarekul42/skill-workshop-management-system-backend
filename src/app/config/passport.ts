@@ -130,24 +130,22 @@ passport.use(
         const isUserExists = await User.findOne({ email });
 
         if (!isUserExists) {
-          return done(null, false, { message: "User does not exist." });
+          return done(null, false, { message: "Invalid email or password" });
         }
 
         if (isUserExists.isDeleted) {
-          return done(null, false, { message: "User is deleted." });
+          return done(null, false, { message: "Invalid email or password" });
         }
 
         if (!isUserExists.isVerified) {
-          return done(null, false, { message: "User is not verified." });
+          return done(null, false, { message: "Invalid email or password" });
         }
 
         if (
           isUserExists.isActive === IsActive.BLOCKED ||
           isUserExists.isActive === IsActive.INACTIVE
         ) {
-          return done(null, false, {
-            message: `User is ${isUserExists.isActive}.`,
-          });
+          return done(null, false, { message: "Invalid email or password" });
         }
 
         const isGoogleAuthenticated = isUserExists.auths.some(
@@ -155,16 +153,11 @@ passport.use(
         );
 
         if (isGoogleAuthenticated && !isUserExists.password) {
-          return done(null, false, {
-            message:
-              "You have authenticated through Google. So if you want to login with credentials, then at first login with google and set a password for your Gmail and then you can login with email and password.",
-          });
+          return done(null, false, { message: "Invalid email or password" });
         }
 
         if (!isUserExists.password) {
-          return done(null, false, {
-            message: "Password not set for this account",
-          });
+          return done(null, false, { message: "Invalid email or password" });
         }
 
         const isPasswordMatched = await bcrypt.compare(
@@ -173,7 +166,7 @@ passport.use(
         );
 
         if (!isPasswordMatched) {
-          return done(null, false, { message: "Password does not match" });
+          return done(null, false, { message: "Invalid email or password" });
         }
 
         return done(null, isUserExists);

@@ -71,13 +71,14 @@ const setPassword = async (userId: string, plainPassword: string) => {
 
   if (!user) throw new AppError(StatusCodes.NOT_FOUND, "User not found");
 
-  if (
-    user.password &&
-    user.auths.some((providerObject) => providerObject.provider === "google")
-  ) {
+  // If the user already has a password, they must use changePassword()
+  // which verifies the old password first. setPassword is only for users
+  // who have never set a password (e.g., Google users creating one for
+  // the first time, or registration flows that skipped password).
+  if (user.password) {
     throw new AppError(
       StatusCodes.FORBIDDEN,
-      "Cannot change password for Google users",
+      "Password already set. Use change password to update it.",
     );
   }
 

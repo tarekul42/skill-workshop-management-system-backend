@@ -441,36 +441,18 @@ const handleIPN = async (body: Record<string, string>) => {
   }
 
   if (status === "VALID" && valId) {
-    await SSLService.validatePayment({ val_id: valId, tran_id: transactionId });
-
-    // Re-fetch payment to get paymentGatewayData stored during validation
-    const paymentWithGatewayData =
+    // Check amount mismatch BEFORE calling validatePayment (which writes to DB).
+    // The IPN body includes amount from SSLCommerz — validate against our record first.
+    const prePayment =
       await PaymentRepository.findPaymentByTransactionId(transactionId);
-
-    if (paymentWithGatewayData) {
-      // Verify amount from SSLCommerz response matches stored payment amount
-      if (
-        paymentWithGatewayData.paymentGatewayData &&
-        typeof paymentWithGatewayData.paymentGatewayData === "object"
-      ) {
-        const gatewayData = paymentWithGatewayData.paymentGatewayData;
-        const sslAmount =
-          Number((gatewayData as Record<string, unknown>).currency_amount) ||
-          Number((gatewayData as Record<string, unknown>).amount);
-        if (
-          sslAmount &&
-          Math.abs(sslAmount - paymentWithGatewayData.amount) > 0.5
-        ) {
-          logger.warn({
-            msg: "IPN amount mismatch",
-            transactionId,
-            expectedAmount: paymentWithGatewayData.amount,
-            sslAmount,
-          });
-          throw new AppError(StatusCodes.BAD_REQUEST, "IPN amount mismatch");
-        }
+    if (prePayment) {
+      const ipnAmount = Number(body.amount) || Number(body.currency_amount);
+      if (ipnAmount && Math.abs(ipnAmount - prePayment.amount) > 0.5) {
+        throw new AppError(StatusCodes.BAD_REQUEST, "IPN amount mismatch");
       }
     }
+
+    await SSLService.validatePayment({ val_id: valId, tran_id: transactionId });
 
     const session = await PaymentRepository.startTransaction();
     try {
@@ -566,6 +548,31 @@ const refundPayment = async (
       StatusCodes.BAD_REQUEST,
       "Only paid payments can be refunded",
     );
+  }
+
+  // Call SSLCommerz refund API before updating local state.
+  // If the gateway refund fails, we never touch the database.
+  const gatewayData = payment.paymentGatewayData as Record<string, string> | undefined;
+  const bankTranId = gatewayData?.bank_tran_id;
+  if (bankTranId) {
+    try {
+      await SSLService.sslRefundPayment({
+        bankTranId,
+        amount: payment.amount,
+        remarks: reason || "Refund requested",
+      });
+    } catch (err) {
+      logger.error({ msg: "SSLCommerz refund API call failed", err });
+      throw new AppError(
+        StatusCodes.BAD_GATEWAY,
+        "Refund failed at payment gateway. Please try again or process manually.",
+      );
+    }
+  } else {
+    logger.warn({
+      msg: "No bank_tran_id found — skipping SSLCommerz refund API, updating local state only",
+      paymentId,
+    });
   }
 
   const session = await PaymentRepository.startTransaction();

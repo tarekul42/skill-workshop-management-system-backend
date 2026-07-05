@@ -52,10 +52,12 @@ export const isTokenBlacklisted = async (token: string) => {
     const result = await redisClient.get(`blacklist:${tokenHash}`);
     return !!result;
   } catch (error) {
-    logger.error({
-      msg: "Redis unavailable for token blacklist check — blocking request for safety",
+    logger.warn({
+      msg: "Redis unavailable for token blacklist check — allowing request",
       err: error,
     });
-    return true;
+    // Fail-open: blacklisting is a convenience layer layered on top of JWT
+    // expiry. A Redis outage should not block all authenticated traffic.
+    return false;
   }
 };

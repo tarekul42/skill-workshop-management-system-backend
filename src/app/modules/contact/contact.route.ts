@@ -1,7 +1,7 @@
 import express from "express";
 import checkAuth from "../../middlewares/checkAuth.js";
 import validateRequest from "../../middlewares/validateRequest.js";
-import { adminCrudLimiter } from "../../utils/rateLimiter.js";
+import { adminCrudLimiter, publicLimiter } from "../../utils/rateLimiter.js";
 import { UserRole } from "../user/user.interface.js";
 import ContactController from "./contact.controller.js";
 import { createContactZodSchema } from "./contact.validation.js";
@@ -51,7 +51,7 @@ const router = express.Router();
  */
 router.post(
   "/",
-  adminCrudLimiter,
+  publicLimiter,
   validateRequest(createContactZodSchema),
   ContactController.createContact,
 );

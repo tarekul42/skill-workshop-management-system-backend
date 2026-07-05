@@ -32,16 +32,9 @@ const createUserTokens = async (user: Partial<IUser>) => {
   );
 
   const hashedToken = hashToken(refreshToken);
-  try {
-    await redisClient.set(`refresh_token:${user._id}`, hashedToken, {
-      EX: parseExpiryToSeconds(envVariables.JWT_REFRESH_EXPIRES),
-    });
-  } catch (error) {
-    logger.error({
-      msg: "Redis unavailable — refresh token not stored",
-      err: error,
-    });
-  }
+  await redisClient.set(`refresh_token:${user._id}`, hashedToken, {
+    EX: parseExpiryToSeconds(envVariables.JWT_REFRESH_EXPIRES),
+  });
 
   return { accessToken, refreshToken };
 };
@@ -72,15 +65,6 @@ const createNewAccessToken = async (refreshToken: string) => {
       StatusCodes.UNAUTHORIZED,
       "Invalid or expired refresh token",
     );
-  }
-
-  try {
-    await redisClient.del(`refresh_token:${userId}`);
-  } catch (error) {
-    logger.error({
-      msg: "Redis unavailable — cannot delete old refresh token",
-      err: error,
-    });
   }
 
   const isUserExists = await User.findOne({ email: verifiedPayload.email });
@@ -121,17 +105,14 @@ const createNewAccessToken = async (refreshToken: string) => {
     envVariables.JWT_REFRESH_EXPIRES,
   );
 
+  // Atomically replace the old hash with the new one.
+  // A single SET at the same key overwrites the old value — no separate DEL needed.
+  // If Redis is unavailable, we throw fail-closed: the old token remains valid and
+  // the caller can retry rather than being stranded with an unpersisted new token.
   const hashedNewToken = hashToken(newRefreshToken);
-  try {
-    await redisClient.set(`refresh_token:${userId}`, hashedNewToken, {
-      EX: parseExpiryToSeconds(envVariables.JWT_REFRESH_EXPIRES),
-    });
-  } catch (error) {
-    logger.error({
-      msg: "Redis unavailable — new refresh token not stored",
-      err: error,
-    });
-  }
+  await redisClient.set(`refresh_token:${userId}`, hashedNewToken, {
+    EX: parseExpiryToSeconds(envVariables.JWT_REFRESH_EXPIRES),
+  });
 
   return { accessToken, refreshToken: newRefreshToken };
 };

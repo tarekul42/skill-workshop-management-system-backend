@@ -1,7 +1,7 @@
 import express from "express";
 import checkAuth from "../../middlewares/checkAuth.js";
 import validateRequest from "../../middlewares/validateRequest.js";
-import { adminCrudLimiter, authLimiter } from "../../utils/rateLimiter.js";
+import { adminCrudLimiter, authLimiter, ipnLimiter } from "../../utils/rateLimiter.js";
 import { UserRole } from "../user/user.interface.js";
 import PaymentController from "./payment.controller.js";
 import {
@@ -282,7 +282,7 @@ router.post(
  *             schema:
  *               $ref: "#/components/schemas/ErrorResponse"
  */
-router.post("/ipn", PaymentController.handleIPN);
+router.post("/ipn", ipnLimiter, PaymentController.handleIPN);
 
 /**
  * @openapi

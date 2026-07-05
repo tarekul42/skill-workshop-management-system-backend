@@ -195,12 +195,11 @@ const createWorkshop = async (payload: IWorkshop) => {
   return workshop;
 };
 
-const getSingleWorkshop = async (slugOrId: string) => {
-  const query = mongoose.Types.ObjectId.isValid(slugOrId)
-    ? { $or: [{ _id: slugOrId }, { slug: slugOrId }] }
-    : { slug: slugOrId };
-
-  const workshop = await WorkShop.findOne(query).populate(
+const getSingleWorkshop = async (slug: string) => {
+  // Slug-only lookup — the route is /workshop/:slug, not /workshop/:id.
+  // Using slugOrId with an $or clause could match an _id when a slug
+  // accidentally looks like a valid ObjectId hex string.
+  const workshop = await WorkShop.findOne({ slug }).populate(
     "createdBy",
     "name email picture expertise bio",
   );
