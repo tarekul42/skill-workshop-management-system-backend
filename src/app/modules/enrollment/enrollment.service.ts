@@ -70,19 +70,24 @@ const createEnrollment = async (
       session,
     );
 
-    const sslPayload: ISSLCommerz = {
-      address: result.userInfo.address,
-      email: result.userInfo.email,
-      phoneNumber: result.userInfo.phoneNumber,
-      name: result.userInfo.name,
-      amount: result.amount,
-      transactionId: result.transactionId,
-    };
-
-    const sslPayment = await SSLService.sslPaymentInit(sslPayload);
-
     await session.commitTransaction();
     session.endSession();
+
+    let paymentUrl: string | null = null;
+
+    if (!result.isFree) {
+      const sslPayload: ISSLCommerz = {
+        address: result.userInfo.address,
+        email: result.userInfo.email,
+        phoneNumber: result.userInfo.phoneNumber,
+        name: result.userInfo.name,
+        amount: result.amount,
+        transactionId: result.transactionId,
+      };
+
+      const sslPayment = await SSLService.sslPaymentInit(sslPayload);
+      paymentUrl = sslPayment.GatewayPageURL;
+    }
 
     await auditLogger({
       action: AuditAction.CREATE,
@@ -92,7 +97,7 @@ const createEnrollment = async (
     });
 
     return {
-      paymentUrl: sslPayment.GatewayPageURL,
+      paymentUrl,
       enrollment: result.enrollment,
     };
   } catch (err) {

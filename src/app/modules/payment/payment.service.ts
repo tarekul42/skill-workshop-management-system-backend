@@ -200,19 +200,27 @@ const successPayment = async (
     await session.commitTransaction();
     session.endSession();
 
-    await sendEmailDirect({
-      to: populatedEnrollment.user.email,
-      subject: "Your Enrollment Invoice",
-      templateName: "invoice",
-      templateData: {
-        transactionId: updatedPayment.transactionId,
-        enrollmentDate: populatedEnrollment.createdAt as Date,
-        userName: populatedEnrollment.user.name,
-        workshopTitle: populatedEnrollment.workshop.title,
-        studentCount: populatedEnrollment.studentCount,
-        totalAmount: updatedPayment.amount,
-      },
-    });
+    try {
+      await sendEmailDirect({
+        to: populatedEnrollment.user.email,
+        subject: "Your Enrollment Invoice",
+        templateName: "invoice",
+        templateData: {
+          transactionId: updatedPayment.transactionId,
+          enrollmentDate: populatedEnrollment.createdAt as Date,
+          userName: populatedEnrollment.user.name,
+          workshopTitle: populatedEnrollment.workshop.title,
+          studentCount: populatedEnrollment.studentCount,
+          totalAmount: updatedPayment.amount,
+        },
+      });
+    } catch (emailErr) {
+      logger.error({
+        msg: "Invoice email failed after successful payment",
+        transactionId,
+        err: emailErr,
+      });
+    }
 
     return {
       success: true,
@@ -292,6 +300,33 @@ const failPayment = async (query: Record<string, string>) => {
       });
     }
 
+    try {
+      if (enrollmentWithWorkshop?.user) {
+        const u = enrollmentWithWorkshop.user as {
+          name: string;
+          email: string;
+        };
+        await sendEmailDirect({
+          to: u.email,
+          subject: "Payment Failed",
+          templateName: "bookingConfirmation",
+          templateData: {
+            userName: u.name,
+            workshopTitle: (
+              enrollmentWithWorkshop.workshop as { title?: string }
+            )?.title ?? "Workshop",
+            status: "failed",
+          },
+        });
+      }
+    } catch (emailErr) {
+      logger.error({
+        msg: "Failed to send payment failure email",
+        transactionId,
+        err: emailErr,
+      });
+    }
+
     return {
       success: false,
       message: "Payment Failed",
@@ -365,6 +400,33 @@ const cancelPayment = async (query: Record<string, string>) => {
     if (enrollmentWithWorkshop?.workshop) {
       await WorkShop.findByIdAndUpdate(enrollmentWithWorkshop.workshop, {
         $inc: { currentEnrollments: -1 },
+      });
+    }
+
+    try {
+      if (enrollmentWithWorkshop?.user) {
+        const u = enrollmentWithWorkshop.user as {
+          name: string;
+          email: string;
+        };
+        await sendEmailDirect({
+          to: u.email,
+          subject: "Payment Cancelled",
+          templateName: "bookingConfirmation",
+          templateData: {
+            userName: u.name,
+            workshopTitle: (
+              enrollmentWithWorkshop.workshop as { title?: string }
+            )?.title ?? "Workshop",
+            status: "cancelled",
+          },
+        });
+      }
+    } catch (emailErr) {
+      logger.error({
+        msg: "Failed to send payment cancellation email",
+        transactionId,
+        err: emailErr,
       });
     }
 
@@ -481,6 +543,37 @@ const handleIPN = async (body: Record<string, string>) => {
 
       await session.commitTransaction();
       session.endSession();
+
+      const ipnEnrollment =
+        await PaymentRepository.findEnrollmentWithUser(
+          String(updatedPayment.enrollment),
+        );
+      try {
+        if (ipnEnrollment?.user) {
+          const u = ipnEnrollment.user as {
+            name: string;
+            email: string;
+          };
+          await sendEmailDirect({
+            to: u.email,
+            subject: "Payment Received",
+            templateName: "bookingConfirmation",
+            templateData: {
+              userName: u.name,
+              workshopTitle: (
+                ipnEnrollment.workshop as { title?: string }
+              )?.title ?? "Workshop",
+              status: "confirmed",
+            },
+          });
+        }
+      } catch (emailErr) {
+        logger.error({
+          msg: "Failed to send IPN payment confirmation email",
+          transactionId,
+          err: emailErr,
+        });
+      }
     } catch (err) {
       if (session.inTransaction()) {
         await session.abortTransaction();
@@ -519,6 +612,33 @@ const handleIPN = async (body: Record<string, string>) => {
         if (enrollmentWithWorkshop?.workshop) {
           await WorkShop.findByIdAndUpdate(enrollmentWithWorkshop.workshop, {
             $inc: { currentEnrollments: -1 },
+          });
+        }
+
+        try {
+          if (enrollmentWithWorkshop?.user) {
+            const u = enrollmentWithWorkshop.user as {
+              name: string;
+              email: string;
+            };
+            await sendEmailDirect({
+              to: u.email,
+              subject: "Payment Failed",
+              templateName: "bookingConfirmation",
+              templateData: {
+                userName: u.name,
+                workshopTitle: (
+                  enrollmentWithWorkshop.workshop as { title?: string }
+                )?.title ?? "Workshop",
+                status: "failed",
+              },
+            });
+          }
+        } catch (emailErr) {
+          logger.error({
+            msg: "Failed to send IPN payment failure email",
+            transactionId,
+            err: emailErr,
           });
         }
       }
@@ -626,6 +746,33 @@ const refundPayment = async (
       performedBy: userId,
       changes: { status: PAYMENT_STATUS.REFUNDED, reason },
     });
+
+    try {
+      if (enrollmentWithWorkshop?.user) {
+        const u = enrollmentWithWorkshop.user as {
+          name: string;
+          email: string;
+        };
+        await sendEmailDirect({
+          to: u.email,
+          subject: "Payment Refunded",
+          templateName: "bookingConfirmation",
+          templateData: {
+            userName: u.name,
+            workshopTitle: (
+              enrollmentWithWorkshop.workshop as { title?: string }
+            )?.title ?? "Workshop",
+            status: "refunded",
+          },
+        });
+      }
+    } catch (emailErr) {
+      logger.error({
+        msg: "Failed to send refund notification email",
+        paymentId,
+        err: emailErr,
+      });
+    }
 
     return {
       success: true,
