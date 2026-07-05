@@ -117,10 +117,17 @@ const validatePayment = async (payload: {
     );
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    logger.error({ msg: "Payment validation error", err: error });
+    const sanitizedMsg = errorMessage.replace(
+      /store_passwd=[^&\s]+/gi,
+      "store_passwd=REDACTED",
+    ).replace(
+      /store_id=[^&\s]+/gi,
+      "store_id=REDACTED",
+    );
+    logger.error({ msg: "Payment validation error", err: sanitizedMsg });
     throw new AppError(
       StatusCodes.BAD_GATEWAY,
-      errorMessage || "Payment validation failed",
+      "Payment validation failed",
     );
   }
 };

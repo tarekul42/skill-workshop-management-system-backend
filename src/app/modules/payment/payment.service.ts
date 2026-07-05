@@ -407,8 +407,10 @@ const getInvoiceDownloadUrl = async (
 
   return {
     invoiceUrl: payment.invoiceUrl,
-    payment,
-    enrollment,
+    paymentId: payment._id,
+    amount: payment.amount,
+    status: payment.status,
+    transactionId: payment.transactionId,
   };
 };
 

@@ -506,7 +506,7 @@ async function seed() {
   console.log(`  Reviews:      ${reviews.length}`);
   console.log(`  Contacts:     ${contacts.length}`);
   console.log("───────────────────────────────────────────────────────\n");
-  console.log(`Seed accounts created. Check src/seed.ts for login credentials.`);
+  console.log(`Seed accounts created.`);
 
   await mongoose.disconnect();
   process.exit(0);

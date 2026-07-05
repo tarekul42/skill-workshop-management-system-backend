@@ -6,7 +6,7 @@ import QueryBuilder from "../../utils/queryBuilder.js";
 import { AuditAction } from "../audit/audit.interface.js";
 import { ISSLCommerz } from "../sslCommerz/sslCommerz.interface.js";
 import SSLService from "../sslCommerz/sslCommerz.service.js";
-import { isAdminRole } from "../user/user.interface.js";
+import { isAdminRole, UserRole } from "../user/user.interface.js";
 import { WorkShop } from "../workshop/workshop.model.js";
 import {
   ENROLLMENT_STATUS,
@@ -147,8 +147,23 @@ const getSingleEnrollment = async (
   return populatedEnrollment;
 };
 
-const getAllEnrollments = async (query: Record<string, string>) => {
-  const queryBuilder = new QueryBuilder(Enrollment.find(), query);
+const getAllEnrollments = async (
+  query: Record<string, string>,
+  userId: string,
+  userRole: string,
+) => {
+  // INSTRUCTORs should only see enrollments for their own workshops
+  let filter: Record<string, unknown> = {};
+  if (userRole === UserRole.INSTRUCTOR) {
+    const instructorWorkshops = await WorkShop.find({
+      createdBy: userId,
+    }).select("_id");
+    const workshopIds = instructorWorkshops.map((w) => w._id);
+    filter = { workshop: { $in: workshopIds } };
+  }
+
+  const baseQuery = Enrollment.find(filter);
+  const queryBuilder = new QueryBuilder(baseQuery, query);
 
   const enrollmentsData = queryBuilder.filter().sort().fields().paginate().lean();
 

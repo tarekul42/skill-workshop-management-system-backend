@@ -44,15 +44,15 @@ const requiredSecrets = [
 ];
 
 for (const secret of requiredSecrets) {
+  if (!secret.value || secret.value.length < 16) {
+    throw new Error(
+      `${secret.name} must be at least 16 characters. Current length: ${secret.value.length}`,
+    );
+  }
   if (secret.value.length < 32 && envVariables.NODE_ENV === "production") {
     throw new Error(
       `${secret.name} must be at least 32 characters in production. Current length: ${secret.value.length}`,
     );
-  }
-  if (secret.value.length < 16 && envVariables.NODE_ENV !== "production") {
-    logger.warn({
-      msg: `${secret.name} is below the recommended minimum length.`,
-    });
   }
 }
 
