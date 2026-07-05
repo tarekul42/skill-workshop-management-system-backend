@@ -506,14 +506,7 @@ async function seed() {
   console.log(`  Reviews:      ${reviews.length}`);
   console.log(`  Contacts:     ${contacts.length}`);
   console.log("───────────────────────────────────────────────────────\n");
-  console.log(`Seed users password: ${PASSWORD}`);
-  console.log(`Super Admin: superadmin@seed.com`);
-  console.log(`Admin:       admin1@seed.com / admin2@seed.com (password: ${PASSWORD})`);
-  console.log(`Admin:       admin@test.com (password: Admin@123)`);
-  console.log(`Instructor:  instructor1-3@seed.com (password: ${PASSWORD})`);
-  console.log(`Instructor:  instructor@test.com (password: Instructor@123)`);
-  console.log(`Student:     student1-6@seed.com (password: ${PASSWORD})`);
-  console.log(`Student:     student@test.com (password: Student@123)`);
+  console.log(`Seed accounts created. Check src/seed.ts for login credentials.`);
 
   await mongoose.disconnect();
   process.exit(0);

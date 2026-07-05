@@ -99,7 +99,8 @@ const validatePayment = async (payload: {
     });
     logger.info({
       msg: "sslCommerz validate api response",
-      data: response.data,
+      status: response.data?.status,
+      tran_id: response.data?.tran_id,
     });
 
     if (
