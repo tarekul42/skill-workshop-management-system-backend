@@ -92,14 +92,35 @@ const verifyOtp = async (email: string, otp: string) => {
   }
 
   // OTP is correct — mark user as verified and clean up
-  await Promise.all([
-    User.updateOne(
-      { email: { $eq: normalizedEmail } },
-      { isVerified: true },
-      { runValidators: true },
-    ),
-    redisClient.del([redisKey, attemptsKey]),
-  ]);
+  await User.updateOne(
+    { email: { $eq: normalizedEmail } },
+    { isVerified: true },
+    { runValidators: true },
+  );
+
+  await redisClient.del([redisKey, attemptsKey]);
+
+  // ── Send welcome email ──
+  if (user) {
+    try {
+      await sendEmailDirect({
+        to: normalizedEmail,
+        subject: "Welcome to Skill Workshop!",
+        templateName: "welcome",
+        templateData: {
+          name: user.name,
+          role: user.role,
+          dashboardLink: `${process.env.FRONTEND_URL || ""}/login`,
+        },
+      });
+    } catch (emailErr) {
+      logger.error({
+        msg: "Welcome email failed after successful OTP verification",
+        email: normalizedEmail,
+        err: emailErr,
+      });
+    }
+  }
 };
 
 const OTPService = {

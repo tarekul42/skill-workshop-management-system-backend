@@ -1,6 +1,8 @@
 import { StatusCodes } from "http-status-codes";
 import AppError from "../../errorHelpers/AppError.js";
 import auditLogger from "../../utils/auditLogger.js";
+import { uploadBufferToCloudinary } from "../../config/cloudinary.config.js";
+import { generatePDF, IInvoiceData } from "../../utils/invoice.js";
 import logger from "../../utils/logger.js";
 import { sendEmailDirect } from "../../utils/sendEmailDirect.js";
 import { AuditAction } from "../audit/audit.interface.js";
@@ -13,6 +15,7 @@ import SSLService from "../sslCommerz/sslCommerz.service.js";
 import { UserRole } from "../user/user.interface.js";
 import { WorkShop } from "../workshop/workshop.model.js";
 import { PAYMENT_STATUS } from "./payment.interface.js";
+import Payment from "./payment.model.js";
 import PaymentRepository from "./payment.repository.js";
 
 const initPayment = async (enrollmentId: string, userId: string) => {
@@ -219,6 +222,36 @@ const successPayment = async (
         msg: "Invoice email failed after successful payment",
         transactionId,
         err: emailErr,
+      });
+    }
+
+    // Generate PDF invoice and upload to Cloudinary for download
+    try {
+      const pdfBuffer = await generatePDF({
+        transactionId: updatedPayment.transactionId,
+        enrollmentDate: populatedEnrollment.createdAt as Date,
+        userName: populatedEnrollment.user.name,
+        workshopTitle: populatedEnrollment.workshop.title,
+        studentCount: populatedEnrollment.studentCount,
+        totalAmount: updatedPayment.amount,
+      } as unknown as IInvoiceData);
+
+      const cloudinaryResult = await uploadBufferToCloudinary(
+        pdfBuffer,
+        "invoice",
+      );
+
+      if (cloudinaryResult) {
+        await Payment.findOneAndUpdate(
+          { transactionId },
+          { invoiceUrl: cloudinaryResult.secure_url },
+        );
+      }
+    } catch (pdfErr) {
+      logger.error({
+        msg: "Invoice PDF generation failed after successful payment",
+        transactionId,
+        err: pdfErr,
       });
     }
 

@@ -68,7 +68,6 @@ const createReview = async (payload: Partial<IReview>, userId: string) => {
     ...payload,
     workshop: workshopObjectId,
     user: new Types.ObjectId(userId),
-    status: REVIEW_STATUS.APPROVED,
   });
 
   const populated = await review.populate("user", "name picture");

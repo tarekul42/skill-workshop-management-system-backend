@@ -8,6 +8,8 @@ import {
 import { Strategy as LocalStrategy } from "passport-local";
 import { IsActive, UserRole } from "../modules/user/user.interface.js";
 import User from "../modules/user/user.model.js";
+import { sendEmailDirect } from "../utils/sendEmailDirect.js";
+import logger from "../utils/logger.js";
 import envVariables from "./env.js";
 
 // 1. SERIALIZATION
@@ -73,9 +75,10 @@ passport.use(
             });
           }
 
-          // OPTIONAL: Update picture or name if they changed on Google
-          existingUser.name = name;
-          existingUser.picture = picture;
+          // Only populate name/picture on initial creation — subsequent
+          // Google logins must not revert user-customized profile fields.
+          if (!existingUser.name) existingUser.name = name;
+          if (!existingUser.picture) existingUser.picture = picture;
 
           // Guard against duplicate google provider
           const hasGoogleProvider = existingUser.auths.some(
@@ -109,6 +112,26 @@ passport.use(
           ],
           isActive: IsActive.ACTIVE,
         });
+
+        // ── Send welcome email ──
+        try {
+          await sendEmailDirect({
+            to: email,
+            subject: "Welcome to Skill Workshop!",
+            templateName: "welcome",
+            templateData: {
+              name: name,
+              role: UserRole.STUDENT,
+              dashboardLink: `${envVariables.FRONTEND_URL}/login`,
+            },
+          });
+        } catch (emailErr) {
+          // Non-blocking: don't fail OAuth if welcome email fails
+          logger.error({
+            msg: "Failed to send welcome email to Google user",
+            err: emailErr,
+          });
+        }
 
         return done(null, newUser);
       } catch (error) {

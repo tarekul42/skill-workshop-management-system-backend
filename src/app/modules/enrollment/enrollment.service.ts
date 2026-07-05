@@ -2,7 +2,9 @@ import { StatusCodes } from "http-status-codes";
 import { Types } from "mongoose";
 import AppError from "../../errorHelpers/AppError.js";
 import auditLogger from "../../utils/auditLogger.js";
+import logger from "../../utils/logger.js";
 import QueryBuilder from "../../utils/queryBuilder.js";
+import { sendEmailDirect } from "../../utils/sendEmailDirect.js";
 import { AuditAction } from "../audit/audit.interface.js";
 import { ISSLCommerz } from "../sslCommerz/sslCommerz.interface.js";
 import SSLService from "../sslCommerz/sslCommerz.service.js";
@@ -95,6 +97,31 @@ const createEnrollment = async (
       documentId: result.enrollmentId,
       performedBy: userId,
     });
+
+    try {
+      const populated = result.enrollment as unknown as {
+        user: { name: string; email: string };
+        workshop: { title: string };
+      };
+      if (populated?.user?.email) {
+        await sendEmailDirect({
+          to: populated.user.email,
+          subject: "Enrollment Confirmation",
+          templateName: "bookingConfirmation",
+          templateData: {
+            userName: populated.user.name,
+            workshopTitle: populated.workshop?.title ?? "Workshop",
+            status: result.isFree ? "confirmed" : "pending",
+          },
+        });
+      }
+    } catch (emailErr) {
+      logger.error({
+        msg: "Failed to send enrollment confirmation email",
+        enrollmentId: result.enrollmentId,
+        err: emailErr,
+      });
+    }
 
     return {
       paymentUrl,

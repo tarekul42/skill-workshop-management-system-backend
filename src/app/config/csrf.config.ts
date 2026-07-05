@@ -10,6 +10,7 @@ const CSRF_EXEMPT_PATHS = [
   "/api/v1/payment/fail",
   "/api/v1/payment/cancel",
   "/api/v1/payment/ipn",
+  "/api/v1/payment/validate-payment",
   "/api/v1/auth/google/callback",
   "/api/v1/auth/exchange-code",
   "/api/v1/user/register",
@@ -26,10 +27,16 @@ const CSRF_EXEMPT_PATHS = [
 
 const isProduction = envVariables.NODE_ENV === "production";
 
+// Cross-origin architecture (separate frontend/backend domains) requires
+// SameSite=None so the browser includes the CSRF cookie in cross-site requests.
+// The __Host- prefix in production locks the cookie to the exact origin
+// (requires Secure, Path=/, and no Domain attribute).
+const csrfCookieName = isProduction ? "__Host-__csrf" : "__csrf";
+
 const { doubleCsrfProtection, generateCsrfToken } = doubleCsrf({
   getSecret: () => envVariables.CSRF_SECRET,
   getSessionIdentifier: (req) => req.cookies?.sessionId ?? req.ip ?? "",
-  cookieName: "__csrf",
+  cookieName: csrfCookieName,
   cookieOptions: {
     httpOnly: true,
     sameSite: isProduction ? "none" : "lax",
