@@ -11,18 +11,9 @@ class QueryBuilder<T> {
   }
 
   filter(): this {
-    const filter = { ...this.query };
-
-    for (const field of excludeFields) {
-      // eslint-disable-next-line  @typescript-eslint/no-dynamic-delete
-      delete filter[field];
-    }
-
-    // Sanitize filter values to prevent NoSQL injection
     const sanitizedFilter: Record<string, string> = {};
-    for (const [key, value] of Object.entries(filter)) {
-      // Reject keys starting with $ to prevent operator injection
-      if (typeof value === "string" && !key.startsWith("$")) {
+    for (const [key, value] of Object.entries(this.query)) {
+      if (!excludeFields.includes(key) && typeof value === "string" && !key.startsWith("$")) {
         sanitizedFilter[key] = value;
       }
     }

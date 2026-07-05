@@ -30,6 +30,7 @@ import {
 import { authLimiter, generalLimiter } from "./app/utils/rateLimiter.js";
 
 const app = express();
+app.disable("x-powered-by");
 
 // ──── Security Check ────
 const requiredSecrets = [
