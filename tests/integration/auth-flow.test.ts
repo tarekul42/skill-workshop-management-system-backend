@@ -23,6 +23,7 @@ import User from "../../src/app/modules/user/user.model";
 import { MongoMemoryReplSet } from "mongodb-memory-server";
 import { generateToken } from "../../src/app/utils/jwt";
 import { IsActive, UserRole } from "../../src/app/modules/user/user.interface";
+import bcrypt from "bcryptjs";
 
 describe("Auth Flow", () => {
   let mongoServer: MongoMemoryReplSet;
@@ -48,7 +49,7 @@ describe("Auth Flow", () => {
     const student = await User.create({
       name: "Test Student",
       email: "student@auth.test",
-      password: "Password123!",
+      password: await bcrypt.hash("Password123!", 12),
       role: UserRole.STUDENT,
       isVerified: true,
       isActive: IsActive.ACTIVE,
@@ -68,6 +69,19 @@ describe("Auth Flow", () => {
   });
 
   describe("POST /auth/login", () => {
+    it("should login successfully with valid credentials", async () => {
+      const res = await agent.post("/api/v1/auth/login").send({
+        email: "student@auth.test",
+        password: "Password123!",
+      });
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data).toHaveProperty("accessToken");
+      expect(res.body.data).toHaveProperty("refreshToken");
+      expect(res.body.data.user.email).toBe("student@auth.test");
+      expect(res.body.data.user).not.toHaveProperty("password");
+    });
+
     it("should return validation error for missing email", async () => {
       const res = await agent.post("/api/v1/auth/login").send({
         password: "Password123!",
@@ -146,7 +160,7 @@ describe("Auth Flow", () => {
 
   describe("POST /auth/refresh-token", () => {
     it("should return error without refresh token cookie", async () => {
-      const res = await agent.post("/api/v1/auth/refresh-token");
+      const res = await request(app).post("/api/v1/auth/refresh-token");
       expect(res.status).toBe(400);
       expect(res.body.success).toBe(false);
     });
