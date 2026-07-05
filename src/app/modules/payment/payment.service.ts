@@ -335,7 +335,7 @@ const failPayment = async (query: Record<string, string>) => {
 
     try {
       if (enrollmentWithWorkshop?.user) {
-        const u = enrollmentWithWorkshop.user as {
+        const u = enrollmentWithWorkshop.user as unknown as {
           name: string;
           email: string;
         };
@@ -438,7 +438,7 @@ const cancelPayment = async (query: Record<string, string>) => {
 
     try {
       if (enrollmentWithWorkshop?.user) {
-        const u = enrollmentWithWorkshop.user as {
+        const u = enrollmentWithWorkshop.user as unknown as {
           name: string;
           email: string;
         };
@@ -583,7 +583,7 @@ const handleIPN = async (body: Record<string, string>) => {
         );
       try {
         if (ipnEnrollment?.user) {
-          const u = ipnEnrollment.user as {
+          const u = ipnEnrollment.user as unknown as {
             name: string;
             email: string;
           };
@@ -650,7 +650,7 @@ const handleIPN = async (body: Record<string, string>) => {
 
         try {
           if (enrollmentWithWorkshop?.user) {
-            const u = enrollmentWithWorkshop.user as {
+            const u = enrollmentWithWorkshop.user as unknown as {
               name: string;
               email: string;
             };
@@ -782,7 +782,7 @@ const refundPayment = async (
 
     try {
       if (enrollmentWithWorkshop?.user) {
-        const u = enrollmentWithWorkshop.user as {
+        const u = enrollmentWithWorkshop.user as unknown as {
           name: string;
           email: string;
         };

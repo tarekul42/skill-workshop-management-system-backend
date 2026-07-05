@@ -41,7 +41,7 @@ describe("handleValidationError", () => {
 
     const result = handleValidationError(validationError);
     expect(result.statusCode).toBe(StatusCodes.BAD_REQUEST);
-    expect(result.message).toBe("Validation Error Occurred");
+    expect(result.message).toBe("Please check your input and try again.");
     expect(result.errorSources).toHaveLength(1);
     expect(result.errorSources![0].path).toBe("name");
     expect(result.errorSources![0].message).toContain("required");
@@ -64,7 +64,7 @@ describe("handleZodError", () => {
 
     const result = handleZodError(zodError!);
     expect(result.statusCode).toBe(StatusCodes.BAD_REQUEST);
-    expect(result.message).toBe("Zod validation error");
+    expect(result.message).toBe("Please check your input and try again.");
     expect(result.errorSources!.length).toBeGreaterThanOrEqual(2);
     expect(result.errorSources![0].path).toBeDefined();
     expect(result.errorSources![0].message).toBeDefined();
