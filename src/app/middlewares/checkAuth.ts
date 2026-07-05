@@ -70,11 +70,11 @@ const checkAuth =
         throw new AppError(StatusCodes.BAD_REQUEST, "User is deleted");
       }
 
-      if (!authRoles.includes(verifiedToken.role)) {
+      if (!authRoles.includes(isUserExists.role)) {
         throw new AppError(StatusCodes.FORBIDDEN, "Access denied");
       }
 
-      req.user = verifiedToken;
+      req.user = { ...verifiedToken, role: isUserExists.role };
 
       next();
     } catch (err) {

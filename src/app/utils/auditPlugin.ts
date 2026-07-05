@@ -10,7 +10,7 @@ import logger from "./logger.js";
  */
 const sanitize = (data: Record<string, unknown>): Record<string, unknown> => {
   const copy = { ...data };
-  const sensitiveFields = ["password", "__v"];
+  const sensitiveFields = ["password", "__v", "token", "refreshToken", "resetToken", "accessToken"];
   for (const field of sensitiveFields) {
     if (field in copy) {
       copy[field] = "[REDACTED]";
