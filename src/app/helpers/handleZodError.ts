@@ -15,7 +15,7 @@ const handleZodError = (err: ZodError): IGenericErrorResponse => {
 
   return {
     statusCode: StatusCodes.BAD_REQUEST,
-    message: "Zod validation error",
+    message: "Please check your input and try again.",
     errorSources,
   };
 };

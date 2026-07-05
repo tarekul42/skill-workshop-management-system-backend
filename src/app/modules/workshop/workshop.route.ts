@@ -2,7 +2,7 @@ import express from "express";
 import multerUpload from "../../config/multer.config.js";
 import checkAuth from "../../middlewares/checkAuth.js";
 import validateRequest from "../../middlewares/validateRequest.js";
-import { adminCrudLimiter } from "../../utils/rateLimiter.js";
+import { adminCrudLimiter, publicLimiter } from "../../utils/rateLimiter.js";
 import { UserRole } from "../user/user.interface.js";
 import WorkshopController from "./workshop.controller.js";
 import {
@@ -263,7 +263,7 @@ router.delete(
  *       500:
  *         $ref: "#/components/responses/InternalServerError"
  */
-router.get("/", WorkshopController.getAllWorkshops);
+router.get("/", publicLimiter, WorkshopController.getAllWorkshops);
 
 /**
  * @openapi

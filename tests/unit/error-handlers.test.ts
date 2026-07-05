@@ -8,10 +8,13 @@ import handleValidationError from "../../src/app/helpers/handleValidationError";
 import handleZodError from "../../src/app/helpers/handleZodError";
 
 describe("handleCastError", () => {
-  it("should return 400 with generic message", () => {
-    const result = handleCastError();
+  it("should return 400 with field-specific error message", () => {
+    const castError = new mongoose.Error.CastError("ObjectId", "invalid123", "workshopId");
+    const result = handleCastError(castError);
     expect(result.statusCode).toBe(StatusCodes.BAD_REQUEST);
-    expect(result.message).toBe("Invalid ID format. Please provide a valid ID.");
+    expect(result.message).toBe(
+      'Invalid value "invalid123" for field "workshopId". Please provide a valid ObjectId.',
+    );
   });
 });
 
