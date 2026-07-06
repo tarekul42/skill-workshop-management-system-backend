@@ -181,29 +181,39 @@ const sslRefundPayment = async (payload: {
   amount: number;
   remarks?: string;
 }) => {
-  const data = new URLSearchParams();
-  data.append("store_id", envVariables.SSL.SSL_STORE_ID);
-  data.append("store_passwd", envVariables.SSL.SSL_STORE_PASS);
-  data.append("bank_tran_id", payload.bankTranId);
-  data.append("refund_amount", payload.amount.toFixed(2));
-  data.append("refund_remarks", payload.remarks ?? "Refund requested");
+  try {
+    const data = new URLSearchParams();
+    data.append("store_id", envVariables.SSL.SSL_STORE_ID);
+    data.append("store_passwd", envVariables.SSL.SSL_STORE_PASS);
+    data.append("bank_tran_id", payload.bankTranId);
+    data.append("refund_amount", payload.amount.toFixed(2));
+    data.append("refund_remarks", payload.remarks ?? "Refund requested");
 
-  const response = await axios({
-    method: "POST",
-    url: `${envVariables.SSL.SSL_PAYMENT_API.replace("gwprocess/v4/api.php", "gwprocess/v4/refund_api.php")}`,
-    data,
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    timeout: 30000,
-  });
+    const response = await axios({
+      method: "POST",
+      url: `${envVariables.SSL.SSL_PAYMENT_API.replace("gwprocess/v4/api.php", "gwprocess/v4/refund_api.php")}`,
+      data,
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      timeout: 30000,
+    });
 
-  if (!response.data || response.data.status !== "success") {
+    if (!response.data || response.data.status !== "success") {
+      throw new AppError(
+        StatusCodes.BAD_GATEWAY,
+        response.data?.error_reason || "SSLCommerz refund failed",
+      );
+    }
+
+    return response.data;
+  } catch (error: unknown) {
+    if (error instanceof AppError) throw error;
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logger.error({ msg: "SSLCommerz refund error", err: errorMessage });
     throw new AppError(
       StatusCodes.BAD_GATEWAY,
-      response.data?.error_reason || "SSLCommerz refund failed",
+      "Payment refund failed",
     );
   }
-
-  return response.data;
 };
 
 const SSLService = {

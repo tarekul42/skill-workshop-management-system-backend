@@ -309,11 +309,10 @@ const exchangeAuthCode = catchAsync(async (req: Request, res: Response) => {
     );
   }
 
-  // Retrieve and immediately delete the code (one-time use)
+  // Retrieve and immediately delete the code (one-time use) via atomic GETDEL
   let payload: string | null;
   try {
-    payload = await redisClient.get(`auth_code:${code}`);
-    await redisClient.del(`auth_code:${code}`);
+    payload = (await redisClient.getdel(`auth_code:${code}`)) as string | null;
   } catch (err) {
     logger.error({ msg: "Redis error during code exchange", err });
     throw new AppError(
