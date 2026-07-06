@@ -18,8 +18,16 @@ import AuthServices from "./auth.service.js";
 type TPassportError = Error | null;
 
 interface IAuthInfo {
-  message: string;
+  code?: string;
 }
+
+const extractAccessToken = (req: Request): string | undefined => {
+  const authHeader = req.headers.authorization;
+  if (authHeader?.startsWith("Bearer ")) {
+    return authHeader.split(" ")[1];
+  }
+  return req.cookies.accessToken;
+};
 
 const MAX_FAILED_ATTEMPTS = 5;
 const LOCKOUT_DURATION_SECONDS = 15 * 60; // 15 minutes
@@ -127,12 +135,7 @@ const logout = catchAsync(async (req: Request, res: Response) => {
     sameSite: isProduction ? "none" : "lax",
   });
 
-  let accessToken = req.headers.authorization;
-  if (accessToken?.startsWith("Bearer ")) {
-    accessToken = accessToken.split(" ")[1];
-  } else {
-    accessToken = req.cookies.accessToken;
-  }
+  const accessToken = extractAccessToken(req);
 
   if (accessToken) {
     await invalidateToken(accessToken, envVariables.JWT_ACCESS_SECRET);
@@ -159,12 +162,7 @@ const changePassword = catchAsync(async (req: Request, res: Response) => {
   const oldPassword = req.body.oldPassword;
   const decodedToken = req.user;
 
-  let accessToken = req.headers.authorization;
-  if (accessToken?.startsWith("Bearer ")) {
-    accessToken = accessToken.split(" ")[1];
-  } else {
-    accessToken = req.cookies.accessToken;
-  }
+  const accessToken = extractAccessToken(req);
 
   await AuthServices.changePassword(
     oldPassword,

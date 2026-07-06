@@ -258,6 +258,7 @@ const successPayment = async (
     return {
       success: true,
       message: "Payment completed successfully",
+      workshopTitle: populatedEnrollment.workshop.title,
     };
   } catch (err) {
     if (session.inTransaction()) {

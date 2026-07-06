@@ -43,6 +43,7 @@ const successPayment = catchAsync(async (req: Request, res: Response) => {
       message: result.message ?? "",
       amount: String(query.amount ?? ""),
       status: String(query.status ?? ""),
+      workshop: result.workshopTitle ?? "",
     });
 
     res.redirect(

@@ -69,37 +69,41 @@ const verifyOtp = async (email: string, otp: string) => {
     throw new AppError(StatusCodes.NOT_FOUND, "OTP not found");
   }
 
-  const attemptsKey = `otp_attempts:${normalizedEmail}`;
-
-  // Increment the attempt counter BEFORE checking the hash.
-  // Redis INCR is atomic so concurrent requests are serialised — this closes the
-  // TOCTOU window where multiple bad guesses could race past the hash check
-  // before any of them increments the counter.
-  const attemptCount = await redisClient.incr(attemptsKey);
-  if (attemptCount === 1) {
-    await redisClient.expire(attemptsKey, OTP_EXPIRATION);
-  }
-
-  if (attemptCount > 5) {
-    await redisClient.del([redisKey, attemptsKey]);
-    throw new AppError(
-      StatusCodes.TOO_MANY_REQUESTS,
-      "Too many failed attempts. Please request a new OTP.",
-    );
-  }
-
+  // Compare the OTP hash FIRST, before incrementing the attempt counter.
+  // This prevents a correct OTP from being rejected because a concurrent
+  // wrong guess incremented the counter first.
   if (savedOtp !== hashOtp(otp)) {
+    const attemptsKey = `otp_attempts:${normalizedEmail}`;
+
+    // Increment attempt counter atomically — serialises concurrent wrong guesses
+    const attemptCount = await redisClient.incr(attemptsKey);
+    if (attemptCount === 1) {
+      await redisClient.expire(attemptsKey, OTP_EXPIRATION);
+    }
+
+    if (attemptCount > 5) {
+      await redisClient.del([redisKey, attemptsKey]);
+      throw new AppError(
+        StatusCodes.TOO_MANY_REQUESTS,
+        "Too many failed attempts. Please request a new OTP.",
+      );
+    }
+
     throw new AppError(StatusCodes.UNAUTHORIZED, "Invalid OTP");
   }
 
-  // OTP is correct — mark user as verified and clean up
+  // OTP is correct — clean up Redis FIRST, then mark user as verified.
+  // Order matters: if the app crashes between the two calls the worst case is
+  // a harmless false negative (OTP consumed, user needs to request a new one).
+  // The reverse order (MongoDB first) would risk a false positive where the
+  // user is verified but the OTP remains usable.
+  await redisClient.del([redisKey, `otp_attempts:${normalizedEmail}`]);
+
   await User.updateOne(
     { email: { $eq: normalizedEmail } },
     { isVerified: true },
     { runValidators: true },
   );
-
-  await redisClient.del([redisKey, attemptsKey]);
 
   // ── Send welcome email ──
   if (user) {
