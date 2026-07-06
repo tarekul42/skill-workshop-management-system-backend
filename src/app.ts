@@ -143,7 +143,7 @@ app.use(
     cookie: {
       secure: envVariables.NODE_ENV === "production",
       httpOnly: true,
-      sameSite: envVariables.NODE_ENV === "production" ? "strict" : "lax",
+      sameSite: envVariables.NODE_ENV === "production" ? "none" : "lax",
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
     },
   }),

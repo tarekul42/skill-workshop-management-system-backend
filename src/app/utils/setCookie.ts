@@ -14,7 +14,7 @@ const setAuthCookie = (res: Response, tokenInfo: IAuthTokens) => {
     res.cookie("accessToken", tokenInfo.accessToken, {
       httpOnly: true,
       secure: isProduction,
-      sameSite: isProduction ? "strict" : "lax",
+      sameSite: isProduction ? "none" : "lax",
       maxAge: parseExpiryToSeconds(envVariables.JWT_ACCESS_EXPIRES) * 1000,
       path: "/",
     });
@@ -23,7 +23,7 @@ const setAuthCookie = (res: Response, tokenInfo: IAuthTokens) => {
     res.cookie("refreshToken", tokenInfo.refreshToken, {
       httpOnly: true,
       secure: isProduction,
-      sameSite: isProduction ? "strict" : "lax",
+      sameSite: isProduction ? "none" : "lax",
       maxAge: parseExpiryToSeconds(envVariables.JWT_REFRESH_EXPIRES) * 1000,
       path: "/",
     });
