@@ -40,6 +40,9 @@ describe("Auth Flow", () => {
     spyOn(redisClient, "connect").mockResolvedValue({} as any);
     spyOn(redisClient, "get").mockResolvedValue(null);
     spyOn(redisClient, "set").mockResolvedValue("OK");
+    spyOn(redisClient, "del").mockResolvedValue(1);
+    spyOn(redisClient, "incr").mockResolvedValue(1);
+    spyOn(redisClient, "expire").mockResolvedValue(true);
     await connectRedis();
 
     if (mongoose.connection.db) {

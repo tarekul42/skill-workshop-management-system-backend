@@ -21,8 +21,25 @@ interface IAuthInfo {
   message: string;
 }
 
+const MAX_FAILED_ATTEMPTS = 5;
+const LOCKOUT_DURATION_SECONDS = 15 * 60; // 15 minutes
+
 const credentialsLogin = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
+    const email = req.body.email;
+
+    // Check account lockout before attempting authentication
+    if (email) {
+      const failKey = `failed_login:${email}`;
+      const attempts = await redisClient.get(failKey);
+      if (attempts && parseInt(attempts, 10) >= MAX_FAILED_ATTEMPTS) {
+        throw new AppError(
+          StatusCodes.TOO_MANY_REQUESTS,
+          "Account temporarily locked due to too many failed attempts. Try again in 15 minutes.",
+        );
+      }
+    }
+
     passport.authenticate(
       "local",
       { session: false },
@@ -37,12 +54,24 @@ const credentialsLogin = catchAsync(
         }
 
         if (!user) {
+          // Increment failed attempt counter
+          if (email) {
+            const failKey = `failed_login:${email}`;
+            await redisClient.incr(failKey);
+            await redisClient.expire(failKey, LOCKOUT_DURATION_SECONDS);
+          }
+
           return next(
             new AppError(
               StatusCodes.UNAUTHORIZED,
               info?.message || "Incorrect email or password",
             ),
           );
+        }
+
+        // Successful login — clear failed attempts
+        if (email) {
+          await redisClient.del(`failed_login:${email}`);
         }
 
         const userTokens = await createUserTokens(user);
