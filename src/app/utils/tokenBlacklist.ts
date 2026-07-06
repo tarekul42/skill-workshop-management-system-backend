@@ -9,13 +9,25 @@ import logger from "./logger.js";
 // window and are garbage-collected lazily on lookup.
 const localBlacklist = new Map<string, number>();
 
-/**
- * Generates a hash for the token to be used as a key in Redis.
- * @param token - The token string.
- * @returns The hex hash of the token.
- */
 const getTokenHash = (token: string) => {
   return crypto.createHash("sha256").update(token).digest("hex");
+};
+
+const syncLocalToRedis = async () => {
+  const now = Date.now();
+  for (const [hash, expiry] of localBlacklist) {
+    if (now > expiry) {
+      localBlacklist.delete(hash);
+      continue;
+    }
+    try {
+      const ttl = Math.ceil((expiry - now) / 1000);
+      await redisClient.set(`blacklist:${hash}`, "true", { EX: ttl });
+      localBlacklist.delete(hash);
+    } catch {
+      break;
+    }
+  }
 };
 
 /**
@@ -49,6 +61,9 @@ export const invalidateToken = async (token: string, secret: string) => {
     await redisClient.set(`blacklist:${tokenHash}`, "true", {
       EX: ttl,
     });
+    if (localBlacklist.size > 0) {
+      syncLocalToRedis();
+    }
   } catch (err) {
     logger.warn({
       msg: "Redis unavailable for token invalidation — in-memory fallback active",
@@ -70,20 +85,29 @@ export const isTokenBlacklisted = async (token: string) => {
   // Try Redis first.
   try {
     const result = await redisClient.get(`blacklist:${tokenHash}`);
-    return !!result;
+    if (result) return true;
   } catch {
     logger.warn({
       msg: "Redis unavailable for blacklist check — using in-memory fallback",
     });
   }
 
-  // Fallback: check in-memory Map. Purge expired entries lazily.
   const expiry = localBlacklist.get(tokenHash);
   if (expiry === undefined) return false;
 
   if (Date.now() > expiry) {
     localBlacklist.delete(tokenHash);
     return false;
+  }
+
+  const now = Date.now();
+  const ttl = Math.ceil((expiry - now) / 1000);
+  if (ttl > 0) {
+    try {
+      await redisClient.set(`blacklist:${tokenHash}`, "true", { EX: ttl });
+    } catch {
+      // Redis still down — in-memory fallback handles it.
+    }
   }
 
   return true;

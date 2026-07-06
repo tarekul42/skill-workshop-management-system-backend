@@ -129,6 +129,8 @@ const validatePayment = async (payload: {
       StatusCodes.BAD_GATEWAY,
       "Payment validation failed",
     );
+  } finally {
+    await redisClient.del(lockKey).catch(() => {});
   }
 };
 
