@@ -1,6 +1,5 @@
 import { StatusCodes } from "http-status-codes";
 import { JwtPayload } from "jsonwebtoken";
-import mongoose from "mongoose";
 import { deleteImageFromCloudinary } from "../../config/cloudinary.config.js";
 import { redisClient } from "../../config/redis.config.js";
 import AppError from "../../errorHelpers/AppError.js";

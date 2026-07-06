@@ -22,8 +22,6 @@ const tryAssign = (
   value: unknown,
 ): boolean => {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-    delete (req as unknown as Record<string, unknown>)[key];
     Object.defineProperty(req, key, {
       value: value,
       writable: true,

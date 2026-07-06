@@ -19,6 +19,7 @@ type TPassportError = Error | null;
 
 interface IAuthInfo {
   code?: string;
+  message?: string;
 }
 
 const extractAccessToken = (req: Request): string | undefined => {

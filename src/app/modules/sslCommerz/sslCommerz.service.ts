@@ -130,7 +130,7 @@ const validatePayment = async (payload: {
       "Payment validation failed",
     );
   } finally {
-    await redisClient.del(lockKey).catch(() => {});
+    await redisClient.del(lockKey).catch(() => undefined);
   }
 };
 

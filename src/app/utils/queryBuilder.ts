@@ -64,7 +64,7 @@ class QueryBuilder<T> {
     // Strip any characters that aren't valid MongoDB field name characters
     // (alphanumeric, underscore, space, minus). This prevents NoSQL injection
     // via projection operators like { $gt: "" } or { field: 0 }.
-    const sanitized = fields.replace(/[^a-zA-Z0-9_ \-]/g, "");
+    const sanitized = fields.replace(/[^a-zA-Z0-9_ -]/g, "");
 
     this.modelQuery = this.modelQuery.select(sanitized);
 
