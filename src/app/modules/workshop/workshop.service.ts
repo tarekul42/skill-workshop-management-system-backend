@@ -41,7 +41,7 @@ const invalidateWorkshopCache = async () => {
       logger.info({ msg: `Invalidated ${keys.length} workshop cache keys` });
     }
   } catch (err) {
-    logger.error({ msg: "Failed to invalidate workshop cache", err });
+    logger.warn({ msg: "Failed to invalidate workshop cache", err });
   }
 };
 
@@ -222,7 +222,7 @@ const getAllWorkshops = async (query: Record<string, string>) => {
       return JSON.parse(cachedData);
     }
   } catch (err) {
-    logger.error({ msg: "Redis cache GET error", err });
+    logger.warn({ msg: "Redis cache GET error", err });
   }
 
   const queryBuilder = new QueryBuilder(WorkShop.find(), query);
@@ -250,7 +250,7 @@ const getAllWorkshops = async (query: Record<string, string>) => {
       EX: 60, // cache for 60 seconds
     });
   } catch (err) {
-    logger.error({ msg: "Redis cache SET error", err });
+    logger.warn({ msg: "Redis cache SET error", err });
   }
 
   return result;
