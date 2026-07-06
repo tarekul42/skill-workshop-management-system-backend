@@ -10,7 +10,7 @@ const createContact = async (payload: Partial<IContact>) => {
 
 const getAllContacts = async (query: Record<string, string>) => {
   const page = Number(query.page) || 1;
-  const limit = Math.max(1, Number(query.limit) || 10);
+  const limit = Math.min(100, Math.max(1, Number(query.limit) || 10));
   const skip = (page - 1) * limit;
 
   const filter: Record<string, unknown> = { isDeleted: { $ne: true } };

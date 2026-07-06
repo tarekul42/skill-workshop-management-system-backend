@@ -46,7 +46,7 @@ const checkAuth =
         );
       }
 
-      const isUserExists = await User.findOne({ email: verifiedToken.email });
+      const isUserExists = await User.findById(verifiedToken.userId);
 
       if (!isUserExists) {
         throw new AppError(StatusCodes.BAD_REQUEST, "User does not exist");

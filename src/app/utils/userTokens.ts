@@ -67,7 +67,7 @@ const createNewAccessToken = async (refreshToken: string) => {
     );
   }
 
-  const isUserExists = await User.findOne({ email: verifiedPayload.email });
+  const isUserExists = await User.findById(verifiedPayload.userId);
 
   if (!isUserExists) {
     throw new AppError(StatusCodes.BAD_REQUEST, "User does not exist");

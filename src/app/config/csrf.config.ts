@@ -13,8 +13,6 @@ const CSRF_EXEMPT_PATHS = [
   "/api/v1/payment/validate-payment",
   "/api/v1/auth/google/callback",
   "/api/v1/auth/exchange-code",
-  "/api/v1/user/register",
-  "/api/v1/auth/login",
   "/api/v1/auth/refresh-token",
   "/api/v1/auth/forgot-password",
   "/api/v1/otp/send",

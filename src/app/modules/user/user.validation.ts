@@ -7,7 +7,7 @@ import { IsActive, UserRole } from "./user.interface.js";
  */
 export const passwordZodSchema = z
   .string("Password must be string")
-  .min(6, { message: "Password must be at least 6 characters long." })
+  .min(8, { message: "Password must be at least 8 characters long." })
   .max(72, { message: "Password cannot exceed 72 characters." })
   .regex(/^(?=.*[A-Z])/, {
     message: "Password must contain at least 1 uppercase letter.",
