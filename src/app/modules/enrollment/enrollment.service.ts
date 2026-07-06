@@ -40,6 +40,8 @@ const createEnrollment = async (
     throw new AppError(StatusCodes.NOT_FOUND, "Workshop not found.");
   }
 
+  // Atomic seat reservation outside the transaction.
+  // findOneAndUpdate with $lt guard handles concurrent requests correctly.
   let seatReserved = false;
   if (workshop.maxSeats != null) {
     seatReserved = await EnrollmentRepository.reserveSeat(

@@ -23,6 +23,7 @@ const startTransaction = async () => {
 const reserveSeat = async (
   workshopId: string,
   maxSeats: number,
+  session?: ClientSession,
 ): Promise<boolean> => {
   const result = await WorkShop.findOneAndUpdate(
     {
@@ -30,7 +31,7 @@ const reserveSeat = async (
       currentEnrollments: { $lt: maxSeats },
     },
     { $inc: { currentEnrollments: 1 } },
-    { returnDocument: "after" },
+    { returnDocument: "after", session },
   );
   return result !== null;
 };
