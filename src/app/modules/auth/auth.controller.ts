@@ -371,6 +371,23 @@ const exchangeAuthCode = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getDemoCredentials = catchAsync(async (_req: Request, res: Response) => {
+  if (process.env.NODE_ENV === "production") {
+    throw new AppError(StatusCodes.NOT_FOUND, "Demo credentials not available in production");
+  }
+
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: "Demo credentials fetched successfully",
+    data: {
+      student: { email: "student@test.com", password: "Student@123", label: "Student" },
+      admin: { email: "admin@test.com", password: "Admin@123", label: "Admin" },
+      instructor: { email: "instructor@test.com", password: "Instructor@123", label: "Instructor" },
+    },
+  });
+});
+
 const AuthControllers = {
   credentialsLogin,
   getNewAccessToken,
@@ -381,6 +398,7 @@ const AuthControllers = {
   resetPassword,
   googleCallback,
   exchangeAuthCode,
+  getDemoCredentials,
 };
 
 export default AuthControllers;

@@ -479,6 +479,8 @@ router.get(
  */
 router.post("/exchange-code", authLimiter, AuthControllers.exchangeAuthCode);
 
+router.get("/demo-credentials", authLimiter, AuthControllers.getDemoCredentials);
+
 const AuthRoutes = router;
 
 export default AuthRoutes;
