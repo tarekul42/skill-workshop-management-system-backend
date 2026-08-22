@@ -1,6 +1,15 @@
 import { Query } from "mongoose";
 import { excludeFields } from "../constants.js";
 
+// Fields that must never be settable as a filter nor projectable via ?fields=
+const FORBIDDEN_FIELDS = new Set([
+  "password",
+  "__v",
+  "_id",
+  "isDeleted",
+  "deletedAt",
+]);
+
 class QueryBuilder<T> {
   public modelQuery: Query<T[], T>;
   public readonly query: Record<string, string>;
@@ -10,10 +19,16 @@ class QueryBuilder<T> {
     this.query = query;
   }
 
-  filter(): this {
+  filter(allowedFilterFields?: string[]): this {
     const sanitizedFilter: Record<string, string> = {};
+    const allowed = allowedFilterFields
+      ? new Set(allowedFilterFields)
+      : undefined;
+
     for (const [key, value] of Object.entries(this.query)) {
       if (!excludeFields.includes(key) && typeof value === "string" && !key.startsWith("$")) {
+        if (FORBIDDEN_FIELDS.has(key)) continue;
+        if (allowed && !allowed.has(key)) continue;
         sanitizedFilter[key] = value;
       }
     }
@@ -66,7 +81,17 @@ class QueryBuilder<T> {
     // via projection operators like { $gt: "" } or { field: 0 }.
     const sanitized = fields.replace(/[^a-zA-Z0-9_ -]/g, "");
 
-    this.modelQuery = this.modelQuery.select(sanitized);
+    // Drop sensitive/internal fields even if explicitly requested,
+    // e.g. ?fields=name,password must never re-include the password hash.
+    const safeFields = sanitized
+      .split(" ")
+      .filter((f) => {
+        const bare = f.replace(/^-/, "");
+        return bare.length > 0 && !FORBIDDEN_FIELDS.has(bare);
+      })
+      .join(" ");
+
+    this.modelQuery = this.modelQuery.select(safeFields);
 
     return this;
   }

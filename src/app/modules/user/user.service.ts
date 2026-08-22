@@ -31,7 +31,11 @@ const createUser = async (payload: Partial<IUser>) => {
   const isUserExists = await User.findOne({ email: { $eq: email } });
 
   if (isUserExists) {
-    throw new AppError(StatusCodes.CONFLICT, "User already exists");
+    // Deliberately generic: avoids confirming whether an email is registered
+    throw new AppError(
+      StatusCodes.CONFLICT,
+      "Unable to create account with these details",
+    );
   }
 
   // Ensure role is valid for public registration (STUDENT or INSTRUCTOR)
@@ -94,7 +98,7 @@ const getAllUsers = async (query: Record<string, string>) => {
 
   const usersData = queryBuilder
     .search(userSearchableFields)
-    .filter()
+    .filter(["role", "isActive", "isVerified"])
     .sort()
     .fields()
     .paginate()

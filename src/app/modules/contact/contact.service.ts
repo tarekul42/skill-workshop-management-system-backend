@@ -17,7 +17,7 @@ const getAllContacts = async (query: Record<string, string>) => {
 
   const contactsData = queryBuilder
     .search(contactSearchableFields)
-    .filter()
+    .filter(["isRead"])
     .sort()
     .fields()
     .paginate();

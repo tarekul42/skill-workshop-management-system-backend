@@ -83,7 +83,7 @@ const getAllLevels = async (query: Record<string, string>) => {
 
   const levels = queryBuilder
     .search(levelSearchableFields)
-    .filter()
+    .filter(["name"])
     .sort()
     .fields()
     .paginate()
@@ -228,7 +228,7 @@ const getAllWorkshops = async (query: Record<string, string>) => {
 
   const workshops = queryBuilder
     .search(workshopSearchableFields)
-    .filter()
+    .filter(["category", "level", "price", "location", "startDate"])
     .sort()
     .fields()
     .paginate()

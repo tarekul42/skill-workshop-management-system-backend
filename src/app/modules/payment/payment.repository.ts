@@ -79,6 +79,14 @@ const findPaymentByTransactionId = async (transactionId: string) => {
   });
 };
 
+const findEnrollmentUserById = async (enrollmentId: string) => {
+  if (!isValidObjectId(enrollmentId)) {
+    return null;
+  }
+  const enrollment = await Enrollment.findById(enrollmentId).select("user");
+  return enrollment?.user ?? null;
+};
+
 const findPaymentWithEnrollment = async (paymentId: string) => {
   if (!isValidObjectId(paymentId)) {
     return null;
@@ -99,6 +107,7 @@ const PaymentRepository = {
   findPaymentByEnrollmentId,
   findEnrollmentWithUser,
   findPaymentByTransactionId,
+  findEnrollmentUserById,
   updatePaymentStatus,
   updateEnrollmentStatus,
   findPaymentById,

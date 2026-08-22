@@ -50,7 +50,7 @@ const getAllCategories = async (query: Record<string, string>) => {
 
   const categoriesData = queryBuilder
     .search(categorySearchableFields)
-    .filter()
+    .filter(["name", "slug"])
     .sort()
     .fields()
     .paginate()

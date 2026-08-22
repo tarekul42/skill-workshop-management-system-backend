@@ -821,7 +821,11 @@ const refundPayment = async (
   }
 };
 
-const getPaymentStatus = async (transactionId: string) => {
+const getPaymentStatus = async (
+  transactionId: string,
+  userId: string,
+  userRole: string,
+) => {
   if (!transactionId) {
     throw new AppError(StatusCodes.BAD_REQUEST, "Invalid transactionId");
   }
@@ -831,6 +835,19 @@ const getPaymentStatus = async (transactionId: string) => {
 
   if (!payment) {
     throw new AppError(StatusCodes.NOT_FOUND, "Payment not found");
+  }
+
+  const enrollmentOwner = await PaymentRepository.findEnrollmentUserById(
+    String(payment.enrollment),
+  );
+
+  const isAdmin =
+    userRole === UserRole.ADMIN || userRole === UserRole.SUPER_ADMIN;
+  if (!isAdmin && String(enrollmentOwner?._id ?? "") !== userId) {
+    throw new AppError(
+      StatusCodes.FORBIDDEN,
+      "You can only access your own payment status",
+    );
   }
 
   return {

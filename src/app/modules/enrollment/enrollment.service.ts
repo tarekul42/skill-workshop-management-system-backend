@@ -199,7 +199,12 @@ const getAllEnrollments = async (
   const baseQuery = Enrollment.find(filter);
   const queryBuilder = new QueryBuilder(baseQuery, query);
 
-  const enrollmentsData = queryBuilder.filter().sort().fields().paginate().lean();
+  const enrollmentsData = queryBuilder
+    .filter(["status", "workshop"])
+    .sort()
+    .fields()
+    .paginate()
+    .lean();
 
   const [data, meta] = await Promise.all([
     enrollmentsData
