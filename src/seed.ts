@@ -1,6 +1,9 @@
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 import dotenv from "dotenv";
+import { randomBytes } from "crypto";
+import fs from "fs";
+import path from "path";
 
 dotenv.config();
 
@@ -22,7 +25,11 @@ type EnrollmentStatus = "PENDING" | "CANCEL" | "COMPLETE" | "FAILED";
 type PaymentStatus = "PAID" | "UNPAID" | "CANCELLED" | "FAILED" | "REFUNDED";
 type ReviewStatus = "PENDING" | "APPROVED" | "REJECTED";
 
-const PASSWORD = "Seed@123";
+const CREDENTIALS_FILE = path.resolve(process.cwd(), ".seed-credentials.local.json");
+
+function generatePassword(): string {
+  return `Sd-${randomBytes(12).toString("base64url")}`;
+}
 
 function monthsAgo(n: number): Date {
   const d = new Date();
@@ -282,6 +289,13 @@ function generateTransactionId(): string {
 // ── Main Seed Function ───────────────────────────────────────────────
 
 async function seed() {
+  if (process.env.NODE_ENV === "production") {
+    console.error(
+      "REFUSING TO RUN: seed scripts must never run in production (NODE_ENV=production).",
+    );
+    process.exit(1);
+  }
+
   const args = process.argv.slice(2);
   const isFresh = args.includes("--fresh");
   const isClear = args.includes("--clear");
@@ -332,16 +346,17 @@ async function seed() {
 
   // ── 3. Seed Users (12) ───────────────────────────────────────────
   console.log("Seeding Users...");
-  const hashedPassword = await bcrypt.hash(PASSWORD, 10);
-  const demoPasswords = {
-    "admin@test.com": await bcrypt.hash("Admin@123", 10),
-    "instructor@test.com": await bcrypt.hash("Instructor@123", 10),
-    "student@test.com": await bcrypt.hash("Student@123", 10),
-  };
+  const demoPassword = generatePassword();
+  const hashedPassword = await bcrypt.hash(demoPassword, 10);
+  const demoAccounts = [
+    { email: "admin@test.com", label: "Admin" },
+    { email: "instructor@test.com", label: "Instructor" },
+    { email: "student@test.com", label: "Student" },
+  ];
   const userDocs = USER_DATA.map((u, i) => ({
     name: u.name,
     email: u.email,
-    password: demoPasswords[u.email as keyof typeof demoPasswords] ?? hashedPassword,
+    password: hashedPassword,
     role: u.role,
     isActive: "ACTIVE" as const,
     isVerified: true,
@@ -506,7 +521,20 @@ async function seed() {
   console.log(`  Reviews:      ${reviews.length}`);
   console.log(`  Contacts:     ${contacts.length}`);
   console.log("───────────────────────────────────────────────────────\n");
+
+  const credentialsPayload = {
+    generatedAt: new Date().toISOString(),
+    demoPassword,
+    accounts: demoAccounts,
+  };
+  fs.writeFileSync(CREDENTIALS_FILE, JSON.stringify(credentialsPayload, null, 2));
   console.log(`Seed accounts created.`);
+  console.log(
+    `Demo credentials (all seeded users share one password, rotated every seed run):\n` +
+      `  password: ${demoPassword}\n` +
+      `  accounts: ${demoAccounts.map((a) => a.email).join(", ")}\n` +
+      `Saved to ${CREDENTIALS_FILE} (gitignored). Store it securely — it is not shown again.`,
+  );
 
   await mongoose.disconnect();
   process.exit(0);

@@ -44,16 +44,40 @@ const requiredSecrets = [
   { name: "RESET_PASSWORD_SECRET", value: envVariables.RESET_PASSWORD_SECRET },
 ];
 
-for (const secret of requiredSecrets) {
-  if (!secret.value || secret.value.length < 16) {
+const MIN_SECRET_LENGTH = 32;
+
+const PLACEHOLDER_PATTERNS = [
+  /^change-me/i,
+  /your-.*(secret|key|password)/i,
+  /placeholder/i,
+  /dummy/i,
+  /^(secret|password|token)$/i,
+  /^(.)\1{7,}$/,
+];
+
+if (envVariables.NODE_ENV === "production") {
+  const distinctSecrets = new Set(requiredSecrets.map((s) => s.value));
+  if (distinctSecrets.size !== requiredSecrets.length) {
     throw new Error(
-      `${secret.name} must be at least 16 characters. Current length: ${secret.value.length}`,
+      "Security check failed: secret values must be unique. " +
+        "Reusing a secret across purposes (e.g. access vs refresh tokens) undermines isolation.",
     );
   }
-  if (secret.value.length < 32 && envVariables.NODE_ENV === "production") {
+}
+
+for (const secret of requiredSecrets) {
+  if (!secret.value || secret.value.length < MIN_SECRET_LENGTH) {
     throw new Error(
-      `${secret.name} must be at least 32 characters in production. Current length: ${secret.value.length}`,
+      `${secret.name} must be at least ${MIN_SECRET_LENGTH} characters (use a high-entropy random value, e.g. 'openssl rand -hex 32'). ` +
+        `Current length: ${secret.value.length}`,
     );
+  }
+  for (const pattern of PLACEHOLDER_PATTERNS) {
+    if (pattern.test(secret.value)) {
+      throw new Error(
+        `${secret.name} appears to be a placeholder/default value. Generate a real secret with 'openssl rand -hex 32'.`,
+      );
+    }
   }
 }
 

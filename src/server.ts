@@ -148,9 +148,15 @@ const startServer = async () => {
     await seedSuperAdmin();
   } catch (seedErr) {
     logger.error({
-      msg: "Super admin seeding failed — server continues without seeded admin",
+      msg: "Super admin seeding failed",
       err: seedErr,
     });
+    if (envVariables.NODE_ENV === "production") {
+      logger.error({
+        msg: "Refusing to run in production without a verified super-admin seed",
+      });
+      process.exit(1);
+    }
   }
 
   if (process.env.RUN_WORKER === "true") {

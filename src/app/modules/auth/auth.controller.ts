@@ -1,4 +1,6 @@
 import crypto from "crypto";
+import fs from "fs";
+import path from "path";
 import { NextFunction, Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import { JwtPayload } from "jsonwebtoken";
@@ -376,15 +378,23 @@ const getDemoCredentials = catchAsync(async (_req: Request, res: Response) => {
     throw new AppError(StatusCodes.NOT_FOUND, "Demo credentials not available in production");
   }
 
+  const credentialsFile = path.resolve(process.cwd(), ".seed-credentials.local.json");
+
+  let credentials: unknown;
+  try {
+    credentials = JSON.parse(fs.readFileSync(credentialsFile, "utf-8"));
+  } catch {
+    throw new AppError(
+      StatusCodes.NOT_FOUND,
+      "No seeded demo credentials found. Run the seed script first (npm run seed).",
+    );
+  }
+
   sendResponse(res, {
     statusCode: StatusCodes.OK,
     success: true,
     message: "Demo credentials fetched successfully",
-    data: {
-      student: { email: "student@test.com", password: "Student@123", label: "Student" },
-      admin: { email: "admin@test.com", password: "Admin@123", label: "Admin" },
-      instructor: { email: "instructor@test.com", password: "Instructor@123", label: "Instructor" },
-    },
+    data: credentials,
   });
 });
 

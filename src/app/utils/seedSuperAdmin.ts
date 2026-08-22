@@ -1,4 +1,5 @@
 import bcrypt from "bcryptjs";
+import { randomBytes } from "crypto";
 import envVariables from "../config/env.js";
 import {
   IAuthProvider,
@@ -7,6 +8,30 @@ import {
 } from "../modules/user/user.interface.js";
 import User from "../modules/user/user.model.js";
 import logger from "./logger.js";
+
+const MIN_PASSWORD_LENGTH = 12;
+
+const COMMON_WEAK_PASSWORDS = new Set([
+  "admin123",
+  "password",
+  "password123",
+  "superadmin",
+  "superadmin123",
+  "admin@123",
+  "admin@123456",
+  "qwerty123",
+  "changeme",
+]);
+
+export const isPasswordStrongEnough = (password: string): boolean => {
+  if (password.length < MIN_PASSWORD_LENGTH) return false;
+  if (COMMON_WEAK_PASSWORDS.has(password.toLowerCase())) return false;
+  const hasLower = /[a-z]/.test(password);
+  const hasUpper = /[A-Z]/.test(password);
+  const hasDigit = /\d/.test(password);
+  const hasSpecial = /[^a-zA-Z0-9]/.test(password);
+  return hasLower && hasUpper && hasDigit && hasSpecial;
+};
 
 const seedSuperAdmin = async () => {
   try {
@@ -19,8 +44,29 @@ const seedSuperAdmin = async () => {
       return;
     }
 
+    let adminPassword = envVariables.SUPER_ADMIN_PASSWORD;
+
+    if (!isPasswordStrongEnough(adminPassword)) {
+      if (envVariables.NODE_ENV === "production") {
+        throw new Error(
+          `SUPER_ADMIN_PASSWORD does not meet security requirements ` +
+            `(min ${MIN_PASSWORD_LENGTH} chars, upper, lower, digit, special, not a common password). ` +
+            "Refusing to seed a weak super-admin in production.",
+        );
+      }
+
+      adminPassword = randomBytes(18).toString("base64url");
+      logger.warn({
+        msg:
+          "SUPER_ADMIN_PASSWORD is weak. A strong password was generated for the " +
+          "initial super-admin. It is printed ONCE below — store it securely.",
+        email: envVariables.SUPER_ADMIN_EMAIL,
+        generatedPassword: adminPassword,
+      });
+    }
+
     const hashedPassword = await bcrypt.hash(
-      envVariables.SUPER_ADMIN_PASSWORD,
+      adminPassword,
       Number(envVariables.BCRYPT_SALT_ROUND),
     );
 
@@ -39,8 +85,10 @@ const seedSuperAdmin = async () => {
     };
 
     await User.create(payload);
+    logger.info({ msg: "Super Admin seeded successfully" });
   } catch (err) {
     logger.error({ msg: "Error seeding super admin", err });
+    throw err;
   }
 };
 
