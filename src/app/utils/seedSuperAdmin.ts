@@ -56,13 +56,13 @@ const seedSuperAdmin = async () => {
       }
 
       adminPassword = randomBytes(18).toString("base64url");
-      // Print to stderr (not through the structured logger) so the password
-      // is visible in terminal output but NOT persisted to log aggregation.
+      // Do not print credentials to stdout/stderr or logs.
+      // Emit only non-sensitive guidance for operators.
       console.error(
         "\n⚠  SUPER_ADMIN_PASSWORD is weak — a strong password was generated.\n" +
           `   Email : ${envVariables.SUPER_ADMIN_EMAIL}\n` +
-          `   Pass  : ${adminPassword}\n` +
-          "   Store it securely. This is the only time it is shown.\n",
+          "   Password output is suppressed for security.\n" +
+          "   Update SUPER_ADMIN_PASSWORD in your secure secret store.\n",
       );
     }
 
