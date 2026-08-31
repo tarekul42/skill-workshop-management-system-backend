@@ -11,9 +11,9 @@ import AppError from "../../errorHelpers/AppError.js";
 import catchAsync from "../../utils/catchAsync.js";
 import logger from "../../utils/logger.js";
 import sendResponse from "../../utils/sendResponse.js";
-import setAuthCookie from "../../utils/setCookie.js";
+import setAuthCookie, { clearAuthCookie } from "../../utils/setCookie.js";
 import { invalidateToken } from "../../utils/tokenBlacklist.js";
-import { createUserTokens } from "../../utils/userTokens.js";
+import { createUserTokens, revokeRefreshSession } from "../../utils/userTokens.js";
 import { IUser } from "../user/user.interface.js";
 import AuthServices from "./auth.service.js";
 
@@ -124,24 +124,17 @@ const getNewAccessToken = catchAsync(async (req: Request, res: Response) => {
 });
 
 const logout = catchAsync(async (req: Request, res: Response) => {
-  const isProduction = process.env.NODE_ENV === "production";
-
-  res.clearCookie("accessToken", {
-    httpOnly: true,
-    secure: isProduction,
-    sameSite: isProduction ? "none" : "lax",
-  });
-
-  res.clearCookie("refreshToken", {
-    httpOnly: true,
-    secure: isProduction,
-    sameSite: isProduction ? "none" : "lax",
-  });
+  clearAuthCookie(res);
 
   const accessToken = extractAccessToken(req);
 
   if (accessToken) {
     await invalidateToken(accessToken, envVariables.JWT_ACCESS_SECRET);
+  }
+
+  // Revoke only THIS device's refresh session; other devices stay logged in.
+  if (req.cookies?.refreshToken) {
+    await revokeRefreshSession(req.cookies.refreshToken);
   }
 
   if (req.session) {

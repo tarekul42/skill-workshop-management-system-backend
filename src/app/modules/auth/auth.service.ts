@@ -8,7 +8,10 @@ import { redisClient } from "../../config/redis.config.js";
 import AppError from "../../errorHelpers/AppError.js";
 import { sendEmailDirect } from "../../utils/sendEmailDirect.js";
 import { invalidateToken } from "../../utils/tokenBlacklist.js";
-import { createNewAccessToken } from "../../utils/userTokens.js";
+import {
+  createNewAccessToken,
+  revokeAllRefreshTokens,
+} from "../../utils/userTokens.js";
 import { IAuthProvider, IsActive } from "../user/user.interface.js";
 import User from "../user/user.model.js";
 
@@ -62,8 +65,8 @@ const changePassword = async (
 
   await invalidateToken(accessToken, envVariables.JWT_ACCESS_SECRET);
 
-  // Invalidate ALL refresh tokens so other sessions can't generate new access tokens
-  await redisClient.del(`refresh_token:${decodedToken.userId}`);
+  // Invalidate ALL refresh sessions so other devices can't generate new access tokens
+  await revokeAllRefreshTokens(decodedToken.userId as string);
 };
 
 const setPassword = async (userId: string, plainPassword: string) => {
@@ -172,8 +175,8 @@ const resetPassword = async (
 
   await invalidateToken(accessToken, envVariables.RESET_PASSWORD_SECRET);
 
-  // Invalidate ALL refresh tokens to force re-authentication after password reset
-  await redisClient.del(`refresh_token:${decodedToken.userId}`);
+  // Invalidate ALL refresh sessions to force re-authentication after password reset
+  await revokeAllRefreshTokens(decodedToken.userId as string);
 };
 
 const AuthServices = {

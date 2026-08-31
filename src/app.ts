@@ -124,19 +124,10 @@ const allowedOrigins = envVariables.FRONTEND_URL.split(",").map((s) =>
   s.trim(),
 );
 
-// Allow all Vercel deployment URLs for the frontend project
-// (e.g. skill-workshop-management-system-fr.vercel.app, skill-workshop-management-system-fr-git-feat-xyz.vercel.app)
-const vercelOriginPattern =
-  /^https:\/\/skill-workshop-management-system-fr(-[\w-]+)?\.vercel\.app$/;
-
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (
-        !origin ||
-        allowedOrigins.includes(origin) ||
-        vercelOriginPattern.test(origin)
-      ) {
+      if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
         callback(new Error("Not allowed by CORS"));
@@ -167,7 +158,7 @@ app.use(
     cookie: {
       secure: envVariables.NODE_ENV === "production",
       httpOnly: true,
-      sameSite: envVariables.NODE_ENV === "production" ? "none" : "lax",
+      sameSite: envVariables.COOKIE_SAMESITE,
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
     },
   }),
