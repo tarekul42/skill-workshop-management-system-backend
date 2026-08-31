@@ -56,13 +56,14 @@ const seedSuperAdmin = async () => {
       }
 
       adminPassword = randomBytes(18).toString("base64url");
-      logger.warn({
-        msg:
-          "SUPER_ADMIN_PASSWORD is weak. A strong password was generated for the " +
-          "initial super-admin. It is printed ONCE below — store it securely.",
-        email: envVariables.SUPER_ADMIN_EMAIL,
-        generatedPassword: adminPassword,
-      });
+      // Print to stderr (not through the structured logger) so the password
+      // is visible in terminal output but NOT persisted to log aggregation.
+      console.error(
+        "\n⚠  SUPER_ADMIN_PASSWORD is weak — a strong password was generated.\n" +
+          `   Email : ${envVariables.SUPER_ADMIN_EMAIL}\n` +
+          `   Pass  : ${adminPassword}\n` +
+          "   Store it securely. This is the only time it is shown.\n",
+      );
     }
 
     const hashedPassword = await bcrypt.hash(

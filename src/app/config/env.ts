@@ -53,6 +53,7 @@ interface IEnvConfig {
     REDIS_PORT: string;
     REDIS_USERNAME: string;
     REDIS_PASSWORD: string;
+    REDIS_TLS: boolean;
   };
   CSRF_SECRET: string;
   RESET_PASSWORD_SECRET: string;
@@ -173,14 +174,19 @@ const loadEnvVariables = (): IEnvConfig => {
       REDIS_PORT: process.env.REDIS_PORT as string,
       REDIS_USERNAME: process.env.REDIS_USERNAME ?? "",
       REDIS_PASSWORD: process.env.REDIS_PASSWORD ?? "",
+      REDIS_TLS:
+        process.env.REDIS_TLS === "true" ||
+        process.env.REDIS_TLS === "1",
     },
     CSRF_SECRET: process.env.CSRF_SECRET as string,
     RESET_PASSWORD_SECRET:
       (process.env.RESET_PASSWORD_SECRET as string) ||
-      (process.env.NODE_ENV === "test" ? "test-reset-secret" : ""),
+      (process.env.NODE_ENV === "test"
+        ? "test-reset-secret-for-unit-tests-only-32c"
+        : ""),
     METRICS_API_KEY:
       (process.env.METRICS_API_KEY as string) ||
-      (process.env.NODE_ENV === "test" ? "test-metrics-key" : ""),
+      (process.env.NODE_ENV === "test" ? "test-metrics-key-for-unit-tests" : ""),
   };
 };
 
