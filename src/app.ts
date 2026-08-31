@@ -137,6 +137,13 @@ app.use(
       }
     },
     credentials: true,
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+      "X-Requested-With",
+      "x-csrf-token",
+      "X-CSRF-Token",
+    ],
   }),
 );
 
