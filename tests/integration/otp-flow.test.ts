@@ -52,6 +52,9 @@ describe("OTP Flow", () => {
       return Promise.resolve(val);
     });
     spyOn(redisClient, "expire").mockResolvedValue(true as unknown as never);
+    spyOn(redisClient, "ttl").mockImplementation((_key: string) =>
+      Promise.resolve(-2 as unknown as never),
+    );
     await connectRedis();
 
     if (mongoose.connection.db) {
@@ -150,17 +153,18 @@ describe("OTP Flow", () => {
         email: "invalid-otp@test.test",
         otp: "000000",
       });
-      expect(res.status).toBe(401);
+      expect(res.status).toBe(400);
       expect(res.body.success).toBe(false);
     });
 
-    it("should reject OTP for non-existent user", async () => {
+    it("should reject OTP for non-existent user (generic error, no enumeration)", async () => {
       const res = await agent.post("/api/v1/otp/verify").send({
         email: "ghost@otp.test",
         otp: "123456",
       });
-      expect(res.status).toBe(404);
+      expect(res.status).toBe(400);
       expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe("Invalid or expired OTP");
     });
   });
 });

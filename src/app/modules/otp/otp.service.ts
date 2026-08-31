@@ -8,6 +8,8 @@ import User from "../user/user.model.js";
 
 // 5 minutes — extended for user convenience; brute-force risk mitigated by 5-attempt limit
 const OTP_EXPIRATION = 5 * 60;
+// Minimum 60 seconds between OTP resends to the same email (prevents email spam/DoS)
+const OTP_RESEND_COOLDOWN = 60;
 
 const generateOtp = (length = 6) => {
   const otp = crypto.randomInt(10 ** (length - 1), 10 ** length).toString();
@@ -28,6 +30,14 @@ const sendOtp = async (email: string, name: string) => {
     return;
   }
 
+  // Per-email cooldown: prevent spamming OTPs to the same address
+  const cooldownKey = `otp_sent:${normalizedEmail}`;
+  const ttl = await redisClient.ttl(cooldownKey);
+  if (ttl > 0) {
+    // Still in cooldown — silently return (same generic "sent" response)
+    return;
+  }
+
   const otp = generateOtp();
 
   const redisKey = `otp:${normalizedEmail}`;
@@ -37,6 +47,9 @@ const sendOtp = async (email: string, name: string) => {
   await redisClient.set(redisKey, hashedOtp, {
     EX: OTP_EXPIRATION,
   });
+
+  // Set per-email cooldown to prevent rapid resends
+  await redisClient.set(cooldownKey, "1", { EX: OTP_RESEND_COOLDOWN });
 
   await sendEmailDirect({
     to: normalizedEmail,
@@ -53,12 +66,11 @@ const verifyOtp = async (email: string, otp: string) => {
   const normalizedEmail = email.toLowerCase();
   const user = await User.findOne({ email: { $eq: normalizedEmail } });
 
-  if (!user) {
-    throw new AppError(StatusCodes.NOT_FOUND, "User not found");
-  }
+  // Single generic error for all failure modes (prevents user enumeration)
+  const GENERIC_ERROR = "Invalid or expired OTP";
 
-  if (user.isVerified) {
-    throw new AppError(StatusCodes.BAD_REQUEST, "User already verified");
+  if (!user || user.isVerified) {
+    throw new AppError(StatusCodes.BAD_REQUEST, GENERIC_ERROR);
   }
 
   const redisKey = `otp:${normalizedEmail}`;
@@ -66,7 +78,7 @@ const verifyOtp = async (email: string, otp: string) => {
   const savedOtp = await redisClient.get(redisKey);
 
   if (!savedOtp) {
-    throw new AppError(StatusCodes.NOT_FOUND, "OTP not found");
+    throw new AppError(StatusCodes.BAD_REQUEST, GENERIC_ERROR);
   }
 
   // Compare the OTP hash FIRST, before incrementing the attempt counter.
@@ -89,7 +101,7 @@ const verifyOtp = async (email: string, otp: string) => {
       );
     }
 
-    throw new AppError(StatusCodes.UNAUTHORIZED, "Invalid OTP");
+    throw new AppError(StatusCodes.BAD_REQUEST, GENERIC_ERROR);
   }
 
   // OTP is correct — clean up Redis FIRST, then mark user as verified.

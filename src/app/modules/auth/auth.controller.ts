@@ -37,7 +37,8 @@ const LOCKOUT_DURATION_SECONDS = 15 * 60; // 15 minutes
 
 const credentialsLogin = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    const email = req.body.email;
+    const rawEmail = req.body.email as string | undefined;
+    const email = rawEmail?.toLowerCase().trim();
 
     // Check account lockout before attempting authentication
     if (email) {
