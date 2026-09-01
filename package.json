@@ -6,7 +6,7 @@
   "scripts": {
     "test": "bun test tests/",
     "dev": "bun --watch ./src/server.ts",
-    "lint": "bun x eslint ./src",
+    "lint": "tsc --noEmit",
     "build": "tsc -p tsconfig.build.json && cp -r src/app/utils/templates dist/app/utils/",
     "start": "bun dist/server.js",
     "docker:up": "docker compose up --build",
