@@ -219,6 +219,18 @@ app.get("/api/csrf-token", authLimiter, (req: Request, res: Response) => {
 app.use("/api", generalLimiter, apiRouter);
 
 // ──── Metrics Endpoint ────
+// Exposes Prometheus-compatible metrics for monitoring.
+// Protected by: API key (timing-safe comparison), rate limiting (10 req/min).
+//
+// Exposed metrics:
+//   - http_request_duration_seconds: HTTP request latency histogram (method, route, status_code)
+//   - redis_used_memory_bytes: Redis memory consumption
+//   - db_connection_latency_ms: MongoDB ping latency
+//   - mail_queue_jobs_total: BullMQ mail queue depth
+//   - Default prom-client metrics (process CPU, memory, GC, event loop lag)
+//
+// Route labels are pre-aggregated to prevent high-cardinality explosion.
+// No user-identifying or payment-sensitive data is included.
 app.get("/metrics", metricsLimiter, async (req, res) => {
   const apiKey = req.headers["x-metrics-key"];
 
