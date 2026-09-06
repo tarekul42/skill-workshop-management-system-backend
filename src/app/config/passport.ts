@@ -8,8 +8,8 @@ import {
 import { Strategy as LocalStrategy } from "passport-local";
 import { IsActive, UserRole } from "../modules/user/user.interface.js";
 import User from "../modules/user/user.model.js";
-import { sendEmailDirect } from "../utils/sendEmailDirect.js";
 import logger from "../utils/logger.js";
+import { sendEmailDirect } from "../utils/sendEmailDirect.js";
 import envVariables from "./env.js";
 
 // 1. SERIALIZATION
