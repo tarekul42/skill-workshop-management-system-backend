@@ -271,6 +271,7 @@ const successPayment = async (
 
 const failPayment = async (query: Record<string, string>) => {
   const transactionId = (query.transactionId || "").trim();
+  const callbackAmount = Number(query.amount);
 
   if (!transactionId) {
     throw new AppError(StatusCodes.BAD_REQUEST, "Invalid transactionId");
@@ -282,6 +283,18 @@ const failPayment = async (query: Record<string, string>) => {
 
   if (!existingPayment) {
     throw new AppError(StatusCodes.NOT_FOUND, "Payment not found");
+  }
+
+  // Verify callback amount matches stored amount (defense-in-depth against
+  // spoofed fail callbacks with a different transactionId's amount).
+  if (callbackAmount && Math.abs(callbackAmount - existingPayment.amount) > 0.5) {
+    logger.warn({
+      msg: "Payment fail callback amount mismatch",
+      transactionId,
+      expectedAmount: existingPayment.amount,
+      callbackAmount,
+    });
+    throw new AppError(StatusCodes.BAD_REQUEST, "Payment amount mismatch");
   }
 
   if (existingPayment.status !== PAYMENT_STATUS.UNPAID) {
@@ -374,6 +387,7 @@ const failPayment = async (query: Record<string, string>) => {
 
 const cancelPayment = async (query: Record<string, string>) => {
   const transactionId = (query.transactionId || "").trim();
+  const callbackAmount = Number(query.amount);
 
   if (!transactionId) {
     throw new AppError(StatusCodes.BAD_REQUEST, "Invalid transactionId");
@@ -385,6 +399,18 @@ const cancelPayment = async (query: Record<string, string>) => {
 
   if (!existingPayment) {
     throw new AppError(StatusCodes.NOT_FOUND, "Payment not found");
+  }
+
+  // Verify callback amount matches stored amount (defense-in-depth against
+  // spoofed cancel callbacks with a different transactionId's amount).
+  if (callbackAmount && Math.abs(callbackAmount - existingPayment.amount) > 0.5) {
+    logger.warn({
+      msg: "Payment cancel callback amount mismatch",
+      transactionId,
+      expectedAmount: existingPayment.amount,
+      callbackAmount,
+    });
+    throw new AppError(StatusCodes.BAD_REQUEST, "Payment amount mismatch");
   }
 
   if (existingPayment.status !== PAYMENT_STATUS.UNPAID) {
