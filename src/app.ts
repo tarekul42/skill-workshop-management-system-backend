@@ -1,6 +1,7 @@
 import { RedisStore } from "connect-redis";
 import cookieParser from "cookie-parser";
 import cors from "cors";
+import crypto from "crypto";
 import express, { Request, Response } from "express";
 import expressSession from "express-session";
 import helmet from "helmet";
@@ -27,7 +28,7 @@ import {
   register,
   updateSystemMetrics,
 } from "./app/utils/metrics.js";
-import { authLimiter, generalLimiter } from "./app/utils/rateLimiter.js";
+import { authLimiter, generalLimiter, metricsLimiter } from "./app/utils/rateLimiter.js";
 
 const app = express();
 app.disable("x-powered-by");
@@ -218,10 +219,30 @@ app.get("/api/csrf-token", authLimiter, (req: Request, res: Response) => {
 app.use("/api", generalLimiter, apiRouter);
 
 // ──── Metrics Endpoint ────
-app.get("/metrics", async (req, res) => {
+// Exposes Prometheus-compatible metrics for monitoring.
+// Protected by: API key (timing-safe comparison), rate limiting (10 req/min).
+//
+// Exposed metrics:
+//   - http_request_duration_seconds: HTTP request latency histogram (method, route, status_code)
+//   - redis_used_memory_bytes: Redis memory consumption
+//   - db_connection_latency_ms: MongoDB ping latency
+//   - mail_queue_jobs_total: BullMQ mail queue depth
+//   - Default prom-client metrics (process CPU, memory, GC, event loop lag)
+//
+// Route labels are pre-aggregated to prevent high-cardinality explosion.
+// No user-identifying or payment-sensitive data is included.
+app.get("/metrics", metricsLimiter, async (req, res) => {
   const apiKey = req.headers["x-metrics-key"];
 
-  if (apiKey !== envVariables.METRICS_API_KEY) {
+  if (!apiKey || typeof apiKey !== "string") {
+    return res.status(403).end("Forbidden");
+  }
+
+  const expectedKey = envVariables.METRICS_API_KEY;
+  const expectedBuf = Buffer.from(expectedKey, "utf8");
+  const receivedBuf = Buffer.from(apiKey, "utf8");
+
+  if (expectedBuf.length !== receivedBuf.length || !crypto.timingSafeEqual(expectedBuf, receivedBuf)) {
     return res.status(403).end("Forbidden");
   }
 

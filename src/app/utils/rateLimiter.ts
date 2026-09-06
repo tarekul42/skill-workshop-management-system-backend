@@ -92,12 +92,18 @@ const publicLimiter = createLimiter("rl:public:", 1 * 60 * 1000, 10, {
   message: "Too many requests, please try again later.",
 });
 
+const metricsLimiter = createLimiter("rl:metrics:", 1 * 60 * 1000, 10, {
+  status: 429,
+  message: "Too many metrics requests, please try again later.",
+});
+
 export {
   adminCrudLimiter,
   authLimiter,
   generalLimiter,
   healthLimiter,
   ipnLimiter,
+  metricsLimiter,
   publicLimiter,
   statsLimiter,
   strictLimiter,
