@@ -1,8 +1,5 @@
-import fs from "fs";
 import type { Server } from "http";
 import mongoose from "mongoose";
-import path from "path";
-import { fileURLToPath } from "url";
 import app from "./app.js";
 import envVariables from "./app/config/env.js";
 import { connectRedis, redisClient } from "./app/config/redis.config.js";
@@ -14,20 +11,8 @@ let server: Server;
 let isShuttingDown = false;
 
 const SHUTDOWN_TIMEOUT_MS = 15_000;
-const MAX_PORT_RETRIES = 20;
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const PORT_FILE = path.resolve(__dirname, "../.port");
 
 export let ACTUAL_PORT: number | null = null;
-
-function writePortFile(port: number) {
-  try {
-    fs.writeFileSync(PORT_FILE, String(port), "utf-8");
-  } catch {
-    // non-critical
-  }
-}
 
 async function gracefulShutdown(exitCode: number) {
   if (isShuttingDown) return;
@@ -73,46 +58,6 @@ async function gracefulShutdown(exitCode: number) {
   process.exit(exitCode);
 }
 
-function tryListen(port: number, maxRetries = MAX_PORT_RETRIES): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const s = app.listen(port);
-
-    s.on("listening", () => {
-      server = s;
-      ACTUAL_PORT = port;
-      process.env.ACTUAL_PORT = String(port);
-      writePortFile(port);
-      logger.info({
-        msg: `Skill workshop management system backend is running on port: ${port}`,
-      });
-      resolve();
-    });
-
-    s.on("error", (error: NodeJS.ErrnoException) => {
-      if (error.code === "EADDRINUSE") {
-        const attempts = port - Number(envVariables.PORT);
-        if (attempts >= maxRetries) {
-          logger.error({
-            msg: `Exhausted ${maxRetries} fallback ports. Last tried port ${port}.`,
-          });
-          reject(
-            new Error(`No available port found after ${maxRetries} attempts`),
-          );
-          return;
-        }
-        logger.warn({
-          msg: `Port ${port} is in use, trying port ${port + 1}`,
-        });
-        s.close(() => {
-          tryListen(port + 1, maxRetries).then(resolve, reject);
-        });
-      } else {
-        reject(error);
-      }
-    });
-  });
-}
-
 const startServer = async () => {
   try {
     logger.info({ msg: "Connecting to database...." });
@@ -126,8 +71,27 @@ const startServer = async () => {
     process.exit(1);
   }
 
+  const port = Number(envVariables.PORT);
+
   try {
-    await tryListen(Number(envVariables.PORT));
+    server = app.listen(port, () => {
+      ACTUAL_PORT = port;
+      process.env.ACTUAL_PORT = String(port);
+      logger.info({
+        msg: `Skill workshop management system backend is running on port: ${port}`,
+      });
+    });
+
+    server.on("error", (error: NodeJS.ErrnoException) => {
+      if (error.code === "EADDRINUSE") {
+        logger.error({
+          msg: `Port ${port} is already in use. Set the PORT environment variable to a different value.`,
+        });
+      } else {
+        logger.error({ msg: "Server error", err: error });
+      }
+      process.exit(1);
+    });
   } catch (error) {
     logger.error({ msg: "Failed to start server", err: error });
     process.exit(1);
