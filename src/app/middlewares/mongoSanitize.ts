@@ -1,51 +1,45 @@
 import { NextFunction, Request, Response } from "express";
+import { StatusCodes } from "http-status-codes";
 
-const sanitize = (obj: unknown): unknown => {
+const DANGEROUS_KEYS = /^\$|^\.|__proto__|constructor|prototype/;
+
+const findDangerousKeys = (obj: unknown, path = ""): string | null => {
   if (Array.isArray(obj)) {
-    return obj.map((v) => sanitize(v));
+    for (let i = 0; i < obj.length; i++) {
+      const result = findDangerousKeys(obj[i], `${path}[${i}]`);
+      if (result) return result;
+    }
   } else if (obj !== null && typeof obj === "object") {
-    const newObj: Record<string, unknown> = {};
-    const sourceObj = obj as Record<string, unknown>;
-    Object.keys(sourceObj).forEach((key) => {
-      if (!key.startsWith("$") && !key.includes(".")) {
-        newObj[key] = sanitize(sourceObj[key]);
+    for (const key of Object.keys(obj as Record<string, unknown>)) {
+      if (DANGEROUS_KEYS.test(key)) {
+        return `${path}.${key}`;
       }
-    });
-    return newObj;
+      const result = findDangerousKeys(
+        (obj as Record<string, unknown>)[key],
+        `${path}.${key}`,
+      );
+      if (result) return result;
+    }
   }
-  return obj;
-};
-
-const tryAssign = (
-  req: Request,
-  key: "body" | "query" | "params",
-  value: unknown,
-): boolean => {
-  try {
-    Object.defineProperty(req, key, {
-      value: value,
-      writable: true,
-      configurable: true,
-    });
-    return true;
-  } catch {
-    return false;
-  }
+  return null;
 };
 
 const mongoSanitizeCustom = (
   req: Request,
-  _res: Response,
+  res: Response,
   next: NextFunction,
 ) => {
-  if (req.body && typeof req.body === "object") {
-    tryAssign(req, "body", sanitize(req.body));
-  }
-  if (req.query && typeof req.query === "object") {
-    tryAssign(req, "query", sanitize(req.query));
-  }
-  if (req.params && typeof req.params === "object") {
-    tryAssign(req, "params", sanitize(req.params));
+  for (const key of ["body", "query", "params"] as const) {
+    const value = req[key];
+    if (value && typeof value === "object") {
+      const dangerous = findDangerousKeys(value, key);
+      if (dangerous) {
+        return res.status(StatusCodes.BAD_REQUEST).json({
+          success: false,
+          message: `Potentially malicious input detected: ${dangerous}`,
+        });
+      }
+    }
   }
   next();
 };
