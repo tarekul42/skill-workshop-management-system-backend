@@ -1,8 +1,9 @@
 import axios from "axios";
+import crypto from "crypto";
 import { StatusCodes } from "http-status-codes";
 import envVariables from "../../config/env.js";
-import AppError from "../../errorHelpers/AppError.js";
 import { redisClient } from "../../config/redis.config.js";
+import AppError from "../../errorHelpers/AppError.js";
 import logger from "../../utils/logger.js";
 import Payment from "../payment/payment.model.js";
 import { ISSLCommerz } from "./sslCommerz.interface.js";
@@ -41,16 +42,6 @@ const sslPaymentInit = async (payload: ISSLCommerz) => {
       ship_postcode: 1000,
       ship_country: "N/A",
     };
-
-    // Diagnostic logging for Bug #11 (Environment variable quotes)
-    logger.debug({
-      msg: "SSL Store ID:",
-      storeId: envVariables.SSL.SSL_STORE_ID,
-    });
-    logger.debug({
-      msg: "SSL API URL:",
-      apiUrl: envVariables.SSL.SSL_PAYMENT_API,
-    });
 
     const formData = new URLSearchParams();
     Object.entries(data).forEach(([key, value]) => {
@@ -91,7 +82,10 @@ const validatePayment = async (payload: {
   // Distributed lock: prevent concurrent IPN + callback from both hitting
   // the SSLCommerz validation API for the same val_id simultaneously.
   const lockKey = `lock:payment:val_id:${payload.val_id}`;
-  const acquired = await redisClient.set(lockKey, "locked", { NX: true, EX: 30 });
+  const acquired = await redisClient.set(lockKey, "locked", {
+    NX: true,
+    EX: 30,
+  });
   if (!acquired) {
     logger.info({
       msg: "Payment validation already in progress for this val_id, skipping duplicate",
@@ -108,7 +102,8 @@ const validatePayment = async (payload: {
     });
     logger.info({
       msg: "sslCommerz validate api response",
-      data: response.data,
+      status: response.data?.status,
+      tran_id: response.data?.tran_id,
     });
 
     if (
@@ -125,40 +120,92 @@ const validatePayment = async (payload: {
     );
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    logger.error({ msg: "Payment validation error", err: error });
-    throw new AppError(
-      StatusCodes.BAD_GATEWAY,
-      errorMessage || "Payment validation failed",
-    );
+    const sanitizedMsg = errorMessage
+      .replace(/store_passwd=[^&\s]+/gi, "store_passwd=REDACTED")
+      .replace(/store_id=[^&\s]+/gi, "store_id=REDACTED");
+    logger.error({ msg: "Payment validation error", err: sanitizedMsg });
+    throw new AppError(StatusCodes.BAD_GATEWAY, "Payment validation failed");
+  } finally {
+    await redisClient.del(lockKey).catch(() => undefined);
   }
 };
 
 const verifyIPNSignature = (body: Record<string, string>) => {
-  // Check required fields exist in the IPN body
+  // Reject if required fields are missing
   if (!body.val_id || !body.tran_id || !body.status) {
-    logger.warn({
-      msg: "IPN missing required fields",
-      hasValId: !!body.val_id,
-      hasTranId: !!body.tran_id,
-      hasStatus: !!body.status,
-    });
+    throw new AppError(
+      StatusCodes.BAD_REQUEST,
+      "IPN missing required fields: val_id, tran_id, status",
+    );
   }
 
-  // Log verify_sign presence for debugging
-  // Note: The existing validatePayment() call already handles server-to-server
-  // verification by hitting SSLCommerz's validation API — that IS the primary
-  // verification mechanism. A missing verify_sign may indicate a spoofed IPN.
+  // verify_sign is SSLCommerz's HMAC-style signature.
+  // Without it the IPN cannot be trusted — it may be a spoofed callback.
   if (!body.verify_sign) {
-    logger.warn({
-      msg: "IPN received without verify_sign field — possible spoofed IPN",
-      tran_id: body.tran_id,
-      status: body.status,
+    throw new AppError(
+      StatusCodes.FORBIDDEN,
+      "IPN missing verify_sign — possible spoofed callback",
+    );
+  }
+
+  // Validate the verify_sign hash:
+  //   MD5(store_id + ":" + tran_id + ":" + store_passwd)
+  const expectedSign = crypto
+    .createHash("md5")
+    .update(
+      `${envVariables.SSL.SSL_STORE_ID}:${body.tran_id}:${envVariables.SSL.SSL_STORE_PASS}`,
+    )
+    .digest("hex")
+    .toLowerCase();
+
+  const receivedSign = body.verify_sign.toLowerCase();
+  if (receivedSign !== expectedSign) {
+    throw new AppError(
+      StatusCodes.FORBIDDEN,
+      "IPN verify_sign mismatch — possible spoofed callback",
+    );
+  }
+
+  logger.info({
+    msg: "IPN signature verified",
+    tran_id: body.tran_id,
+  });
+};
+
+const sslRefundPayment = async (payload: {
+  bankTranId: string;
+  amount: number;
+  remarks?: string;
+}) => {
+  try {
+    const data = new URLSearchParams();
+    data.append("store_id", envVariables.SSL.SSL_STORE_ID);
+    data.append("store_passwd", envVariables.SSL.SSL_STORE_PASS);
+    data.append("bank_tran_id", payload.bankTranId);
+    data.append("refund_amount", payload.amount.toFixed(2));
+    data.append("refund_remarks", payload.remarks ?? "Refund requested");
+
+    const response = await axios({
+      method: "POST",
+      url: `${envVariables.SSL.SSL_PAYMENT_API.replace("gwprocess/v4/api.php", "gwprocess/v4/refund_api.php")}`,
+      data,
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      timeout: 30000,
     });
-  } else {
-    logger.debug({
-      msg: "IPN verify_sign present",
-      tran_id: body.tran_id,
-    });
+
+    if (!response.data || response.data.status !== "success") {
+      throw new AppError(
+        StatusCodes.BAD_GATEWAY,
+        response.data?.error_reason || "SSLCommerz refund failed",
+      );
+    }
+
+    return response.data;
+  } catch (error: unknown) {
+    if (error instanceof AppError) throw error;
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logger.error({ msg: "SSLCommerz refund error", err: errorMessage });
+    throw new AppError(StatusCodes.BAD_GATEWAY, "Payment refund failed");
   }
 };
 
@@ -166,6 +213,7 @@ const SSLService = {
   sslPaymentInit,
   validatePayment,
   verifyIPNSignature,
+  sslRefundPayment,
 };
 
 export default SSLService;

@@ -52,9 +52,7 @@ const sendEmail = async ({
     logger.info({ msg: `\u2709\uFE0F Email sent to ${to}: ${info.messageId}` });
   } catch (error: unknown) {
     logger.error({ msg: "Email sending error", err: error });
-    // Do not throw — a failed email should not crash the caller flow
-    // (e.g., payment success, password reset). The email can be retried
-    // later via BullMQ or manually.
+    throw error;
   }
 };
 

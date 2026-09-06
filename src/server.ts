@@ -1,14 +1,14 @@
+import fs from "fs";
 import type { Server } from "http";
 import mongoose from "mongoose";
+import path from "path";
+import { fileURLToPath } from "url";
 import app from "./app.js";
 import envVariables from "./app/config/env.js";
 import { connectRedis, redisClient } from "./app/config/redis.config.js";
 import { mailQueue } from "./app/jobs/mail.queue.js";
 import logger from "./app/utils/logger.js";
 import seedSuperAdmin from "./app/utils/seedSuperAdmin.js";
-import fs from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
 
 let server: Server;
 let isShuttingDown = false;
@@ -95,7 +95,9 @@ function tryListen(port: number, maxRetries = MAX_PORT_RETRIES): Promise<void> {
           logger.error({
             msg: `Exhausted ${maxRetries} fallback ports. Last tried port ${port}.`,
           });
-          reject(new Error(`No available port found after ${maxRetries} attempts`));
+          reject(
+            new Error(`No available port found after ${maxRetries} attempts`),
+          );
           return;
         }
         logger.warn({
@@ -143,7 +145,21 @@ const startServer = async () => {
     process.exit(1);
   }
   await startServer();
-  await seedSuperAdmin();
+
+  try {
+    await seedSuperAdmin();
+  } catch (seedErr) {
+    logger.error({
+      msg: "Super admin seeding failed",
+      err: seedErr,
+    });
+    if (envVariables.NODE_ENV === "production") {
+      logger.error({
+        msg: "Refusing to run in production without a verified super-admin seed",
+      });
+      process.exit(1);
+    }
+  }
 
   if (process.env.RUN_WORKER === "true") {
     await import("./app/jobs/mail.worker.js");

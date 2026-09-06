@@ -17,6 +17,7 @@ interface IEnvConfig {
   GOOGLE_CLIENT_SECRET: string;
   GOOGLE_CALLBACK_URL: string;
   EXPRESS_SESSION_SECRET: string;
+  COOKIE_SAMESITE: "strict" | "lax" | "none";
   FRONTEND_URL: string;
   BACKEND_URL: {
     BACKEND_DEV_URL: string;
@@ -52,6 +53,7 @@ interface IEnvConfig {
     REDIS_PORT: string;
     REDIS_USERNAME: string;
     REDIS_PASSWORD: string;
+    REDIS_TLS: boolean;
   };
   CSRF_SECRET: string;
   RESET_PASSWORD_SECRET: string;
@@ -132,6 +134,11 @@ const loadEnvVariables = (): IEnvConfig => {
     GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET as string,
     GOOGLE_CALLBACK_URL: process.env.GOOGLE_CALLBACK_URL as string,
     EXPRESS_SESSION_SECRET: process.env.EXPRESS_SESSION_SECRET as string,
+    COOKIE_SAMESITE: (() => {
+      const raw = (process.env.COOKIE_SAMESITE ?? "lax").toLowerCase();
+      if (raw === "strict" || raw === "none") return raw;
+      return "lax" as const;
+    })(),
     FRONTEND_URL: process.env.FRONTEND_URL as string,
     BACKEND_URL: {
       BACKEND_DEV_URL: process.env.BACKEND_DEV_URL as string,
@@ -167,14 +174,20 @@ const loadEnvVariables = (): IEnvConfig => {
       REDIS_PORT: process.env.REDIS_PORT as string,
       REDIS_USERNAME: process.env.REDIS_USERNAME ?? "",
       REDIS_PASSWORD: process.env.REDIS_PASSWORD ?? "",
+      REDIS_TLS:
+        process.env.REDIS_TLS === "true" || process.env.REDIS_TLS === "1",
     },
     CSRF_SECRET: process.env.CSRF_SECRET as string,
     RESET_PASSWORD_SECRET:
       (process.env.RESET_PASSWORD_SECRET as string) ||
-      (process.env.NODE_ENV === "test" ? "test-reset-secret" : ""),
+      (process.env.NODE_ENV === "test"
+        ? "test-reset-secret-for-unit-tests-only-32c"
+        : ""),
     METRICS_API_KEY:
       (process.env.METRICS_API_KEY as string) ||
-      (process.env.NODE_ENV === "test" ? "test-metrics-key" : ""),
+      (process.env.NODE_ENV === "test"
+        ? "test-metrics-key-for-unit-tests"
+        : ""),
   };
 };
 

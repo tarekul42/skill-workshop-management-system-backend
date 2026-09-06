@@ -6,7 +6,10 @@ const generateToken = (
   secret: string,
   expiresIn: string,
 ) => {
-  const token = jwt.sign({ ...payload, jti: crypto.randomUUID() }, secret, {
+  // Preserve a caller-supplied jti (used to key refresh sessions);
+  // otherwise generate one so every token has a unique identifier.
+  const jti = payload.jti ?? crypto.randomUUID();
+  const token = jwt.sign({ ...payload, jti }, secret, {
     expiresIn,
   } as SignOptions);
   return token;

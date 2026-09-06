@@ -1,6 +1,5 @@
 import { StatusCodes } from "http-status-codes";
 import { JwtPayload } from "jsonwebtoken";
-import mongoose from "mongoose";
 import { deleteImageFromCloudinary } from "../../config/cloudinary.config.js";
 import { redisClient } from "../../config/redis.config.js";
 import AppError from "../../errorHelpers/AppError.js";
@@ -21,6 +20,7 @@ import { Level, WorkShop } from "./workshop.model.js";
  * Invalidates all workshop list cache keys using Redis SCAN.
  */
 const invalidateWorkshopCache = async () => {
+  if (!redisClient.isOpen) return;
   const pattern = "workshops:list:*";
   try {
     const keys: string[] = [];
@@ -40,7 +40,7 @@ const invalidateWorkshopCache = async () => {
       logger.info({ msg: `Invalidated ${keys.length} workshop cache keys` });
     }
   } catch (err) {
-    logger.error({ msg: "Failed to invalidate workshop cache", err });
+    logger.warn({ msg: "Failed to invalidate workshop cache", err });
   }
 };
 
@@ -83,10 +83,11 @@ const getAllLevels = async (query: Record<string, string>) => {
 
   const levels = queryBuilder
     .search(levelSearchableFields)
-    .filter()
+    .filter(["name"])
     .sort()
     .fields()
-    .paginate();
+    .paginate()
+    .lean();
 
   const [data, meta] = await Promise.all([
     levels.build(),
@@ -193,12 +194,11 @@ const createWorkshop = async (payload: IWorkshop) => {
   return workshop;
 };
 
-const getSingleWorkshop = async (slugOrId: string) => {
-  const query = mongoose.Types.ObjectId.isValid(slugOrId)
-    ? { $or: [{ _id: slugOrId }, { slug: slugOrId }] }
-    : { slug: slugOrId };
-
-  const workshop = await WorkShop.findOne(query).populate(
+const getSingleWorkshop = async (slug: string) => {
+  // Slug-only lookup — the route is /workshop/:slug, not /workshop/:id.
+  // Using slugOrId with an $or clause could match an _id when a slug
+  // accidentally looks like a valid ObjectId hex string.
+  const workshop = await WorkShop.findOne({ slug }).populate(
     "createdBy",
     "name email picture expertise bio",
   );
@@ -221,17 +221,18 @@ const getAllWorkshops = async (query: Record<string, string>) => {
       return JSON.parse(cachedData);
     }
   } catch (err) {
-    logger.error({ msg: "Redis cache GET error", err });
+    logger.warn({ msg: "Redis cache GET error", err });
   }
 
   const queryBuilder = new QueryBuilder(WorkShop.find(), query);
 
   const workshops = queryBuilder
     .search(workshopSearchableFields)
-    .filter()
+    .filter(["category", "level", "price", "location", "startDate"])
     .sort()
     .fields()
-    .paginate();
+    .paginate()
+    .lean();
 
   const [data, meta] = await Promise.all([
     workshops.build(),
@@ -248,7 +249,7 @@ const getAllWorkshops = async (query: Record<string, string>) => {
       EX: 60, // cache for 60 seconds
     });
   } catch (err) {
-    logger.error({ msg: "Redis cache SET error", err });
+    logger.warn({ msg: "Redis cache SET error", err });
   }
 
   return result;

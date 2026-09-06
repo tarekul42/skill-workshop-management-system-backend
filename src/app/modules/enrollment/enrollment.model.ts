@@ -50,6 +50,8 @@ enrollmentSchema.index(
     unique: true,
   },
 );
+enrollmentSchema.index({ user: 1, createdAt: -1 });
+enrollmentSchema.index({ status: 1, createdAt: -1 });
 
 const Enrollment = model<IEnrollment>("Enrollment", enrollmentSchema);
 

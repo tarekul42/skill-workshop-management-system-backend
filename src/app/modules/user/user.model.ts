@@ -74,8 +74,14 @@ userSchema.pre("save", async function (this: mongoose.Document) {
     const Enrollment = mongoose.model("Enrollment");
     const Review = mongoose.model("Review");
     await Promise.all([
-      Enrollment.updateMany({ user: doc._id }, { isDeleted: true, deletedAt: new Date() }),
-      Review.updateMany({ user: doc._id }, { isDeleted: true, deletedAt: new Date() }),
+      Enrollment.updateMany(
+        { user: doc._id },
+        { isDeleted: true, deletedAt: new Date() },
+      ),
+      Review.updateMany(
+        { user: doc._id },
+        { isDeleted: true, deletedAt: new Date() },
+      ),
     ]);
   }
 });

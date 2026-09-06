@@ -38,6 +38,7 @@ import { mailQueue } from "../../src/app/jobs/mail.queue";
 import * as sslServiceModule from "../../src/app/modules/sslCommerz/sslCommerz.service";
 import { IsActive, UserRole } from "../../src/app/modules/user/user.interface";
 import * as sendEmailDirectModule from "../../src/app/utils/sendEmailDirect";
+import * as cloudinaryConfigModule from "../../src/app/config/cloudinary.config";
 
 // Create spies on the actual imported modules that the app uses.
 const sslInitSpy = spyOn(
@@ -60,6 +61,12 @@ const sendEmailDirectSpy = spyOn(
   sendEmailDirectModule,
   "sendEmailDirect",
 ).mockResolvedValue(undefined as any);
+
+// Spy on Cloudinary upload to avoid actual API calls in CI
+const cloudinarySpy = spyOn(
+  cloudinaryConfigModule,
+  "uploadBufferToCloudinary",
+).mockResolvedValue({ secure_url: "https://mocked-cloudinary-url.com/invoice.pdf" } as any);
 
 describe("Integration: Enrollment -> Payment Flow", () => {
   let userToken: string;
@@ -153,6 +160,7 @@ describe("Integration: Enrollment -> Payment Flow", () => {
     validatePaymentSpy.mockRestore();
     mailQueueSpy.mockRestore();
     sendEmailDirectSpy.mockRestore();
+    cloudinarySpy.mockRestore();
 
     // Close connections
     await mongoose.disconnect();
@@ -231,8 +239,9 @@ describe("Integration: Enrollment -> Payment Flow", () => {
     expect(updatedEnrollment?.status).toBe(ENROLLMENT_STATUS.COMPLETE);
 
     // Verify the invoice email was attempted via sendEmailDirect
-    expect(sendEmailDirectSpy).toHaveBeenCalled();
-    const emailCall = sendEmailDirectSpy.mock.calls[0];
+    // (index 0 is the bookingConfirmation from enrollment creation, index 1 is the invoice)
+    expect(sendEmailDirectSpy).toHaveBeenCalledTimes(2);
+    const emailCall = sendEmailDirectSpy.mock.calls[1];
     if (emailCall) {
       expect(emailCall[0].templateName).toBe("invoice");
       expect(emailCall[0].templateData?.transactionId).toBe(transactionId);

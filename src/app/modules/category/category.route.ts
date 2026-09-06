@@ -2,7 +2,7 @@ import { Router } from "express";
 import multerUpload from "../../config/multer.config.js";
 import checkAuth from "../../middlewares/checkAuth.js";
 import validateRequest from "../../middlewares/validateRequest.js";
-import { adminCrudLimiter } from "../../utils/rateLimiter.js";
+import { adminCrudLimiter, publicLimiter } from "../../utils/rateLimiter.js";
 import { UserRole } from "../user/user.interface.js";
 import CategoryController from "./category.controller.js";
 import {
@@ -100,7 +100,7 @@ router.post(
  *       500:
  *         $ref: "#/components/responses/InternalServerError"
  */
-router.get("/", CategoryController.getAllCategories);
+router.get("/", publicLimiter, CategoryController.getAllCategories);
 
 /**
  * @openapi
@@ -132,7 +132,7 @@ router.get("/", CategoryController.getAllCategories);
  *       500:
  *         $ref: "#/components/responses/InternalServerError"
  */
-router.get("/:slug", CategoryController.getSingleCategory);
+router.get("/:slug", publicLimiter, CategoryController.getSingleCategory);
 
 /**
  * @openapi

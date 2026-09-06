@@ -1,6 +1,8 @@
 import { StatusCodes } from "http-status-codes";
+import { uploadBufferToCloudinary } from "../../config/cloudinary.config.js";
 import AppError from "../../errorHelpers/AppError.js";
 import auditLogger from "../../utils/auditLogger.js";
+import { generatePDF, IInvoiceData } from "../../utils/invoice.js";
 import logger from "../../utils/logger.js";
 import { sendEmailDirect } from "../../utils/sendEmailDirect.js";
 import { AuditAction } from "../audit/audit.interface.js";
@@ -13,6 +15,7 @@ import SSLService from "../sslCommerz/sslCommerz.service.js";
 import { UserRole } from "../user/user.interface.js";
 import { WorkShop } from "../workshop/workshop.model.js";
 import { PAYMENT_STATUS } from "./payment.interface.js";
+import Payment from "./payment.model.js";
 import PaymentRepository from "./payment.repository.js";
 
 const initPayment = async (enrollmentId: string, userId: string) => {
@@ -200,23 +203,62 @@ const successPayment = async (
     await session.commitTransaction();
     session.endSession();
 
-    await sendEmailDirect({
-      to: populatedEnrollment.user.email,
-      subject: "Your Enrollment Invoice",
-      templateName: "invoice",
-      templateData: {
+    try {
+      await sendEmailDirect({
+        to: populatedEnrollment.user.email,
+        subject: "Your Enrollment Invoice",
+        templateName: "invoice",
+        templateData: {
+          transactionId: updatedPayment.transactionId,
+          enrollmentDate: populatedEnrollment.createdAt as Date,
+          userName: populatedEnrollment.user.name,
+          workshopTitle: populatedEnrollment.workshop.title,
+          studentCount: populatedEnrollment.studentCount,
+          totalAmount: updatedPayment.amount,
+        },
+      });
+    } catch (emailErr) {
+      logger.error({
+        msg: "Invoice email failed after successful payment",
+        transactionId,
+        err: emailErr,
+      });
+    }
+
+    // Generate PDF invoice and upload to Cloudinary for download
+    try {
+      const pdfBuffer = await generatePDF({
         transactionId: updatedPayment.transactionId,
         enrollmentDate: populatedEnrollment.createdAt as Date,
         userName: populatedEnrollment.user.name,
         workshopTitle: populatedEnrollment.workshop.title,
         studentCount: populatedEnrollment.studentCount,
         totalAmount: updatedPayment.amount,
-      },
-    });
+      } as unknown as IInvoiceData);
+
+      const cloudinaryResult = await uploadBufferToCloudinary(
+        pdfBuffer,
+        "invoice",
+      );
+
+      if (cloudinaryResult) {
+        await Payment.findOneAndUpdate(
+          { transactionId },
+          { invoiceUrl: cloudinaryResult.secure_url },
+        );
+      }
+    } catch (pdfErr) {
+      logger.error({
+        msg: "Invoice PDF generation failed after successful payment",
+        transactionId,
+        err: pdfErr,
+      });
+    }
 
     return {
       success: true,
       message: "Payment completed successfully",
+      workshopTitle: populatedEnrollment.workshop.title,
     };
   } catch (err) {
     if (session.inTransaction()) {
@@ -229,6 +271,7 @@ const successPayment = async (
 
 const failPayment = async (query: Record<string, string>) => {
   const transactionId = (query.transactionId || "").trim();
+  const callbackAmount = Number(query.amount);
 
   if (!transactionId) {
     throw new AppError(StatusCodes.BAD_REQUEST, "Invalid transactionId");
@@ -240,6 +283,18 @@ const failPayment = async (query: Record<string, string>) => {
 
   if (!existingPayment) {
     throw new AppError(StatusCodes.NOT_FOUND, "Payment not found");
+  }
+
+  // Verify callback amount matches stored amount (defense-in-depth against
+  // spoofed fail callbacks with a different transactionId's amount).
+  if (callbackAmount && Math.abs(callbackAmount - existingPayment.amount) > 0.5) {
+    logger.warn({
+      msg: "Payment fail callback amount mismatch",
+      transactionId,
+      expectedAmount: existingPayment.amount,
+      callbackAmount,
+    });
+    throw new AppError(StatusCodes.BAD_REQUEST, "Payment amount mismatch");
   }
 
   if (existingPayment.status !== PAYMENT_STATUS.UNPAID) {
@@ -292,6 +347,33 @@ const failPayment = async (query: Record<string, string>) => {
       });
     }
 
+    try {
+      if (enrollmentWithWorkshop?.user) {
+        const u = enrollmentWithWorkshop.user as unknown as {
+          name: string;
+          email: string;
+        };
+        await sendEmailDirect({
+          to: u.email,
+          subject: "Payment Failed",
+          templateName: "bookingConfirmation",
+          templateData: {
+            userName: u.name,
+            workshopTitle:
+              (enrollmentWithWorkshop.workshop as { title?: string })?.title ??
+              "Workshop",
+            status: "failed",
+          },
+        });
+      }
+    } catch (emailErr) {
+      logger.error({
+        msg: "Failed to send payment failure email",
+        transactionId,
+        err: emailErr,
+      });
+    }
+
     return {
       success: false,
       message: "Payment Failed",
@@ -305,6 +387,7 @@ const failPayment = async (query: Record<string, string>) => {
 
 const cancelPayment = async (query: Record<string, string>) => {
   const transactionId = (query.transactionId || "").trim();
+  const callbackAmount = Number(query.amount);
 
   if (!transactionId) {
     throw new AppError(StatusCodes.BAD_REQUEST, "Invalid transactionId");
@@ -316,6 +399,18 @@ const cancelPayment = async (query: Record<string, string>) => {
 
   if (!existingPayment) {
     throw new AppError(StatusCodes.NOT_FOUND, "Payment not found");
+  }
+
+  // Verify callback amount matches stored amount (defense-in-depth against
+  // spoofed cancel callbacks with a different transactionId's amount).
+  if (callbackAmount && Math.abs(callbackAmount - existingPayment.amount) > 0.5) {
+    logger.warn({
+      msg: "Payment cancel callback amount mismatch",
+      transactionId,
+      expectedAmount: existingPayment.amount,
+      callbackAmount,
+    });
+    throw new AppError(StatusCodes.BAD_REQUEST, "Payment amount mismatch");
   }
 
   if (existingPayment.status !== PAYMENT_STATUS.UNPAID) {
@@ -368,6 +463,33 @@ const cancelPayment = async (query: Record<string, string>) => {
       });
     }
 
+    try {
+      if (enrollmentWithWorkshop?.user) {
+        const u = enrollmentWithWorkshop.user as unknown as {
+          name: string;
+          email: string;
+        };
+        await sendEmailDirect({
+          to: u.email,
+          subject: "Payment Cancelled",
+          templateName: "bookingConfirmation",
+          templateData: {
+            userName: u.name,
+            workshopTitle:
+              (enrollmentWithWorkshop.workshop as { title?: string })?.title ??
+              "Workshop",
+            status: "cancelled",
+          },
+        });
+      }
+    } catch (emailErr) {
+      logger.error({
+        msg: "Failed to send payment cancellation email",
+        transactionId,
+        err: emailErr,
+      });
+    }
+
     return {
       success: false,
       message: "Payment Cancelled",
@@ -407,8 +529,10 @@ const getInvoiceDownloadUrl = async (
 
   return {
     invoiceUrl: payment.invoiceUrl,
-    payment,
-    enrollment,
+    paymentId: payment._id,
+    amount: payment.amount,
+    status: payment.status,
+    transactionId: payment.transactionId,
   };
 };
 
@@ -441,36 +565,18 @@ const handleIPN = async (body: Record<string, string>) => {
   }
 
   if (status === "VALID" && valId) {
-    await SSLService.validatePayment({ val_id: valId, tran_id: transactionId });
-
-    // Re-fetch payment to get paymentGatewayData stored during validation
-    const paymentWithGatewayData =
+    // Check amount mismatch BEFORE calling validatePayment (which writes to DB).
+    // The IPN body includes amount from SSLCommerz — validate against our record first.
+    const prePayment =
       await PaymentRepository.findPaymentByTransactionId(transactionId);
-
-    if (paymentWithGatewayData) {
-      // Verify amount from SSLCommerz response matches stored payment amount
-      if (
-        paymentWithGatewayData.paymentGatewayData &&
-        typeof paymentWithGatewayData.paymentGatewayData === "object"
-      ) {
-        const gatewayData = paymentWithGatewayData.paymentGatewayData;
-        const sslAmount =
-          Number((gatewayData as Record<string, unknown>).currency_amount) ||
-          Number((gatewayData as Record<string, unknown>).amount);
-        if (
-          sslAmount &&
-          Math.abs(sslAmount - paymentWithGatewayData.amount) > 0.5
-        ) {
-          logger.warn({
-            msg: "IPN amount mismatch",
-            transactionId,
-            expectedAmount: paymentWithGatewayData.amount,
-            sslAmount,
-          });
-          throw new AppError(StatusCodes.BAD_REQUEST, "IPN amount mismatch");
-        }
+    if (prePayment) {
+      const ipnAmount = Number(body.amount) || Number(body.currency_amount);
+      if (ipnAmount && Math.abs(ipnAmount - prePayment.amount) > 0.5) {
+        throw new AppError(StatusCodes.BAD_REQUEST, "IPN amount mismatch");
       }
     }
+
+    await SSLService.validatePayment({ val_id: valId, tran_id: transactionId });
 
     const session = await PaymentRepository.startTransaction();
     try {
@@ -497,6 +603,36 @@ const handleIPN = async (body: Record<string, string>) => {
 
       await session.commitTransaction();
       session.endSession();
+
+      const ipnEnrollment = await PaymentRepository.findEnrollmentWithUser(
+        String(updatedPayment.enrollment),
+      );
+      try {
+        if (ipnEnrollment?.user) {
+          const u = ipnEnrollment.user as unknown as {
+            name: string;
+            email: string;
+          };
+          await sendEmailDirect({
+            to: u.email,
+            subject: "Payment Received",
+            templateName: "bookingConfirmation",
+            templateData: {
+              userName: u.name,
+              workshopTitle:
+                (ipnEnrollment.workshop as { title?: string })?.title ??
+                "Workshop",
+              status: "confirmed",
+            },
+          });
+        }
+      } catch (emailErr) {
+        logger.error({
+          msg: "Failed to send IPN payment confirmation email",
+          transactionId,
+          err: emailErr,
+        });
+      }
     } catch (err) {
       if (session.inTransaction()) {
         await session.abortTransaction();
@@ -537,6 +673,33 @@ const handleIPN = async (body: Record<string, string>) => {
             $inc: { currentEnrollments: -1 },
           });
         }
+
+        try {
+          if (enrollmentWithWorkshop?.user) {
+            const u = enrollmentWithWorkshop.user as unknown as {
+              name: string;
+              email: string;
+            };
+            await sendEmailDirect({
+              to: u.email,
+              subject: "Payment Failed",
+              templateName: "bookingConfirmation",
+              templateData: {
+                userName: u.name,
+                workshopTitle:
+                  (enrollmentWithWorkshop.workshop as { title?: string })
+                    ?.title ?? "Workshop",
+                status: "failed",
+              },
+            });
+          }
+        } catch (emailErr) {
+          logger.error({
+            msg: "Failed to send IPN payment failure email",
+            transactionId,
+            err: emailErr,
+          });
+        }
       }
     } catch (err) {
       if (session.inTransaction()) {
@@ -566,6 +729,33 @@ const refundPayment = async (
       StatusCodes.BAD_REQUEST,
       "Only paid payments can be refunded",
     );
+  }
+
+  // Call SSLCommerz refund API before updating local state.
+  // If the gateway refund fails, we never touch the database.
+  const gatewayData = payment.paymentGatewayData as
+    | Record<string, string>
+    | undefined;
+  const bankTranId = gatewayData?.bank_tran_id;
+  if (bankTranId) {
+    try {
+      await SSLService.sslRefundPayment({
+        bankTranId,
+        amount: payment.amount,
+        remarks: reason || "Refund requested",
+      });
+    } catch (err) {
+      logger.error({ msg: "SSLCommerz refund API call failed", err });
+      throw new AppError(
+        StatusCodes.BAD_GATEWAY,
+        "Refund failed at payment gateway. Please try again or process manually.",
+      );
+    }
+  } else {
+    logger.warn({
+      msg: "No bank_tran_id found — skipping SSLCommerz refund API, updating local state only",
+      paymentId,
+    });
   }
 
   const session = await PaymentRepository.startTransaction();
@@ -618,6 +808,33 @@ const refundPayment = async (
       changes: { status: PAYMENT_STATUS.REFUNDED, reason },
     });
 
+    try {
+      if (enrollmentWithWorkshop?.user) {
+        const u = enrollmentWithWorkshop.user as unknown as {
+          name: string;
+          email: string;
+        };
+        await sendEmailDirect({
+          to: u.email,
+          subject: "Payment Refunded",
+          templateName: "bookingConfirmation",
+          templateData: {
+            userName: u.name,
+            workshopTitle:
+              (enrollmentWithWorkshop.workshop as { title?: string })?.title ??
+              "Workshop",
+            status: "refunded",
+          },
+        });
+      }
+    } catch (emailErr) {
+      logger.error({
+        msg: "Failed to send refund notification email",
+        paymentId,
+        err: emailErr,
+      });
+    }
+
     return {
       success: true,
       message: "Payment refunded successfully",
@@ -631,7 +848,11 @@ const refundPayment = async (
   }
 };
 
-const getPaymentStatus = async (transactionId: string) => {
+const getPaymentStatus = async (
+  transactionId: string,
+  userId: string,
+  userRole: string,
+) => {
   if (!transactionId) {
     throw new AppError(StatusCodes.BAD_REQUEST, "Invalid transactionId");
   }
@@ -641,6 +862,19 @@ const getPaymentStatus = async (transactionId: string) => {
 
   if (!payment) {
     throw new AppError(StatusCodes.NOT_FOUND, "Payment not found");
+  }
+
+  const enrollmentOwner = await PaymentRepository.findEnrollmentUserById(
+    String(payment.enrollment),
+  );
+
+  const isAdmin =
+    userRole === UserRole.ADMIN || userRole === UserRole.SUPER_ADMIN;
+  if (!isAdmin && String(enrollmentOwner?._id ?? "") !== userId) {
+    throw new AppError(
+      StatusCodes.FORBIDDEN,
+      "You can only access your own payment status",
+    );
   }
 
   return {

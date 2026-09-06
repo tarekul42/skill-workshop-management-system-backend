@@ -12,6 +12,9 @@ const validatePaymentBodySchema = z.object({
 const refundPaymentBodySchema = z.object({
   paymentId: z.string().min(1, "Payment ID is required"),
   reason: z.string().optional(),
+  confirm: z.literal(true, {
+    message: "You must explicitly confirm the refund with `confirm: true`",
+  }),
 });
 
 export {

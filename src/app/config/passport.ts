@@ -8,6 +8,8 @@ import {
 import { Strategy as LocalStrategy } from "passport-local";
 import { IsActive, UserRole } from "../modules/user/user.interface.js";
 import User from "../modules/user/user.model.js";
+import logger from "../utils/logger.js";
+import { sendEmailDirect } from "../utils/sendEmailDirect.js";
 import envVariables from "./env.js";
 
 // 1. SERIALIZATION
@@ -73,9 +75,10 @@ passport.use(
             });
           }
 
-          // OPTIONAL: Update picture or name if they changed on Google
-          existingUser.name = name;
-          existingUser.picture = picture;
+          // Only populate name/picture on initial creation — subsequent
+          // Google logins must not revert user-customized profile fields.
+          if (!existingUser.name) existingUser.name = name;
+          if (!existingUser.picture) existingUser.picture = picture;
 
           // Guard against duplicate google provider
           const hasGoogleProvider = existingUser.auths.some(
@@ -110,6 +113,26 @@ passport.use(
           isActive: IsActive.ACTIVE,
         });
 
+        // ── Send welcome email ──
+        try {
+          await sendEmailDirect({
+            to: email,
+            subject: "Welcome to Skill Workshop!",
+            templateName: "welcome",
+            templateData: {
+              name: name,
+              role: UserRole.STUDENT,
+              dashboardLink: `${envVariables.FRONTEND_URL}/login`,
+            },
+          });
+        } catch (emailErr) {
+          // Non-blocking: don't fail OAuth if welcome email fails
+          logger.error({
+            msg: "Failed to send welcome email to Google user",
+            err: emailErr,
+          });
+        }
+
         return done(null, newUser);
       } catch (error) {
         return done(error, undefined);
@@ -130,24 +153,22 @@ passport.use(
         const isUserExists = await User.findOne({ email });
 
         if (!isUserExists) {
-          return done(null, false, { message: "User does not exist." });
+          return done(null, false, { message: "Invalid email or password" });
         }
 
         if (isUserExists.isDeleted) {
-          return done(null, false, { message: "User is deleted." });
+          return done(null, false, { message: "Invalid email or password" });
         }
 
         if (!isUserExists.isVerified) {
-          return done(null, false, { message: "User is not verified." });
+          return done(null, false, { message: "Invalid email or password" });
         }
 
         if (
           isUserExists.isActive === IsActive.BLOCKED ||
           isUserExists.isActive === IsActive.INACTIVE
         ) {
-          return done(null, false, {
-            message: `User is ${isUserExists.isActive}.`,
-          });
+          return done(null, false, { message: "Invalid email or password" });
         }
 
         const isGoogleAuthenticated = isUserExists.auths.some(
@@ -155,16 +176,11 @@ passport.use(
         );
 
         if (isGoogleAuthenticated && !isUserExists.password) {
-          return done(null, false, {
-            message:
-              "You have authenticated through Google. So if you want to login with credentials, then at first login with google and set a password for your Gmail and then you can login with email and password.",
-          });
+          return done(null, false, { message: "Invalid email or password" });
         }
 
         if (!isUserExists.password) {
-          return done(null, false, {
-            message: "Password not set for this account",
-          });
+          return done(null, false, { message: "Invalid email or password" });
         }
 
         const isPasswordMatched = await bcrypt.compare(
@@ -173,7 +189,7 @@ passport.use(
         );
 
         if (!isPasswordMatched) {
-          return done(null, false, { message: "Password does not match" });
+          return done(null, false, { message: "Invalid email or password" });
         }
 
         return done(null, isUserExists);

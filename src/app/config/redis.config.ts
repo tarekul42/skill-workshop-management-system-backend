@@ -6,6 +6,10 @@ const redisOptions: Parameters<typeof createClient>[0] = {
   socket: {
     host: envVariables.REDIS.REDIS_HOST,
     port: Number(envVariables.REDIS.REDIS_PORT),
+    ...(envVariables.REDIS.REDIS_TLS && {
+      tls: true,
+      rejectUnauthorized: true,
+    }),
   },
 };
 if (envVariables.REDIS.REDIS_USERNAME) {

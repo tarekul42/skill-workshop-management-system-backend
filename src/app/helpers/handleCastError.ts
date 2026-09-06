@@ -7,7 +7,7 @@ const handleCastError = (
 ): IGenericErrorResponse => {
   return {
     statusCode: StatusCodes.BAD_REQUEST,
-    message: `Invalid MongoDB ObjectId. Please provide a valid ObjectId. Err: ${err.message}`,
+    message: `Invalid value "${err.value}" for field "${err.path}". Please provide a valid ${err.kind}.`,
   };
 };
 

@@ -77,10 +77,34 @@ const adminCrudLimiter = createLimiter("rl:admin:", 15 * 60 * 1000, 100, {
   message: "Too many requests, please try again later.",
 });
 
+const ipnLimiter = createLimiter("rl:ipn:", 15 * 60 * 1000, 60, {
+  status: 429,
+  message: "Too many IPN requests, please try again later.",
+});
+
+const statsLimiter = createLimiter("rl:stats:", 15 * 60 * 1000, 100, {
+  status: 429,
+  message: "Too many requests, please try again later.",
+});
+
+const publicLimiter = createLimiter("rl:public:", 1 * 60 * 1000, 10, {
+  status: 429,
+  message: "Too many requests, please try again later.",
+});
+
+const metricsLimiter = createLimiter("rl:metrics:", 1 * 60 * 1000, 10, {
+  status: 429,
+  message: "Too many metrics requests, please try again later.",
+});
+
 export {
   adminCrudLimiter,
   authLimiter,
   generalLimiter,
   healthLimiter,
+  ipnLimiter,
+  metricsLimiter,
+  publicLimiter,
+  statsLimiter,
   strictLimiter,
 };

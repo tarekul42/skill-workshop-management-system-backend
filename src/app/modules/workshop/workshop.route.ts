@@ -2,7 +2,7 @@ import express from "express";
 import multerUpload from "../../config/multer.config.js";
 import checkAuth from "../../middlewares/checkAuth.js";
 import validateRequest from "../../middlewares/validateRequest.js";
-import { adminCrudLimiter } from "../../utils/rateLimiter.js";
+import { adminCrudLimiter, publicLimiter } from "../../utils/rateLimiter.js";
 import { UserRole } from "../user/user.interface.js";
 import WorkshopController from "./workshop.controller.js";
 import {
@@ -48,7 +48,7 @@ const router = express.Router();
  *       500:
  *         $ref: "#/components/responses/InternalServerError"
  */
-router.get("/levels", WorkshopController.getAllLevels);
+router.get("/levels", publicLimiter, WorkshopController.getAllLevels);
 
 /**
  * @openapi
@@ -80,7 +80,7 @@ router.get("/levels", WorkshopController.getAllLevels);
  *       500:
  *         $ref: "#/components/responses/InternalServerError"
  */
-router.get("/levels/:id", WorkshopController.getSingleLevel);
+router.get("/levels/:id", publicLimiter, WorkshopController.getSingleLevel);
 
 /**
  * @openapi
@@ -263,7 +263,7 @@ router.delete(
  *       500:
  *         $ref: "#/components/responses/InternalServerError"
  */
-router.get("/", WorkshopController.getAllWorkshops);
+router.get("/", publicLimiter, WorkshopController.getAllWorkshops);
 
 /**
  * @openapi
@@ -295,7 +295,7 @@ router.get("/", WorkshopController.getAllWorkshops);
  *       500:
  *         $ref: "#/components/responses/InternalServerError"
  */
-router.get("/:slug", WorkshopController.getSingleWorkshop);
+router.get("/:slug", publicLimiter, WorkshopController.getSingleWorkshop);
 
 /**
  * @openapi

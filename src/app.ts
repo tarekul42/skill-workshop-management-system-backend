@@ -1,6 +1,7 @@
 import { RedisStore } from "connect-redis";
 import cookieParser from "cookie-parser";
 import cors from "cors";
+import crypto from "crypto";
 import express, { Request, Response } from "express";
 import expressSession from "express-session";
 import helmet from "helmet";
@@ -27,9 +28,10 @@ import {
   register,
   updateSystemMetrics,
 } from "./app/utils/metrics.js";
-import { authLimiter, generalLimiter } from "./app/utils/rateLimiter.js";
+import { authLimiter, generalLimiter, metricsLimiter } from "./app/utils/rateLimiter.js";
 
 const app = express();
+app.disable("x-powered-by");
 
 // ──── Security Check ────
 const requiredSecrets = [
@@ -43,16 +45,43 @@ const requiredSecrets = [
   { name: "RESET_PASSWORD_SECRET", value: envVariables.RESET_PASSWORD_SECRET },
 ];
 
-for (const secret of requiredSecrets) {
-  if (secret.value.length < 32 && envVariables.NODE_ENV === "production") {
-    throw new Error(
-      `${secret.name} must be at least 32 characters in production. Current length: ${secret.value.length}`,
-    );
+const MIN_SECRET_LENGTH = 32;
+
+const PLACEHOLDER_PATTERNS = [
+  /^change-me/i,
+  /your-.*(secret|key|password)/i,
+  /placeholder/i,
+  /dummy/i,
+  /^(secret|password|token)$/i,
+  /^(.)\1{7,}$/,
+];
+
+// In test mode the gate is noise — tests use mock secrets.
+if (envVariables.NODE_ENV !== "test") {
+  if (envVariables.NODE_ENV === "production") {
+    const distinctSecrets = new Set(requiredSecrets.map((s) => s.value));
+    if (distinctSecrets.size !== requiredSecrets.length) {
+      throw new Error(
+        "Security check failed: secret values must be unique. " +
+          "Reusing a secret across purposes (e.g. access vs refresh tokens) undermines isolation.",
+      );
+    }
   }
-  if (secret.value.length < 16 && envVariables.NODE_ENV !== "production") {
-    logger.warn({
-      msg: `${secret.name} is below the recommended minimum length.`,
-    });
+
+  for (const secret of requiredSecrets) {
+    if (!secret.value || secret.value.length < MIN_SECRET_LENGTH) {
+      throw new Error(
+        `${secret.name} must be at least ${MIN_SECRET_LENGTH} characters (use a high-entropy random value, e.g. 'openssl rand -hex 32'). ` +
+          `Current length: ${secret.value.length}`,
+      );
+    }
+    for (const pattern of PLACEHOLDER_PATTERNS) {
+      if (pattern.test(secret.value)) {
+        throw new Error(
+          `${secret.name} appears to be a placeholder/default value. Generate a real secret with 'openssl rand -hex 32'.`,
+        );
+      }
+    }
   }
 }
 
@@ -99,25 +128,23 @@ const allowedOrigins = envVariables.FRONTEND_URL.split(",").map((s) =>
   s.trim(),
 );
 
-// Allow all Vercel deployment URLs for the frontend project
-// (e.g. skill-workshop-management-system-fr.vercel.app, skill-workshop-management-system-fr-git-feat-xyz.vercel.app)
-const vercelOriginPattern =
-  /^https:\/\/skill-workshop-management-system-fr(-[\w-]+)?\.vercel\.app$/;
-
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (
-        !origin ||
-        allowedOrigins.includes(origin) ||
-        vercelOriginPattern.test(origin)
-      ) {
+      if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
         callback(new Error("Not allowed by CORS"));
       }
     },
     credentials: true,
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+      "X-Requested-With",
+      "x-csrf-token",
+      "X-CSRF-Token",
+    ],
   }),
 );
 
@@ -142,7 +169,7 @@ app.use(
     cookie: {
       secure: envVariables.NODE_ENV === "production",
       httpOnly: true,
-      sameSite: "lax",
+      sameSite: envVariables.COOKIE_SAMESITE,
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
     },
   }),
@@ -192,10 +219,30 @@ app.get("/api/csrf-token", authLimiter, (req: Request, res: Response) => {
 app.use("/api", generalLimiter, apiRouter);
 
 // ──── Metrics Endpoint ────
-app.get("/metrics", async (req, res) => {
+// Exposes Prometheus-compatible metrics for monitoring.
+// Protected by: API key (timing-safe comparison), rate limiting (10 req/min).
+//
+// Exposed metrics:
+//   - http_request_duration_seconds: HTTP request latency histogram (method, route, status_code)
+//   - redis_used_memory_bytes: Redis memory consumption
+//   - db_connection_latency_ms: MongoDB ping latency
+//   - mail_queue_jobs_total: BullMQ mail queue depth
+//   - Default prom-client metrics (process CPU, memory, GC, event loop lag)
+//
+// Route labels are pre-aggregated to prevent high-cardinality explosion.
+// No user-identifying or payment-sensitive data is included.
+app.get("/metrics", metricsLimiter, async (req, res) => {
   const apiKey = req.headers["x-metrics-key"];
 
-  if (apiKey !== envVariables.METRICS_API_KEY) {
+  if (!apiKey || typeof apiKey !== "string") {
+    return res.status(403).end("Forbidden");
+  }
+
+  const expectedKey = envVariables.METRICS_API_KEY;
+  const expectedBuf = Buffer.from(expectedKey, "utf8");
+  const receivedBuf = Buffer.from(apiKey, "utf8");
+
+  if (expectedBuf.length !== receivedBuf.length || !crypto.timingSafeEqual(expectedBuf, receivedBuf)) {
     return res.status(403).end("Forbidden");
   }
 

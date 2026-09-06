@@ -37,6 +37,9 @@ const createCategory = async (payload: ICategory) => {
 
 const getSingleCategory = async (slug: string) => {
   const category = await Category.findOne({ slug });
+  if (!category) {
+    throw new AppError(StatusCodes.NOT_FOUND, "Category not found");
+  }
   return {
     data: category,
   };
@@ -47,10 +50,11 @@ const getAllCategories = async (query: Record<string, string>) => {
 
   const categoriesData = queryBuilder
     .search(categorySearchableFields)
-    .filter()
+    .filter(["name", "slug"])
     .sort()
     .fields()
-    .paginate();
+    .paginate()
+    .lean();
 
   const [data, meta] = await Promise.all([
     categoriesData.build(),

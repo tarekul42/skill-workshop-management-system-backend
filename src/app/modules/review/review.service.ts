@@ -38,13 +38,11 @@ const createReview = async (payload: Partial<IReview>, userId: string) => {
     );
   }
 
-  // Verify user has an approved enrollment for this workshop
+  // Verify user has a completed enrollment for this workshop
   const enrollment = await Enrollment.findOne({
     user: userId,
     workshop: workshopObjectId,
-    status: {
-      $in: [ENROLLMENT_STATUS.COMPLETE, ENROLLMENT_STATUS.PENDING],
-    },
+    status: ENROLLMENT_STATUS.COMPLETE,
   });
 
   if (!enrollment) {
@@ -70,7 +68,6 @@ const createReview = async (payload: Partial<IReview>, userId: string) => {
     ...payload,
     workshop: workshopObjectId,
     user: new Types.ObjectId(userId),
-    status: REVIEW_STATUS.APPROVED,
   });
 
   const populated = await review.populate("user", "name picture");
@@ -176,6 +173,39 @@ const getUserReviewForWorkshop = async (workshopId: string, userId: string) => {
   return await ReviewRepository.findByUserAndWorkshop(userId, workshopId);
 };
 
+const updateReviewStatus = async (
+  reviewId: string,
+  status: REVIEW_STATUS,
+  userId: string,
+  userRole: string,
+) => {
+  if (!isAdminRole(userRole)) {
+    throw new AppError(
+      StatusCodes.FORBIDDEN,
+      "Only admins can moderate reviews",
+    );
+  }
+
+  const review = await ReviewRepository.findById(reviewId);
+  if (!review) {
+    throw new AppError(StatusCodes.NOT_FOUND, "Review not found");
+  }
+
+  const updated = await ReviewRepository.updateById(reviewId, {
+    status,
+  } as Partial<IReview>);
+
+  await auditLogger({
+    action: AuditAction.UPDATE,
+    collectionName: "Review",
+    documentId: reviewId,
+    performedBy: userId,
+    changes: { status },
+  });
+
+  return updated;
+};
+
 const ReviewService = {
   createReview,
   deleteReview,
@@ -183,6 +213,7 @@ const ReviewService = {
   getWorkshopReviewStats,
   getWorkshopReviews,
   updateReview,
+  updateReviewStatus,
 };
 
 export default ReviewService;

@@ -1,0 +1,18 @@
+title = "Skill Workshop Management System Backend — gitleaks config"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Intentional non-secret fixtures"
+paths = [
+  '''\.env\.example$''',
+  '''postman_collection\.json$''',
+  '''SECURITY_ANALYSIS\.md$''',
+  '''(^|/)bun\.lock$''',
+]
+regexes = [
+  '''REPLACE_WITH_''',
+  '''change-me-to-a-random''',
+  '''your-(access|refresh|session)-secret''',
+]

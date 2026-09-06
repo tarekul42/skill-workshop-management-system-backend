@@ -43,6 +43,7 @@ const successPayment = catchAsync(async (req: Request, res: Response) => {
       message: result.message ?? "",
       amount: String(query.amount ?? ""),
       status: String(query.status ?? ""),
+      workshop: result.workshopTitle ?? "",
     });
 
     res.redirect(
@@ -151,8 +152,13 @@ const handleIPN = catchAsync(async (req: Request, res: Response) => {
 
 const getPaymentStatus = catchAsync(async (req: Request, res: Response) => {
   const transactionId = String(req.query.transactionId || "").trim();
+  const tokenUser = req.user as JwtPayload;
 
-  const result = await PaymentService.getPaymentStatus(transactionId);
+  const result = await PaymentService.getPaymentStatus(
+    transactionId,
+    tokenUser.userId,
+    tokenUser.role,
+  );
 
   sendResponse(res, {
     statusCode: StatusCodes.OK,

@@ -1,4 +1,5 @@
 import { redisClient } from "../../config/redis.config.js";
+import logger from "../../utils/logger.js";
 import Enrollment from "../enrollment/enrollment.model.js";
 import { PAYMENT_STATUS } from "../payment/payment.interface.js";
 import Payment from "../payment/payment.model.js";
@@ -12,8 +13,8 @@ const getUsersStats = async () => {
   try {
     const cached = await redisClient.get(CACHE_KEY);
     if (cached) return JSON.parse(cached);
-  } catch {
-    // Falls through to DB operation
+  } catch (err) {
+    logger.warn({ msg: "Stats cache read failed, falling through to DB", err });
   }
 
   const now = new Date();
@@ -84,8 +85,8 @@ const getUsersStats = async () => {
   };
   try {
     await redisClient.set(CACHE_KEY, JSON.stringify(result), { EX: CACHE_TTL });
-  } catch {
-    // Falls through
+  } catch (err) {
+    logger.warn({ msg: "Stats cache write failed", err });
   }
   return result;
 };
@@ -96,8 +97,8 @@ const getWorkshopStats = async () => {
   try {
     const cached = await redisClient.get(CACHE_KEY);
     if (cached) return JSON.parse(cached);
-  } catch {
-    // Falls through
+  } catch (err) {
+    logger.warn({ msg: "Stats cache read failed, falling through to DB", err });
   }
 
   const totalWorkshopPromise = WorkShop.countDocuments({
@@ -230,8 +231,8 @@ const getWorkshopStats = async () => {
   };
   try {
     await redisClient.set(CACHE_KEY, JSON.stringify(result), { EX: CACHE_TTL });
-  } catch {
-    // Falls through
+  } catch (err) {
+    logger.warn({ msg: "Stats cache write failed", err });
   }
   return result;
 };
@@ -242,8 +243,8 @@ const getEnrollmentStats = async () => {
   try {
     const cached = await redisClient.get(CACHE_KEY);
     if (cached) return JSON.parse(cached);
-  } catch {
-    // Falls through
+  } catch (err) {
+    logger.warn({ msg: "Stats cache read failed, falling through to DB", err });
   }
 
   const now = new Date();
@@ -358,8 +359,8 @@ const getEnrollmentStats = async () => {
   };
   try {
     await redisClient.set(CACHE_KEY, JSON.stringify(result), { EX: CACHE_TTL });
-  } catch {
-    // Falls through
+  } catch (err) {
+    logger.warn({ msg: "Stats cache write failed", err });
   }
   return result;
 };
@@ -370,8 +371,8 @@ const getPaymentStats = async () => {
   try {
     const cached = await redisClient.get(CACHE_KEY);
     if (cached) return JSON.parse(cached);
-  } catch {
-    // Falls through
+  } catch (err) {
+    logger.warn({ msg: "Stats cache read failed, falling through to DB", err });
   }
 
   const totalPaymentPromise = Payment.countDocuments();
@@ -444,8 +445,8 @@ const getPaymentStats = async () => {
   };
   try {
     await redisClient.set(CACHE_KEY, JSON.stringify(result), { EX: CACHE_TTL });
-  } catch {
-    // Falls through
+  } catch (err) {
+    logger.warn({ msg: "Stats cache write failed", err });
   }
   return result;
 };
@@ -456,8 +457,8 @@ const getTrends = async () => {
   try {
     const cached = await redisClient.get(CACHE_KEY);
     if (cached) return JSON.parse(cached);
-  } catch {
-    // Falls through to DB operation
+  } catch (err) {
+    logger.warn({ msg: "Stats cache read failed, falling through to DB", err });
   }
 
   const now = new Date();
@@ -477,7 +478,12 @@ const getTrends = async () => {
   ]);
 
   const dailyEnrollmentsPromise = Enrollment.aggregate([
-    { $match: { createdAt: { $gte: fourteenDaysAgo }, isDeleted: { $ne: true } } },
+    {
+      $match: {
+        createdAt: { $gte: fourteenDaysAgo },
+        isDeleted: { $ne: true },
+      },
+    },
     {
       $group: {
         _id: {
@@ -492,7 +498,12 @@ const getTrends = async () => {
   ]);
 
   const revenueTrendsPromise = Payment.aggregate([
-    { $match: { createdAt: { $gte: sixMonthsAgo }, status: PAYMENT_STATUS.PAID } },
+    {
+      $match: {
+        createdAt: { $gte: sixMonthsAgo },
+        status: PAYMENT_STATUS.PAID,
+      },
+    },
     {
       $group: {
         _id: { year: { $year: "$createdAt" }, month: { $month: "$createdAt" } },
@@ -513,17 +524,13 @@ const getTrends = async () => {
     { $sort: { "_id.year": 1, "_id.month": 1 } },
   ]);
 
-  const [
-    enrollmentTrends,
-    dailyEnrollments,
-    revenueTrends,
-    userTrends,
-  ] = await Promise.all([
-    enrollmentTrendsPromise,
-    dailyEnrollmentsPromise,
-    revenueTrendsPromise,
-    userTrendsPromise,
-  ]);
+  const [enrollmentTrends, dailyEnrollments, revenueTrends, userTrends] =
+    await Promise.all([
+      enrollmentTrendsPromise,
+      dailyEnrollmentsPromise,
+      revenueTrendsPromise,
+      userTrendsPromise,
+    ]);
 
   const result = {
     enrollmentTrends,
@@ -533,8 +540,8 @@ const getTrends = async () => {
   };
   try {
     await redisClient.set(CACHE_KEY, JSON.stringify(result), { EX: CACHE_TTL });
-  } catch {
-    // Falls through
+  } catch (err) {
+    logger.warn({ msg: "Stats cache write failed", err });
   }
   return result;
 };
@@ -548,8 +555,8 @@ const getAdminDashboard = async () => {
   try {
     const cached = await redisClient.get(CACHE_KEY);
     if (cached) return JSON.parse(cached);
-  } catch {
-    // Falls through
+  } catch (err) {
+    logger.warn({ msg: "Stats cache write failed", err });
   }
 
   const [users, workshops, enrollments, payments, trends] = await Promise.all([
@@ -570,8 +577,8 @@ const getAdminDashboard = async () => {
 
   try {
     await redisClient.set(CACHE_KEY, JSON.stringify(result), { EX: CACHE_TTL });
-  } catch {
-    // Falls through
+  } catch (err) {
+    logger.warn({ msg: "Stats cache write failed", err });
   }
 
   return result;

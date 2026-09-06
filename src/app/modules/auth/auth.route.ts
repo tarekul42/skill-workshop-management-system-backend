@@ -12,6 +12,7 @@ import { UserRole } from "../user/user.interface.js";
 import {
   changePasswordZodSchema,
   forgotPasswordZodSchema,
+  loginZodSchema,
   resetPasswordZodSchema,
   setPasswordZodSchema,
 } from "../user/user.validation.js";
@@ -74,7 +75,12 @@ const router = Router();
  *       500:
  *         $ref: "#/components/responses/InternalServerError"
  */
-router.post("/login", authLimiter, AuthControllers.credentialsLogin);
+router.post(
+  "/login",
+  authLimiter,
+  validateRequest(loginZodSchema),
+  AuthControllers.credentialsLogin,
+);
 
 /**
  * @openapi
@@ -472,6 +478,12 @@ router.get(
  *         $ref: "#/components/responses/InternalServerError"
  */
 router.post("/exchange-code", authLimiter, AuthControllers.exchangeAuthCode);
+
+router.get(
+  "/demo-credentials",
+  authLimiter,
+  AuthControllers.getDemoCredentials,
+);
 
 const AuthRoutes = router;
 

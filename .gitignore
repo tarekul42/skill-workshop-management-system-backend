@@ -5,9 +5,14 @@ node_modules/
 .env
 .env.local
 .env.*.local
+.seed-credentials.local.json
+
+# Local-only docs & dev artifacts
+SECURITY_ANALYSIS.md
 
 # Build output
 build/
+dist/
 
 # Logs
 logs

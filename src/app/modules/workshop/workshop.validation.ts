@@ -1,11 +1,18 @@
 import { z } from "zod";
 
 const createLevelZodSchema = z.object({
-  name: z.string().min(1, { message: "Level name is required" }),
+  name: z
+    .string()
+    .min(1, { message: "Level name is required" })
+    .max(100, { message: "Level name cannot exceed 100 characters" }),
 });
 
 const updateLevelZodSchema = z.object({
-  name: z.string().min(1, { message: "Level name cannot be empty" }).optional(),
+  name: z
+    .string()
+    .min(1, { message: "Level name cannot be empty" })
+    .max(100, { message: "Level name cannot exceed 100 characters" })
+    .optional(),
 });
 
 const dateSchema = z.string().refine(
@@ -18,7 +25,10 @@ const dateSchema = z.string().refine(
 
 const createWorkshopZodSchema = z
   .object({
-    title: z.string().min(1, { message: "Title is required" }),
+    title: z
+      .string()
+      .min(1, { message: "Title is required" })
+      .max(200, { message: "Title cannot exceed 200 characters" }),
     description: z
       .string()
       .max(5000, { message: "Description cannot exceed 5000 characters" })
@@ -86,7 +96,11 @@ const createWorkshopZodSchema = z
 
 const updateWorkshopZodSchema = z
   .object({
-    title: z.string().min(1, { message: "Title cannot be empty" }).optional(),
+    title: z
+      .string()
+      .min(1, { message: "Title cannot be empty" })
+      .max(200, { message: "Title cannot exceed 200 characters" })
+      .optional(),
     description: z
       .string()
       .max(5000, { message: "Description cannot exceed 5000 characters" })

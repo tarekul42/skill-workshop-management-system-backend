@@ -46,10 +46,10 @@ const checkAuth =
         );
       }
 
-      const isUserExists = await User.findOne({ email: verifiedToken.email });
+      const isUserExists = await User.findById(verifiedToken.userId);
 
       if (!isUserExists) {
-        throw new AppError(StatusCodes.BAD_REQUEST, "User does not exist");
+        throw new AppError(StatusCodes.NOT_FOUND, "User does not exist");
       }
 
       if (!isUserExists.isVerified) {
@@ -67,14 +67,14 @@ const checkAuth =
       }
 
       if (isUserExists.isDeleted) {
-        throw new AppError(StatusCodes.BAD_REQUEST, "User is deleted");
+        throw new AppError(StatusCodes.GONE, "User is deleted");
       }
 
-      if (!authRoles.includes(verifiedToken.role)) {
+      if (!authRoles.includes(isUserExists.role)) {
         throw new AppError(StatusCodes.FORBIDDEN, "Access denied");
       }
 
-      req.user = verifiedToken;
+      req.user = { ...verifiedToken, role: isUserExists.role };
 
       next();
     } catch (err) {

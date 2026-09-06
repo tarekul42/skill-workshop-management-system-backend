@@ -1,11 +1,16 @@
 import express from "express";
 import checkAuth from "../../middlewares/checkAuth.js";
 import validateRequest from "../../middlewares/validateRequest.js";
-import { adminCrudLimiter } from "../../utils/rateLimiter.js";
+import {
+  adminCrudLimiter,
+  authLimiter,
+  publicLimiter,
+} from "../../utils/rateLimiter.js";
 import { UserRole } from "../user/user.interface.js";
 import ReviewController from "./review.controller.js";
 import {
   createReviewZodSchema,
+  updateReviewStatusZodSchema,
   updateReviewZodSchema,
 } from "./review.validation.js";
 
@@ -54,7 +59,11 @@ const router = express.Router();
  *       404:
  *         $ref: "#/components/responses/NotFoundError"
  */
-router.get("/workshop/:workshopId", ReviewController.getWorkshopReviews);
+router.get(
+  "/workshop/:workshopId",
+  publicLimiter,
+  ReviewController.getWorkshopReviews,
+);
 
 /**
  * @openapi
@@ -76,6 +85,7 @@ router.get("/workshop/:workshopId", ReviewController.getWorkshopReviews);
  */
 router.get(
   "/workshop/:workshopId/stats",
+  publicLimiter,
   ReviewController.getWorkshopReviewStats,
 );
 
@@ -125,8 +135,8 @@ router.get(
  */
 router.post(
   "/",
-  adminCrudLimiter,
-  checkAuth(...Object.values(UserRole)),
+  authLimiter,
+  checkAuth(UserRole.STUDENT, UserRole.INSTRUCTOR),
   validateRequest(createReviewZodSchema),
   ReviewController.createReview,
 );
@@ -153,8 +163,8 @@ router.post(
  */
 router.get(
   "/workshop/:workshopId/my-review",
-  adminCrudLimiter,
-  checkAuth(...Object.values(UserRole)),
+  authLimiter,
+  checkAuth(UserRole.STUDENT, UserRole.INSTRUCTOR),
   ReviewController.getUserReviewForWorkshop,
 );
 
@@ -199,10 +209,54 @@ router.get(
  */
 router.patch(
   "/:reviewId",
-  adminCrudLimiter,
+  authLimiter,
   checkAuth(...Object.values(UserRole)),
   validateRequest(updateReviewZodSchema),
   ReviewController.updateReview,
+);
+
+/**
+ * @openapi
+ * /review/{reviewId}/status:
+ *   patch:
+ *     summary: Update review status (admin only)
+ *     tags: [Review]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: reviewId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - status
+ *             properties:
+ *               status:
+ *                 type: string
+ *                 enum: [PENDING, APPROVED, REJECTED]
+ *     responses:
+ *       200:
+ *         description: Review status updated successfully
+ *       401:
+ *         $ref: "#/components/responses/UnauthorizedError"
+ *       403:
+ *         $ref: "#/components/responses/ForbiddenError"
+ *       404:
+ *         $ref: "#/components/responses/NotFoundError"
+ */
+router.patch(
+  "/:reviewId/status",
+  adminCrudLimiter,
+  checkAuth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
+  validateRequest(updateReviewStatusZodSchema),
+  ReviewController.updateReviewStatus,
 );
 
 /**
@@ -231,7 +285,7 @@ router.patch(
  */
 router.delete(
   "/:reviewId",
-  adminCrudLimiter,
+  authLimiter,
   checkAuth(...Object.values(UserRole)),
   ReviewController.deleteReview,
 );

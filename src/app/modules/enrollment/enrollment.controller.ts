@@ -61,9 +61,12 @@ const getSingleEnrollment = catchAsync(async (req: Request, res: Response) => {
 
 const getAllEnrollments = catchAsync(async (req: Request, res: Response) => {
   const query = req.query;
+  const tokenUser = req.user as JwtPayload;
 
   const enrollments = await EnrollmentService.getAllEnrollments(
     query as Record<string, string>,
+    tokenUser.userId,
+    tokenUser.role,
   );
 
   sendResponse(res, {
