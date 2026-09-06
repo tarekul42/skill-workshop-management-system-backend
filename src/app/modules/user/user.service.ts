@@ -18,7 +18,7 @@ import {
 import User from "./user.model.js";
 
 const createUser = async (payload: Partial<IUser>) => {
-  const { name, email, password, role, ...rest } = payload;
+  const { name, email, password, role } = payload;
 
   if (typeof email !== "string" || email.trim().length === 0) {
     throw new AppError(StatusCodes.BAD_REQUEST, "Valid email is required");
@@ -31,7 +31,11 @@ const createUser = async (payload: Partial<IUser>) => {
   const isUserExists = await User.findOne({ email: { $eq: email } });
 
   if (isUserExists) {
-    throw new AppError(StatusCodes.CONFLICT, "User already exists");
+    // Deliberately generic: avoids confirming whether an email is registered
+    throw new AppError(
+      StatusCodes.CONFLICT,
+      "Unable to create account with these details",
+    );
   }
 
   // Ensure role is valid for public registration (STUDENT or INSTRUCTOR)
@@ -56,7 +60,11 @@ const createUser = async (payload: Partial<IUser>) => {
     password: hashedPassword,
     role: assignedRole,
     auths: [authProvider],
-    ...rest,
+    phone: payload.phone,
+    age: payload.age,
+    address: payload.address,
+    expertise: payload.expertise,
+    bio: payload.bio,
   });
 
   await auditLogger({
@@ -90,14 +98,14 @@ const getAllUsers = async (query: Record<string, string>) => {
 
   const usersData = queryBuilder
     .search(userSearchableFields)
-    .filter()
+    .filter(["role", "isActive", "isVerified"])
     .sort()
     .fields()
     .paginate()
     .lean();
 
   const [data, meta] = await Promise.all([
-    usersData.build(),
+    usersData.build().select("-password"),
     queryBuilder.getMeta(),
   ]);
 

@@ -138,9 +138,11 @@ const updateById = async (reviewId: string, payload: Partial<IReview>) => {
 };
 
 const deleteById = async (reviewId: string) => {
-  return await Review.findOneAndDelete({
-    _id: new Types.ObjectId(reviewId),
-  });
+  return await Review.findOneAndUpdate(
+    { _id: new Types.ObjectId(reviewId) },
+    { $set: { isDeleted: true, deletedAt: new Date() } },
+    { returnDocument: "after", runValidators: true },
+  ).populate("user", "name picture");
 };
 
 const ReviewRepository = {

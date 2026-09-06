@@ -1,28 +1,60 @@
 import crypto from "crypto";
 import { NextFunction, Request, Response } from "express";
+import fs from "fs";
 import { StatusCodes } from "http-status-codes";
 import { JwtPayload } from "jsonwebtoken";
 import passport from "passport";
+import path from "path";
 import envVariables from "../../config/env.js";
 import { redisClient } from "../../config/redis.config.js";
 import AppError from "../../errorHelpers/AppError.js";
 import catchAsync from "../../utils/catchAsync.js";
 import logger from "../../utils/logger.js";
 import sendResponse from "../../utils/sendResponse.js";
-import setAuthCookie from "../../utils/setCookie.js";
+import setAuthCookie, { clearAuthCookie } from "../../utils/setCookie.js";
 import { invalidateToken } from "../../utils/tokenBlacklist.js";
-import { createUserTokens } from "../../utils/userTokens.js";
+import {
+  createUserTokens,
+  revokeRefreshSession,
+} from "../../utils/userTokens.js";
 import { IUser } from "../user/user.interface.js";
 import AuthServices from "./auth.service.js";
 
 type TPassportError = Error | null;
 
 interface IAuthInfo {
-  message: string;
+  code?: string;
+  message?: string;
 }
+
+const extractAccessToken = (req: Request): string | undefined => {
+  const authHeader = req.headers.authorization;
+  if (authHeader?.startsWith("Bearer ")) {
+    return authHeader.split(" ")[1];
+  }
+  return req.cookies.accessToken;
+};
+
+const MAX_FAILED_ATTEMPTS = 5;
+const LOCKOUT_DURATION_SECONDS = 15 * 60; // 15 minutes
 
 const credentialsLogin = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
+    const rawEmail = req.body.email as string | undefined;
+    const email = rawEmail?.toLowerCase().trim();
+
+    // Check account lockout before attempting authentication
+    if (email) {
+      const failKey = `failed_login:${email}`;
+      const attempts = await redisClient.get(failKey);
+      if (attempts && parseInt(attempts, 10) >= MAX_FAILED_ATTEMPTS) {
+        throw new AppError(
+          StatusCodes.TOO_MANY_REQUESTS,
+          "Account temporarily locked due to too many failed attempts. Try again in 15 minutes.",
+        );
+      }
+    }
+
     passport.authenticate(
       "local",
       { session: false },
@@ -37,12 +69,24 @@ const credentialsLogin = catchAsync(
         }
 
         if (!user) {
+          // Increment failed attempt counter
+          if (email) {
+            const failKey = `failed_login:${email}`;
+            await redisClient.incr(failKey);
+            await redisClient.expire(failKey, LOCKOUT_DURATION_SECONDS);
+          }
+
           return next(
             new AppError(
               StatusCodes.UNAUTHORIZED,
               info?.message || "Incorrect email or password",
             ),
           );
+        }
+
+        // Successful login — clear failed attempts
+        if (email) {
+          await redisClient.del(`failed_login:${email}`);
         }
 
         const userTokens = await createUserTokens(user);
@@ -84,29 +128,17 @@ const getNewAccessToken = catchAsync(async (req: Request, res: Response) => {
 });
 
 const logout = catchAsync(async (req: Request, res: Response) => {
-  const isProduction = process.env.NODE_ENV === "production";
+  clearAuthCookie(res);
 
-  res.clearCookie("accessToken", {
-    httpOnly: true,
-    secure: isProduction,
-    sameSite: isProduction ? "strict" : "lax",
-  });
-
-  res.clearCookie("refreshToken", {
-    httpOnly: true,
-    secure: isProduction,
-    sameSite: isProduction ? "strict" : "lax",
-  });
-
-  let accessToken = req.headers.authorization;
-  if (accessToken?.startsWith("Bearer ")) {
-    accessToken = accessToken.split(" ")[1];
-  } else {
-    accessToken = req.cookies.accessToken;
-  }
+  const accessToken = extractAccessToken(req);
 
   if (accessToken) {
     await invalidateToken(accessToken, envVariables.JWT_ACCESS_SECRET);
+  }
+
+  // Revoke only THIS device's refresh session; other devices stay logged in.
+  if (req.cookies?.refreshToken) {
+    await revokeRefreshSession(req.cookies.refreshToken);
   }
 
   if (req.session) {
@@ -130,12 +162,7 @@ const changePassword = catchAsync(async (req: Request, res: Response) => {
   const oldPassword = req.body.oldPassword;
   const decodedToken = req.user;
 
-  let accessToken = req.headers.authorization;
-  if (accessToken?.startsWith("Bearer ")) {
-    accessToken = accessToken.split(" ")[1];
-  } else {
-    accessToken = req.cookies.accessToken;
-  }
+  const accessToken = extractAccessToken(req);
 
   await AuthServices.changePassword(
     oldPassword,
@@ -309,11 +336,10 @@ const exchangeAuthCode = catchAsync(async (req: Request, res: Response) => {
     );
   }
 
-  // Retrieve and immediately delete the code (one-time use)
+  // Retrieve and immediately delete the code (one-time use) via atomic GETDEL
   let payload: string | null;
   try {
-    payload = await redisClient.get(`auth_code:${code}`);
-    await redisClient.del(`auth_code:${code}`);
+    payload = (await redisClient.getdel(`auth_code:${code}`)) as string | null;
   } catch (err) {
     logger.error({ msg: "Redis error during code exchange", err });
     throw new AppError(
@@ -344,6 +370,37 @@ const exchangeAuthCode = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getDemoCredentials = catchAsync(async (_req: Request, res: Response) => {
+  if (process.env.NODE_ENV === "production") {
+    throw new AppError(
+      StatusCodes.NOT_FOUND,
+      "Demo credentials not available in production",
+    );
+  }
+
+  const credentialsFile = path.resolve(
+    process.cwd(),
+    ".seed-credentials.local.json",
+  );
+
+  let credentials: unknown;
+  try {
+    credentials = JSON.parse(fs.readFileSync(credentialsFile, "utf-8"));
+  } catch {
+    throw new AppError(
+      StatusCodes.NOT_FOUND,
+      "No seeded demo credentials found. Run the seed script first (npm run seed).",
+    );
+  }
+
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: "Demo credentials fetched successfully",
+    data: credentials,
+  });
+});
+
 const AuthControllers = {
   credentialsLogin,
   getNewAccessToken,
@@ -354,6 +411,7 @@ const AuthControllers = {
   resetPassword,
   googleCallback,
   exchangeAuthCode,
+  getDemoCredentials,
 };
 
 export default AuthControllers;

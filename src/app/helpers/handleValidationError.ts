@@ -22,7 +22,7 @@ const handleValidationError = (
 
   return {
     statusCode: StatusCodes.BAD_REQUEST,
-    message: "Validation Error Occurred",
+    message: "Please check your input and try again.",
     errorSources,
   };
 };

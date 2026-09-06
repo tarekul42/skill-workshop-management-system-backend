@@ -15,7 +15,6 @@ const globalErrorHandler = (
   err: unknown,
   _req: Request,
   res: Response,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _next: NextFunction,
 ) => {
   logger.error(
@@ -47,7 +46,7 @@ const globalErrorHandler = (
       code = simplifiedError.code;
       errorSources = simplifiedError.errorSources as IErrorSources[];
     } else if (err instanceof mongoose.Error.CastError) {
-      const simplifiedError = handleCastError();
+      const simplifiedError = handleCastError(err);
       statusCode = simplifiedError.statusCode;
       message = simplifiedError.message;
       code = simplifiedError.code;

@@ -1,7 +1,7 @@
 import express from "express";
 import checkAuth from "../../middlewares/checkAuth.js";
 import validateRequest from "../../middlewares/validateRequest.js";
-import { adminCrudLimiter } from "../../utils/rateLimiter.js";
+import { adminCrudLimiter, authLimiter, publicLimiter } from "../../utils/rateLimiter.js";
 import { UserRole } from "../user/user.interface.js";
 import ReviewController from "./review.controller.js";
 import {
@@ -55,7 +55,7 @@ const router = express.Router();
  *       404:
  *         $ref: "#/components/responses/NotFoundError"
  */
-router.get("/workshop/:workshopId", ReviewController.getWorkshopReviews);
+router.get("/workshop/:workshopId", publicLimiter, ReviewController.getWorkshopReviews);
 
 /**
  * @openapi
@@ -77,6 +77,7 @@ router.get("/workshop/:workshopId", ReviewController.getWorkshopReviews);
  */
 router.get(
   "/workshop/:workshopId/stats",
+  publicLimiter,
   ReviewController.getWorkshopReviewStats,
 );
 
@@ -126,7 +127,7 @@ router.get(
  */
 router.post(
   "/",
-  adminCrudLimiter,
+  authLimiter,
   checkAuth(UserRole.STUDENT, UserRole.INSTRUCTOR),
   validateRequest(createReviewZodSchema),
   ReviewController.createReview,
@@ -154,7 +155,7 @@ router.post(
  */
 router.get(
   "/workshop/:workshopId/my-review",
-  adminCrudLimiter,
+  authLimiter,
   checkAuth(UserRole.STUDENT, UserRole.INSTRUCTOR),
   ReviewController.getUserReviewForWorkshop,
 );
@@ -200,7 +201,7 @@ router.get(
  */
 router.patch(
   "/:reviewId",
-  adminCrudLimiter,
+  authLimiter,
   checkAuth(...Object.values(UserRole)),
   validateRequest(updateReviewZodSchema),
   ReviewController.updateReview,
@@ -276,7 +277,7 @@ router.patch(
  */
 router.delete(
   "/:reviewId",
-  adminCrudLimiter,
+  authLimiter,
   checkAuth(...Object.values(UserRole)),
   ReviewController.deleteReview,
 );

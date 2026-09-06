@@ -31,6 +31,14 @@ const contactSchema = new Schema<IContact>(
       type: Boolean,
       default: false,
     },
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
+    deletedAt: {
+      type: Date,
+      default: null,
+    },
   },
   {
     timestamps: true,
@@ -39,6 +47,7 @@ const contactSchema = new Schema<IContact>(
 
 contactSchema.index({ createdAt: -1 });
 contactSchema.index({ isRead: 1, createdAt: -1 });
+contactSchema.index({ isDeleted: 1 });
 
 const Contact = model<IContact>("Contact", contactSchema);
 

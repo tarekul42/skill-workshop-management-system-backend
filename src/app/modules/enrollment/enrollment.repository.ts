@@ -23,6 +23,7 @@ const startTransaction = async () => {
 const reserveSeat = async (
   workshopId: string,
   maxSeats: number,
+  session?: ClientSession,
 ): Promise<boolean> => {
   const result = await WorkShop.findOneAndUpdate(
     {
@@ -30,7 +31,7 @@ const reserveSeat = async (
       currentEnrollments: { $lt: maxSeats },
     },
     { $inc: { currentEnrollments: 1 } },
-    { returnDocument: "after" },
+    { returnDocument: "after", session },
   );
   return result !== null;
 };
@@ -97,15 +98,23 @@ const createEnrollmentWithPayment = async (
   }
 
   const amount = Number(workshop.price) * Number(payload.studentCount);
-  if (isNaN(amount) || amount <= 0) {
+  if (isNaN(amount) || amount < 0) {
     throw new AppError(
       StatusCodes.BAD_REQUEST,
       "Invalid enrollment amount calculated.",
     );
   }
 
+  const isFree = amount === 0;
+
   const [enrollment] = await Enrollment.create(
-    [{ ...payload, user: userId, status: ENROLLMENT_STATUS.PENDING }],
+    [
+      {
+        ...payload,
+        user: userId,
+        status: isFree ? ENROLLMENT_STATUS.COMPLETE : ENROLLMENT_STATUS.PENDING,
+      },
+    ],
     { session },
   );
 
@@ -113,7 +122,7 @@ const createEnrollmentWithPayment = async (
     [
       {
         enrollment: enrollment._id,
-        status: PAYMENT_STATUS.UNPAID,
+        status: isFree ? PAYMENT_STATUS.PAID : PAYMENT_STATUS.UNPAID,
         transactionId,
         amount,
       },
@@ -134,6 +143,7 @@ const createEnrollmentWithPayment = async (
     enrollmentId: enrollment._id,
     amount,
     transactionId,
+    isFree,
     userInfo: {
       address: user.address as string,
       email: user.email,

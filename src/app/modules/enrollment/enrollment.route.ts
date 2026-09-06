@@ -1,7 +1,7 @@
 import express from "express";
 import checkAuth from "../../middlewares/checkAuth.js";
 import validateRequest from "../../middlewares/validateRequest.js";
-import { adminCrudLimiter } from "../../utils/rateLimiter.js";
+import { adminCrudLimiter, authLimiter } from "../../utils/rateLimiter.js";
 import { UserRole } from "../user/user.interface.js";
 import EnrollmentController from "./enrollment.controller.js";
 import {
@@ -68,7 +68,7 @@ const router = express.Router();
  */
 router.post(
   "/",
-  adminCrudLimiter,
+  authLimiter,
   checkAuth(UserRole.STUDENT),
   validateRequest(createEnrollmentZodSchema),
   EnrollmentController.createEnrollment,
@@ -143,7 +143,7 @@ router.get(
  */
 router.get(
   "/my-enrollments",
-  adminCrudLimiter,
+  authLimiter,
   checkAuth(...Object.values(UserRole)),
   EnrollmentController.getUserEnrollments,
 );
@@ -186,7 +186,7 @@ router.get(
  */
 router.get(
   "/:enrollmentId",
-  adminCrudLimiter,
+  authLimiter,
   checkAuth(...Object.values(UserRole)),
   EnrollmentController.getSingleEnrollment,
 );
@@ -285,7 +285,7 @@ router.patch(
  */
 router.delete(
   "/:enrollmentId",
-  adminCrudLimiter,
+  authLimiter,
   checkAuth(...Object.values(UserRole)),
   EnrollmentController.cancelEnrollment,
 );

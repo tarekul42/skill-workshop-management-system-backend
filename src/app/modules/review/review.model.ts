@@ -38,7 +38,7 @@ const reviewSchema = new Schema<IReview>(
     status: {
       type: String,
       enum: Object.values(REVIEW_STATUS),
-      default: REVIEW_STATUS.APPROVED,
+      default: REVIEW_STATUS.PENDING,
       index: true,
     },
   },

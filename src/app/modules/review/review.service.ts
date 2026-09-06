@@ -38,13 +38,11 @@ const createReview = async (payload: Partial<IReview>, userId: string) => {
     );
   }
 
-  // Verify user has an approved enrollment for this workshop
+  // Verify user has a completed enrollment for this workshop
   const enrollment = await Enrollment.findOne({
     user: userId,
     workshop: workshopObjectId,
-    status: {
-      $in: [ENROLLMENT_STATUS.COMPLETE, ENROLLMENT_STATUS.PENDING],
-    },
+    status: ENROLLMENT_STATUS.COMPLETE,
   });
 
   if (!enrollment) {
@@ -70,7 +68,6 @@ const createReview = async (payload: Partial<IReview>, userId: string) => {
     ...payload,
     workshop: workshopObjectId,
     user: new Types.ObjectId(userId),
-    status: REVIEW_STATUS.APPROVED,
   });
 
   const populated = await review.populate("user", "name picture");

@@ -1,7 +1,7 @@
 import express from "express";
 import checkAuth from "../../middlewares/checkAuth.js";
 import validateRequest from "../../middlewares/validateRequest.js";
-import { adminCrudLimiter, authLimiter } from "../../utils/rateLimiter.js";
+import { adminCrudLimiter, authLimiter, ipnLimiter, publicLimiter } from "../../utils/rateLimiter.js";
 import { UserRole } from "../user/user.interface.js";
 import PaymentController from "./payment.controller.js";
 import {
@@ -84,8 +84,8 @@ router.post(
  */
 router
   .route("/success")
-  .get(PaymentController.successPayment)
-  .post(PaymentController.successPayment);
+  .get(publicLimiter, PaymentController.successPayment)
+  .post(publicLimiter, PaymentController.successPayment);
 
 /**
  * @openapi
@@ -111,8 +111,8 @@ router
  */
 router
   .route("/fail")
-  .get(PaymentController.failPayment)
-  .post(PaymentController.failPayment);
+  .get(publicLimiter, PaymentController.failPayment)
+  .post(publicLimiter, PaymentController.failPayment);
 
 /**
  * @openapi
@@ -138,8 +138,8 @@ router
  */
 router
   .route("/cancel")
-  .get(PaymentController.cancelPayment)
-  .post(PaymentController.cancelPayment);
+  .get(publicLimiter, PaymentController.cancelPayment)
+  .post(publicLimiter, PaymentController.cancelPayment);
 
 /**
  * @openapi
@@ -282,7 +282,7 @@ router.post(
  *             schema:
  *               $ref: "#/components/schemas/ErrorResponse"
  */
-router.post("/ipn", PaymentController.handleIPN);
+router.post("/ipn", ipnLimiter, PaymentController.handleIPN);
 
 /**
  * @openapi

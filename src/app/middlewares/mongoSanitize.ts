@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-dynamic-delete */
 import { NextFunction, Request, Response } from "express";
 
 const sanitize = (obj: unknown): unknown => {
@@ -23,7 +22,6 @@ const tryAssign = (
   value: unknown,
 ): boolean => {
   try {
-    delete (req as unknown as Record<string, unknown>)[key];
     Object.defineProperty(req, key, {
       value: value,
       writable: true,

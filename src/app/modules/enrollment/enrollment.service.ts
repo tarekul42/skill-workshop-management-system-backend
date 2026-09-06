@@ -2,11 +2,13 @@ import { StatusCodes } from "http-status-codes";
 import { Types } from "mongoose";
 import AppError from "../../errorHelpers/AppError.js";
 import auditLogger from "../../utils/auditLogger.js";
+import logger from "../../utils/logger.js";
 import QueryBuilder from "../../utils/queryBuilder.js";
+import { sendEmailDirect } from "../../utils/sendEmailDirect.js";
 import { AuditAction } from "../audit/audit.interface.js";
 import { ISSLCommerz } from "../sslCommerz/sslCommerz.interface.js";
 import SSLService from "../sslCommerz/sslCommerz.service.js";
-import { isAdminRole } from "../user/user.interface.js";
+import { isAdminRole, UserRole } from "../user/user.interface.js";
 import { WorkShop } from "../workshop/workshop.model.js";
 import {
   ENROLLMENT_STATUS,
@@ -38,6 +40,8 @@ const createEnrollment = async (
     throw new AppError(StatusCodes.NOT_FOUND, "Workshop not found.");
   }
 
+  // Atomic seat reservation outside the transaction.
+  // findOneAndUpdate with $lt guard handles concurrent requests correctly.
   let seatReserved = false;
   if (workshop.maxSeats != null) {
     seatReserved = await EnrollmentRepository.reserveSeat(
@@ -70,19 +74,24 @@ const createEnrollment = async (
       session,
     );
 
-    const sslPayload: ISSLCommerz = {
-      address: result.userInfo.address,
-      email: result.userInfo.email,
-      phoneNumber: result.userInfo.phoneNumber,
-      name: result.userInfo.name,
-      amount: result.amount,
-      transactionId: result.transactionId,
-    };
-
-    const sslPayment = await SSLService.sslPaymentInit(sslPayload);
-
     await session.commitTransaction();
     session.endSession();
+
+    let paymentUrl: string | null = null;
+
+    if (!result.isFree) {
+      const sslPayload: ISSLCommerz = {
+        address: result.userInfo.address,
+        email: result.userInfo.email,
+        phoneNumber: result.userInfo.phoneNumber,
+        name: result.userInfo.name,
+        amount: result.amount,
+        transactionId: result.transactionId,
+      };
+
+      const sslPayment = await SSLService.sslPaymentInit(sslPayload);
+      paymentUrl = sslPayment.GatewayPageURL;
+    }
 
     await auditLogger({
       action: AuditAction.CREATE,
@@ -91,8 +100,33 @@ const createEnrollment = async (
       performedBy: userId,
     });
 
+    try {
+      const populated = result.enrollment as unknown as {
+        user: { name: string; email: string };
+        workshop: { title: string };
+      };
+      if (populated?.user?.email) {
+        await sendEmailDirect({
+          to: populated.user.email,
+          subject: "Enrollment Confirmation",
+          templateName: "bookingConfirmation",
+          templateData: {
+            userName: populated.user.name,
+            workshopTitle: populated.workshop?.title ?? "Workshop",
+            status: result.isFree ? "confirmed" : "pending",
+          },
+        });
+      }
+    } catch (emailErr) {
+      logger.error({
+        msg: "Failed to send enrollment confirmation email",
+        enrollmentId: result.enrollmentId,
+        err: emailErr,
+      });
+    }
+
     return {
-      paymentUrl: sslPayment.GatewayPageURL,
+      paymentUrl,
       enrollment: result.enrollment,
     };
   } catch (err) {
@@ -147,10 +181,30 @@ const getSingleEnrollment = async (
   return populatedEnrollment;
 };
 
-const getAllEnrollments = async (query: Record<string, string>) => {
-  const queryBuilder = new QueryBuilder(Enrollment.find(), query);
+const getAllEnrollments = async (
+  query: Record<string, string>,
+  userId: string,
+  userRole: string,
+) => {
+  // INSTRUCTORs should only see enrollments for their own workshops
+  let filter: Record<string, unknown> = {};
+  if (userRole === UserRole.INSTRUCTOR) {
+    const instructorWorkshops = await WorkShop.find({
+      createdBy: userId,
+    }).select("_id");
+    const workshopIds = instructorWorkshops.map((w) => w._id);
+    filter = { workshop: { $in: workshopIds } };
+  }
 
-  const enrollmentsData = queryBuilder.filter().sort().fields().paginate().lean();
+  const baseQuery = Enrollment.find(filter);
+  const queryBuilder = new QueryBuilder(baseQuery, query);
+
+  const enrollmentsData = queryBuilder
+    .filter(["status", "workshop"])
+    .sort()
+    .fields()
+    .paginate()
+    .lean();
 
   const [data, meta] = await Promise.all([
     enrollmentsData
@@ -196,6 +250,15 @@ const updateEnrollmentStatus = async (
     throw new AppError(StatusCodes.GONE, "Enrollment has been deleted");
   }
 
+  // Prevent backward or illegal status transitions.
+  // Once an enrollment leaves PENDING it must not regress.
+  if (enrollment.status !== ENROLLMENT_STATUS.PENDING) {
+    throw new AppError(
+      StatusCodes.BAD_REQUEST,
+      `Cannot change status from ${enrollment.status}. Only PENDING enrollments can be updated.`,
+    );
+  }
+
   const updatedEnrollment = await Enrollment.findOneAndUpdate(
     { _id: { $eq: new Types.ObjectId(enrollmentId) } },
     { status },
@@ -230,7 +293,9 @@ const cancelEnrollment = async (enrollmentId: string, userId: string) => {
   );
 
   if (!updatedEnrollment) {
-    // Either not found or not PENDING/COMPLETE — determine which
+    // The atomic query included both userId and allowed statuses; a null result
+    // means ownership, status, or existence failed. Re-fetch to give a specific
+    // error message (the user field is immutable so there is no TOCTOU concern).
     const existing = await Enrollment.findById(enrollmentId);
     if (!existing) {
       throw new AppError(StatusCodes.NOT_FOUND, "Enrollment not found");
@@ -254,14 +319,6 @@ const cancelEnrollment = async (enrollmentId: string, userId: string) => {
       );
     }
     throw new AppError(StatusCodes.NOT_FOUND, "Enrollment not found");
-  }
-
-  // Verify ownership
-  if (String(updatedEnrollment.user) !== userId) {
-    throw new AppError(
-      StatusCodes.FORBIDDEN,
-      "You can only cancel your own enrollments",
-    );
   }
 
   // Decrement the workshop's currentEnrollments counter

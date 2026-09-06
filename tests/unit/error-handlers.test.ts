@@ -8,10 +8,13 @@ import handleValidationError from "../../src/app/helpers/handleValidationError";
 import handleZodError from "../../src/app/helpers/handleZodError";
 
 describe("handleCastError", () => {
-  it("should return 400 with generic message", () => {
-    const result = handleCastError();
+  it("should return 400 with field-specific error message", () => {
+    const castError = new mongoose.Error.CastError("ObjectId", "invalid123", "workshopId");
+    const result = handleCastError(castError);
     expect(result.statusCode).toBe(StatusCodes.BAD_REQUEST);
-    expect(result.message).toBe("Invalid ID format. Please provide a valid ID.");
+    expect(result.message).toBe(
+      'Invalid value "invalid123" for field "workshopId". Please provide a valid ObjectId.',
+    );
   });
 });
 
@@ -38,7 +41,7 @@ describe("handleValidationError", () => {
 
     const result = handleValidationError(validationError);
     expect(result.statusCode).toBe(StatusCodes.BAD_REQUEST);
-    expect(result.message).toBe("Validation Error Occurred");
+    expect(result.message).toBe("Please check your input and try again.");
     expect(result.errorSources).toHaveLength(1);
     expect(result.errorSources![0].path).toBe("name");
     expect(result.errorSources![0].message).toContain("required");
@@ -61,7 +64,7 @@ describe("handleZodError", () => {
 
     const result = handleZodError(zodError!);
     expect(result.statusCode).toBe(StatusCodes.BAD_REQUEST);
-    expect(result.message).toBe("Zod validation error");
+    expect(result.message).toBe("Please check your input and try again.");
     expect(result.errorSources!.length).toBeGreaterThanOrEqual(2);
     expect(result.errorSources![0].path).toBeDefined();
     expect(result.errorSources![0].message).toBeDefined();

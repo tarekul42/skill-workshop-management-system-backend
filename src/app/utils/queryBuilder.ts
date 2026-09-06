@@ -1,6 +1,15 @@
 import { Query } from "mongoose";
 import { excludeFields } from "../constants.js";
 
+// Fields that must never be settable as a filter nor projectable via ?fields=
+const FORBIDDEN_FIELDS = new Set([
+  "password",
+  "__v",
+  "_id",
+  "isDeleted",
+  "deletedAt",
+]);
+
 class QueryBuilder<T> {
   public modelQuery: Query<T[], T>;
   public readonly query: Record<string, string>;
@@ -10,19 +19,16 @@ class QueryBuilder<T> {
     this.query = query;
   }
 
-  filter(): this {
-    const filter = { ...this.query };
-
-    for (const field of excludeFields) {
-      // eslint-disable-next-line  @typescript-eslint/no-dynamic-delete
-      delete filter[field];
-    }
-
-    // Sanitize filter values to prevent NoSQL injection
+  filter(allowedFilterFields?: string[]): this {
     const sanitizedFilter: Record<string, string> = {};
-    for (const [key, value] of Object.entries(filter)) {
-      // Reject keys starting with $ to prevent operator injection
-      if (typeof value === "string" && !key.startsWith("$")) {
+    const allowed = allowedFilterFields
+      ? new Set(allowedFilterFields)
+      : undefined;
+
+    for (const [key, value] of Object.entries(this.query)) {
+      if (!excludeFields.includes(key) && typeof value === "string" && !key.startsWith("$")) {
+        if (FORBIDDEN_FIELDS.has(key)) continue;
+        if (allowed && !allowed.has(key)) continue;
         sanitizedFilter[key] = value;
       }
     }
@@ -70,14 +76,29 @@ class QueryBuilder<T> {
   fields(): this {
     const fields = this.query.fields?.split(",").join(" ") || "";
 
-    this.modelQuery = this.modelQuery.select(fields);
+    // Strip any characters that aren't valid MongoDB field name characters
+    // (alphanumeric, underscore, space, minus). This prevents NoSQL injection
+    // via projection operators like { $gt: "" } or { field: 0 }.
+    const sanitized = fields.replace(/[^a-zA-Z0-9_ -]/g, "");
+
+    // Drop sensitive/internal fields even if explicitly requested,
+    // e.g. ?fields=name,password must never re-include the password hash.
+    const safeFields = sanitized
+      .split(" ")
+      .filter((f) => {
+        const bare = f.replace(/^-/, "");
+        return bare.length > 0 && !FORBIDDEN_FIELDS.has(bare);
+      })
+      .join(" ");
+
+    this.modelQuery = this.modelQuery.select(safeFields);
 
     return this;
   }
 
   paginate(): this {
-    const page = Number(this.query.page) || 1;
-    const limit = Number(this.query.limit) || 10;
+    const page = Math.max(1, Number(this.query.page) || 1);
+    const limit = Math.min(100, Math.max(1, Number(this.query.limit) || 10));
     const skip = (page - 1) * limit;
 
     this.modelQuery = this.modelQuery.skip(skip).limit(limit);

@@ -30,6 +30,7 @@ import {
 import { authLimiter, generalLimiter } from "./app/utils/rateLimiter.js";
 
 const app = express();
+app.disable("x-powered-by");
 
 // ──── Security Check ────
 const requiredSecrets = [
@@ -43,16 +44,43 @@ const requiredSecrets = [
   { name: "RESET_PASSWORD_SECRET", value: envVariables.RESET_PASSWORD_SECRET },
 ];
 
-for (const secret of requiredSecrets) {
-  if (secret.value.length < 32 && envVariables.NODE_ENV === "production") {
-    throw new Error(
-      `${secret.name} must be at least 32 characters in production. Current length: ${secret.value.length}`,
-    );
+const MIN_SECRET_LENGTH = 32;
+
+const PLACEHOLDER_PATTERNS = [
+  /^change-me/i,
+  /your-.*(secret|key|password)/i,
+  /placeholder/i,
+  /dummy/i,
+  /^(secret|password|token)$/i,
+  /^(.)\1{7,}$/,
+];
+
+// In test mode the gate is noise — tests use mock secrets.
+if (envVariables.NODE_ENV !== "test") {
+  if (envVariables.NODE_ENV === "production") {
+    const distinctSecrets = new Set(requiredSecrets.map((s) => s.value));
+    if (distinctSecrets.size !== requiredSecrets.length) {
+      throw new Error(
+        "Security check failed: secret values must be unique. " +
+          "Reusing a secret across purposes (e.g. access vs refresh tokens) undermines isolation.",
+      );
+    }
   }
-  if (secret.value.length < 16 && envVariables.NODE_ENV !== "production") {
-    logger.warn({
-      msg: `${secret.name} is below the recommended minimum length.`,
-    });
+
+  for (const secret of requiredSecrets) {
+    if (!secret.value || secret.value.length < MIN_SECRET_LENGTH) {
+      throw new Error(
+        `${secret.name} must be at least ${MIN_SECRET_LENGTH} characters (use a high-entropy random value, e.g. 'openssl rand -hex 32'). ` +
+          `Current length: ${secret.value.length}`,
+      );
+    }
+    for (const pattern of PLACEHOLDER_PATTERNS) {
+      if (pattern.test(secret.value)) {
+        throw new Error(
+          `${secret.name} appears to be a placeholder/default value. Generate a real secret with 'openssl rand -hex 32'.`,
+        );
+      }
+    }
   }
 }
 
@@ -99,25 +127,23 @@ const allowedOrigins = envVariables.FRONTEND_URL.split(",").map((s) =>
   s.trim(),
 );
 
-// Allow all Vercel deployment URLs for the frontend project
-// (e.g. skill-workshop-management-system-fr.vercel.app, skill-workshop-management-system-fr-git-feat-xyz.vercel.app)
-const vercelOriginPattern =
-  /^https:\/\/skill-workshop-management-system-fr(-[\w-]+)?\.vercel\.app$/;
-
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (
-        !origin ||
-        allowedOrigins.includes(origin) ||
-        vercelOriginPattern.test(origin)
-      ) {
+      if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
         callback(new Error("Not allowed by CORS"));
       }
     },
     credentials: true,
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+      "X-Requested-With",
+      "x-csrf-token",
+      "X-CSRF-Token",
+    ],
   }),
 );
 
@@ -142,7 +168,7 @@ app.use(
     cookie: {
       secure: envVariables.NODE_ENV === "production",
       httpOnly: true,
-      sameSite: "lax",
+      sameSite: envVariables.COOKIE_SAMESITE,
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
     },
   }),

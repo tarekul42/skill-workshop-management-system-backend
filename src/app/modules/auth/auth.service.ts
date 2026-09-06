@@ -4,11 +4,13 @@ import { StatusCodes } from "http-status-codes";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import validator from "validator";
 import envVariables from "../../config/env.js";
-import { redisClient } from "../../config/redis.config.js";
 import AppError from "../../errorHelpers/AppError.js";
 import { sendEmailDirect } from "../../utils/sendEmailDirect.js";
 import { invalidateToken } from "../../utils/tokenBlacklist.js";
-import { createNewAccessToken } from "../../utils/userTokens.js";
+import {
+  createNewAccessToken,
+  revokeAllRefreshTokens,
+} from "../../utils/userTokens.js";
 import { IAuthProvider, IsActive } from "../user/user.interface.js";
 import User from "../user/user.model.js";
 
@@ -62,8 +64,8 @@ const changePassword = async (
 
   await invalidateToken(accessToken, envVariables.JWT_ACCESS_SECRET);
 
-  // Invalidate ALL refresh tokens so other sessions can't generate new access tokens
-  await redisClient.del(`refresh_token:${decodedToken.userId}`);
+  // Invalidate ALL refresh sessions so other devices can't generate new access tokens
+  await revokeAllRefreshTokens(decodedToken.userId as string);
 };
 
 const setPassword = async (userId: string, plainPassword: string) => {
@@ -71,13 +73,14 @@ const setPassword = async (userId: string, plainPassword: string) => {
 
   if (!user) throw new AppError(StatusCodes.NOT_FOUND, "User not found");
 
-  if (
-    user.password &&
-    user.auths.some((providerObject) => providerObject.provider === "google")
-  ) {
+  // If the user already has a password, they must use changePassword()
+  // which verifies the old password first. setPassword is only for users
+  // who have never set a password (e.g., Google users creating one for
+  // the first time, or registration flows that skipped password).
+  if (user.password) {
     throw new AppError(
       StatusCodes.FORBIDDEN,
-      "Cannot change password for Google users",
+      "Password already set. Use change password to update it.",
     );
   }
 
@@ -171,8 +174,8 @@ const resetPassword = async (
 
   await invalidateToken(accessToken, envVariables.RESET_PASSWORD_SECRET);
 
-  // Invalidate ALL refresh tokens to force re-authentication after password reset
-  await redisClient.del(`refresh_token:${decodedToken.userId}`);
+  // Invalidate ALL refresh sessions to force re-authentication after password reset
+  await revokeAllRefreshTokens(decodedToken.userId as string);
 };
 
 const AuthServices = {

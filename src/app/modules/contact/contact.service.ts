@@ -1,7 +1,10 @@
 import { StatusCodes } from "http-status-codes";
 import AppError from "../../errorHelpers/AppError.js";
+import QueryBuilder from "../../utils/queryBuilder.js";
 import { IContact } from "./contact.interface.js";
 import Contact from "./contact.model.js";
+
+const contactSearchableFields = ["name", "email", "subject", "message"];
 
 const createContact = async (payload: Partial<IContact>) => {
   const contact = await Contact.create(payload);
@@ -9,29 +12,22 @@ const createContact = async (payload: Partial<IContact>) => {
 };
 
 const getAllContacts = async (query: Record<string, string>) => {
-  const page = Number(query.page) || 1;
-  const limit = Math.max(1, Number(query.limit) || 10);
-  const skip = (page - 1) * limit;
+  const baseQuery = Contact.find({ isDeleted: { $ne: true } });
+  const queryBuilder = new QueryBuilder(baseQuery, query);
 
-  const filter: Record<string, unknown> = {};
-  if (query.isRead !== undefined) {
-    filter.isRead = query.isRead === "true";
-  }
+  const contactsData = queryBuilder
+    .search(contactSearchableFields)
+    .filter(["isRead"])
+    .sort()
+    .fields()
+    .paginate();
 
-  const [data, total] = await Promise.all([
-    Contact.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
-    Contact.countDocuments(filter),
+  const [data, meta] = await Promise.all([
+    contactsData.build(),
+    queryBuilder.getMeta(),
   ]);
 
-  return {
-    data,
-    meta: {
-      page,
-      limit,
-      total,
-      totalPage: Math.ceil(total / limit),
-    },
-  };
+  return { data, meta };
 };
 
 const getContactById = async (contactId: string) => {
@@ -55,7 +51,11 @@ const markAsRead = async (contactId: string) => {
 };
 
 const deleteContact = async (contactId: string) => {
-  const contact = await Contact.findByIdAndDelete(contactId);
+  const contact = await Contact.findByIdAndUpdate(
+    contactId,
+    { isDeleted: true, deletedAt: new Date() },
+    { returnDocument: "after", runValidators: true },
+  );
   if (!contact) {
     throw new AppError(StatusCodes.NOT_FOUND, "Contact message not found");
   }
