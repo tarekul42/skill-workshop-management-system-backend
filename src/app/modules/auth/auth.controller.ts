@@ -1,10 +1,10 @@
 import crypto from "crypto";
-import fs from "fs";
-import path from "path";
 import { NextFunction, Request, Response } from "express";
+import fs from "fs";
 import { StatusCodes } from "http-status-codes";
 import { JwtPayload } from "jsonwebtoken";
 import passport from "passport";
+import path from "path";
 import envVariables from "../../config/env.js";
 import { redisClient } from "../../config/redis.config.js";
 import AppError from "../../errorHelpers/AppError.js";
@@ -13,7 +13,10 @@ import logger from "../../utils/logger.js";
 import sendResponse from "../../utils/sendResponse.js";
 import setAuthCookie, { clearAuthCookie } from "../../utils/setCookie.js";
 import { invalidateToken } from "../../utils/tokenBlacklist.js";
-import { createUserTokens, revokeRefreshSession } from "../../utils/userTokens.js";
+import {
+  createUserTokens,
+  revokeRefreshSession,
+} from "../../utils/userTokens.js";
 import { IUser } from "../user/user.interface.js";
 import AuthServices from "./auth.service.js";
 
@@ -369,10 +372,16 @@ const exchangeAuthCode = catchAsync(async (req: Request, res: Response) => {
 
 const getDemoCredentials = catchAsync(async (_req: Request, res: Response) => {
   if (process.env.NODE_ENV === "production") {
-    throw new AppError(StatusCodes.NOT_FOUND, "Demo credentials not available in production");
+    throw new AppError(
+      StatusCodes.NOT_FOUND,
+      "Demo credentials not available in production",
+    );
   }
 
-  const credentialsFile = path.resolve(process.cwd(), ".seed-credentials.local.json");
+  const credentialsFile = path.resolve(
+    process.cwd(),
+    ".seed-credentials.local.json",
+  );
 
   let credentials: unknown;
   try {

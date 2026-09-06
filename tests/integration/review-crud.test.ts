@@ -118,7 +118,6 @@ describe("Review CRUD", () => {
       workshop: workshopId,
       status: ENROLLMENT_STATUS.COMPLETE,
       studentCount: 1,
-      totalAmount: 1000,
     });
     enrollmentId = enrollment._id.toString();
 

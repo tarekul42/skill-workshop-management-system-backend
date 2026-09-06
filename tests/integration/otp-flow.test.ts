@@ -34,25 +34,25 @@ describe("OTP Flow", () => {
 
     const redisStore = new Map<string, string>();
     spyOn(redisClient, "connect").mockResolvedValue({} as any);
-    spyOn(redisClient, "get").mockImplementation((key: string) =>
-      Promise.resolve(redisStore.get(key) ?? null),
+    spyOn(redisClient, "get").mockImplementation((key: any) =>
+      Promise.resolve(redisStore.get(String(key)) ?? null),
     );
-    spyOn(redisClient, "set").mockImplementation((key: string, value: any, opts?: any) => {
-      redisStore.set(key, value as string);
+    spyOn(redisClient, "set").mockImplementation((key: any, value: any, opts?: any) => {
+      redisStore.set(String(key), value as string);
       return Promise.resolve("OK");
     });
-    spyOn(redisClient, "del").mockImplementation((keys: string | string[]) => {
+    spyOn(redisClient, "del").mockImplementation((keys: any) => {
       const arr = Array.isArray(keys) ? keys : [keys];
-      arr.forEach((k) => redisStore.delete(k));
+      arr.forEach((k: any) => redisStore.delete(String(k)));
       return Promise.resolve(arr.length);
     });
-    spyOn(redisClient, "incr").mockImplementation((key: string) => {
-      const val = parseInt(redisStore.get(key) ?? "0", 10) + 1;
-      redisStore.set(key, String(val));
+    spyOn(redisClient, "incr").mockImplementation((key: any) => {
+      const val = parseInt(redisStore.get(String(key)) ?? "0", 10) + 1;
+      redisStore.set(String(key), String(val));
       return Promise.resolve(val);
     });
     spyOn(redisClient, "expire").mockResolvedValue(true as unknown as never);
-    spyOn(redisClient, "ttl").mockImplementation((_key: string) =>
+    spyOn(redisClient, "ttl").mockImplementation((_key: any) =>
       Promise.resolve(-2 as unknown as never),
     );
     await connectRedis();

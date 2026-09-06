@@ -21,6 +21,7 @@ import { redisClient } from "../../src/app/config/redis.config";
 import User from "../../src/app/modules/user/user.model";
 import { MongoMemoryReplSet } from "mongodb-memory-server";
 import bcrypt from "bcryptjs";
+import { IsActive, UserRole } from "../../src/app/modules/user/user.interface";
 
 // Shared in-memory Redis emulation
 const kv = new Map<string, string>();
@@ -32,12 +33,12 @@ beforeAll(async () => {
 
   // Mock Redis client methods
   spyOn(redisClient, "connect").mockResolvedValue({} as any);
-  spyOn(redisClient, "get").mockImplementation(async (key: string) =>
-    kv.has(key) ? (kv.get(key) as string) : null,
+  spyOn(redisClient, "get").mockImplementation(async (key: any) =>
+    kv.has(String(key)) ? (kv.get(String(key)) as string) : null,
   );
   spyOn(redisClient, "set").mockImplementation(
-    async (key: string, value: string) => {
-      kv.set(key, value);
+    async (key: any, value: any) => {
+      kv.set(String(key), value as string);
       return "OK" as any;
     },
   );
@@ -75,9 +76,9 @@ beforeAll(async () => {
     name: "Session User",
     email: "session@phase3.test",
     password: await bcrypt.hash("Password123!", 12),
-    role: "STUDENT",
+    role: UserRole.STUDENT,
     isVerified: true,
-    isActive: "ACTIVE",
+    isActive: IsActive.ACTIVE,
   });
 });
 
@@ -86,9 +87,9 @@ afterAll(async () => {
 });
 
 const makePayload = (userId: string) => ({
-  _id: userId,
+  _id: new mongoose.Types.ObjectId(userId),
   email: "session@phase3.test",
-  role: "STUDENT" as const,
+  role: UserRole.STUDENT,
 });
 
 describe("Refresh token sessions (userTokens.ts)", () => {

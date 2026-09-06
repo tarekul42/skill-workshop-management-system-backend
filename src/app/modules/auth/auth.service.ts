@@ -4,7 +4,6 @@ import { StatusCodes } from "http-status-codes";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import validator from "validator";
 import envVariables from "../../config/env.js";
-import { redisClient } from "../../config/redis.config.js";
 import AppError from "../../errorHelpers/AppError.js";
 import { sendEmailDirect } from "../../utils/sendEmailDirect.js";
 import { invalidateToken } from "../../utils/tokenBlacklist.js";
