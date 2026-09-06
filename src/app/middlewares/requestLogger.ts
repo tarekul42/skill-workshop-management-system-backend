@@ -9,9 +9,12 @@ const requestLogger = (req: Request, res: Response, next: NextFunction) => {
     const { method, originalUrl, ip } = req;
     const { statusCode } = res;
 
+    // Strip query strings to prevent leaking secrets (transactionId, tokens, etc.) into logs
+    const safeUrl = originalUrl.split("?")[0];
+
     const logData = {
       method,
-      url: originalUrl,
+      url: safeUrl,
       status: statusCode,
       duration: `${duration}ms`,
       ip,
