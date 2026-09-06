@@ -125,9 +125,9 @@ const loadEnvVariables = (): IEnvConfig => {
     DATABASE_URL: process.env.DATABASE_URL as string,
     BCRYPT_SALT_ROUND: (() => {
       const rounds = Number(process.env.BCRYPT_SALT_ROUND);
-      if (Number.isNaN(rounds) || rounds < 12) {
+      if (Number.isNaN(rounds) || rounds < 10) {
         throw new Error(
-          `BCRYPT_SALT_ROUND must be at least 12 (got: ${process.env.BCRYPT_SALT_ROUND})`,
+          `BCRYPT_SALT_ROUND must be at least 10 (got: ${process.env.BCRYPT_SALT_ROUND})`,
         );
       }
       return rounds;
