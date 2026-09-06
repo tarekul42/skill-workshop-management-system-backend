@@ -1,8 +1,8 @@
-import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
-import dotenv from "dotenv";
 import { randomBytes } from "crypto";
+import dotenv from "dotenv";
 import fs from "fs";
+import mongoose from "mongoose";
 import path from "path";
 
 dotenv.config();
@@ -13,19 +13,22 @@ if (!DB_URL) {
   process.exit(1);
 }
 
-import User from "./app/modules/user/user.model.js";
-import { WorkShop, Level } from "./app/modules/workshop/workshop.model.js";
 import { Category } from "./app/modules/category/category.model.js";
+import Contact from "./app/modules/contact/contact.model.js";
 import Enrollment from "./app/modules/enrollment/enrollment.model.js";
 import Payment from "./app/modules/payment/payment.model.js";
 import Review from "./app/modules/review/review.model.js";
-import Contact from "./app/modules/contact/contact.model.js";
+import User from "./app/modules/user/user.model.js";
+import { Level, WorkShop } from "./app/modules/workshop/workshop.model.js";
 
 type EnrollmentStatus = "PENDING" | "CANCEL" | "COMPLETE" | "FAILED";
 type PaymentStatus = "PAID" | "UNPAID" | "CANCELLED" | "FAILED" | "REFUNDED";
 type ReviewStatus = "PENDING" | "APPROVED" | "REJECTED";
 
-const CREDENTIALS_FILE = path.resolve(process.cwd(), ".seed-credentials.local.json");
+const CREDENTIALS_FILE = path.resolve(
+  process.cwd(),
+  ".seed-credentials.local.json",
+);
 
 function generatePassword(): string {
   return `Sd-${randomBytes(12).toString("base64url")}`;
@@ -119,51 +122,505 @@ const LEVEL_NAMES = [
 ];
 
 const CATEGORY_DATA = [
-  { name: "Web Development", slug: "web-development", description: "Build modern web applications with industry-standard technologies." },
-  { name: "Data Science", slug: "data-science", description: "Analyze data, build models, and derive actionable insights." },
-  { name: "Digital Marketing", slug: "digital-marketing", description: "Master SEO, social media, and paid advertising strategies." },
-  { name: "Graphic Design", slug: "graphic-design", description: "Create stunning visuals using professional design tools." },
-  { name: "Mobile App Development", slug: "mobile-app-development", description: "Build iOS and Android apps with modern frameworks." },
-  { name: "Cloud Computing", slug: "cloud-computing", description: "Deploy and manage infrastructure on AWS, Azure, and GCP." },
-  { name: "Cybersecurity", slug: "cybersecurity", description: "Protect systems and networks from digital threats." },
-  { name: "UI/UX Design", slug: "ui-ux-design", description: "Design intuitive user interfaces and seamless experiences." },
-  { name: "DevOps", slug: "devops", description: "Automate deployments and streamline development pipelines." },
-  { name: "Artificial Intelligence", slug: "artificial-intelligence", description: "Explore machine learning, NLP, and computer vision." },
-  { name: "Business & Entrepreneurship", slug: "business-entrepreneurship", description: "Develop business acumen and entrepreneurial skills." },
-  { name: "Photography & Video", slug: "photography-video", description: "Capture and edit professional photos and videos." },
+  {
+    name: "Web Development",
+    slug: "web-development",
+    description:
+      "Build modern web applications with industry-standard technologies.",
+  },
+  {
+    name: "Data Science",
+    slug: "data-science",
+    description: "Analyze data, build models, and derive actionable insights.",
+  },
+  {
+    name: "Digital Marketing",
+    slug: "digital-marketing",
+    description: "Master SEO, social media, and paid advertising strategies.",
+  },
+  {
+    name: "Graphic Design",
+    slug: "graphic-design",
+    description: "Create stunning visuals using professional design tools.",
+  },
+  {
+    name: "Mobile App Development",
+    slug: "mobile-app-development",
+    description: "Build iOS and Android apps with modern frameworks.",
+  },
+  {
+    name: "Cloud Computing",
+    slug: "cloud-computing",
+    description: "Deploy and manage infrastructure on AWS, Azure, and GCP.",
+  },
+  {
+    name: "Cybersecurity",
+    slug: "cybersecurity",
+    description: "Protect systems and networks from digital threats.",
+  },
+  {
+    name: "UI/UX Design",
+    slug: "ui-ux-design",
+    description: "Design intuitive user interfaces and seamless experiences.",
+  },
+  {
+    name: "DevOps",
+    slug: "devops",
+    description: "Automate deployments and streamline development pipelines.",
+  },
+  {
+    name: "Artificial Intelligence",
+    slug: "artificial-intelligence",
+    description: "Explore machine learning, NLP, and computer vision.",
+  },
+  {
+    name: "Business & Entrepreneurship",
+    slug: "business-entrepreneurship",
+    description: "Develop business acumen and entrepreneurial skills.",
+  },
+  {
+    name: "Photography & Video",
+    slug: "photography-video",
+    description: "Capture and edit professional photos and videos.",
+  },
 ];
 
 const USER_DATA = [
-  { name: "Super Admin", email: "superadmin@seed.com", role: "SUPER_ADMIN" as const },
+  {
+    name: "Super Admin",
+    email: "superadmin@seed.com",
+    role: "SUPER_ADMIN" as const,
+  },
   { name: "Admin Rahman", email: "admin1@seed.com", role: "ADMIN" as const },
   { name: "Admin Khatun", email: "admin2@seed.com", role: "ADMIN" as const },
-  { name: "Instructor Hasan", email: "instructor1@seed.com", role: "INSTRUCTOR" as const },
-  { name: "Instructor Ahmed", email: "instructor2@seed.com", role: "INSTRUCTOR" as const },
-  { name: "Instructor Sultana", email: "instructor3@seed.com", role: "INSTRUCTOR" as const },
-  { name: "Student Karim", email: "student1@seed.com", role: "STUDENT" as const },
-  { name: "Student Akter", email: "student2@seed.com", role: "STUDENT" as const },
-  { name: "Student Islam", email: "student3@seed.com", role: "STUDENT" as const },
-  { name: "Student Hossain", email: "student4@seed.com", role: "STUDENT" as const },
-  { name: "Student Nasrin", email: "student5@seed.com", role: "STUDENT" as const },
-  { name: "Student Parvez", email: "student6@seed.com", role: "STUDENT" as const },
+  {
+    name: "Instructor Hasan",
+    email: "instructor1@seed.com",
+    role: "INSTRUCTOR" as const,
+  },
+  {
+    name: "Instructor Ahmed",
+    email: "instructor2@seed.com",
+    role: "INSTRUCTOR" as const,
+  },
+  {
+    name: "Instructor Sultana",
+    email: "instructor3@seed.com",
+    role: "INSTRUCTOR" as const,
+  },
+  {
+    name: "Student Karim",
+    email: "student1@seed.com",
+    role: "STUDENT" as const,
+  },
+  {
+    name: "Student Akter",
+    email: "student2@seed.com",
+    role: "STUDENT" as const,
+  },
+  {
+    name: "Student Islam",
+    email: "student3@seed.com",
+    role: "STUDENT" as const,
+  },
+  {
+    name: "Student Hossain",
+    email: "student4@seed.com",
+    role: "STUDENT" as const,
+  },
+  {
+    name: "Student Nasrin",
+    email: "student5@seed.com",
+    role: "STUDENT" as const,
+  },
+  {
+    name: "Student Parvez",
+    email: "student6@seed.com",
+    role: "STUDENT" as const,
+  },
   { name: "Demo Admin", email: "admin@test.com", role: "ADMIN" as const },
-  { name: "Demo Instructor", email: "instructor@test.com", role: "INSTRUCTOR" as const },
+  {
+    name: "Demo Instructor",
+    email: "instructor@test.com",
+    role: "INSTRUCTOR" as const,
+  },
   { name: "Demo Student", email: "student@test.com", role: "STUDENT" as const },
 ];
 
 const WORKSHOP_DATA = [
-  { title: "Full-Stack Web Development Bootcamp", slug: "full-stack-web-development-bootcamp", description: "Learn HTML, CSS, JavaScript, React, Node.js, and MongoDB to become a full-stack developer.", location: "Dhaka", price: 2500, maxSeats: 30, whatYouLearn: ["React & Next.js", "Node.js & Express", "MongoDB & PostgreSQL", "REST & GraphQL APIs", "Authentication & Authorization", "Deployment & DevOps"], prerequisites: ["Basic computer literacy"], benefits: ["Build 3 real-world projects", "Get a verifiable certificate", "Portfolio-ready codebase"], syllabus: ["HTML5 & CSS3 Fundamentals", "JavaScript ES6+", "React & State Management", "Node.js & Express.js", "Database Design", "Authentication & Security", "Deployment & CI/CD"] },
-  { title: "Data Science with Python", slug: "data-science-with-python", description: "Master Python, Pandas, Scikit-learn, and TensorFlow for data analysis and machine learning.", location: "Chattogram", price: 3000, maxSeats: 25, whatYouLearn: ["Python for data analysis", "Machine learning algorithms", "Data visualization", "Statistical modeling", "Deep learning basics"], prerequisites: ["Basic programming knowledge"], benefits: ["Work with real datasets", "Kaggle competition experience", "Industry-recognized certificate"], syllabus: ["Python Refresher", "NumPy & Pandas", "Matplotlib & Seaborn", "Machine Learning Fundamentals", "Supervised Learning", "Unsupervised Learning", "Neural Networks & Deep Learning"] },
-  { title: "Digital Marketing Mastery", slug: "digital-marketing-mastery", description: "Master SEO, SEM, social media marketing, email marketing, and content strategy.", location: "Dhaka", price: 2000, maxSeats: 40, whatYouLearn: ["SEO & SEM strategies", "Social media advertising", "Email marketing automation", "Content marketing", "Analytics & reporting"], prerequisites: ["None"], benefits: ["Run a live campaign", "Google Analytics certified", "Portfolio of case studies"], syllabus: ["Digital Marketing Landscape", "SEO & Keyword Research", "Google Ads & PPC", "Social Media Strategy", "Content Marketing", "Email Marketing", "Analytics & Optimization"] },
-  { title: "UI/UX Design Masterclass", slug: "ui-ux-design-masterclass", description: "Design beautiful, user-centered interfaces using Figma, with a focus on usability and accessibility.", location: "Remote", price: 1800, maxSeats: 20, whatYouLearn: ["User research methods", "Wireframing & prototyping", "Visual design principles", "Design systems", "Usability testing"], prerequisites: ["No prior design experience needed"], benefits: ["Figma portfolio project", "User testing certificate", "Design system you built"], syllabus: ["Design Thinking", "User Research", "Information Architecture", "Wireframing & Prototyping", "Visual Design", "Design Systems", "Usability Testing"] },
-  { title: "Cloud Computing with AWS", slug: "cloud-computing-with-aws", description: "Deploy scalable applications on AWS. Learn EC2, S3, Lambda, RDS, and CloudFormation.", location: "Dhaka", price: 3500, maxSeats: 20, whatYouLearn: ["AWS core services", "Serverless architecture", "Infrastructure as Code", "Monitoring & scaling", "Cost optimization"], prerequisites: ["Basic Linux knowledge"], benefits: ["AWS practice exam access", "Free AWS credits", "Deploy a production app"], syllabus: ["AWS Fundamentals", "EC2 & Networking", "S3 & Storage", "Lambda & Serverless", "RDS & Databases", "IAM & Security", "CloudFormation & CI/CD"] },
-  { title: "Mobile App Development with React Native", slug: "mobile-app-development-react-native", description: "Build cross-platform mobile apps for iOS and Android using React Native.", location: "Chattogram", price: 2800, maxSeats: 25, whatYouLearn: ["React Native fundamentals", "Navigation & state management", "Native device APIs", "App store deployment", "Performance optimization"], prerequisites: ["Basic React knowledge"], benefits: ["Publish to App Store & Play Store", "Real-time chat app project", "Developer account guidance"], syllabus: ["React Native Setup", "Components & Styling", "Navigation", "State Management", "Native APIs", "Networking & Data", "Deployment & Publishing"] },
-  { title: "Cybersecurity Essentials", slug: "cybersecurity-essentials", description: "Learn ethical hacking, network security, encryption, and incident response.", location: "Dhaka", price: 3200, maxSeats: 15, whatYouLearn: ["Network security fundamentals", "Ethical hacking tools", "Encryption & cryptography", "Incident response", "Compliance & governance"], prerequisites: ["Basic networking knowledge"], benefits: ["Hands-on lab environment", "Capture The Flag challenges", "Certification prep guide"], syllabus: ["Security Fundamentals", "Network Security", "Cryptography", "Ethical Hacking", "Web Application Security", "Incident Response", "Compliance & Governance"] },
-  { title: "DevOps & CI/CD Pipeline", slug: "devops-ci-cd-pipeline", description: "Automate deployments with Docker, Kubernetes, Jenkins, and GitHub Actions.", location: "Remote", price: 3000, maxSeats: 20, whatYouLearn: ["Docker & containerization", "Kubernetes orchestration", "CI/CD pipelines", "Infrastructure as Code", "Monitoring & logging"], prerequisites: ["Basic Linux & Git knowledge"], benefits: ["Deploy a microservice app", "Kubernetes cluster setup", "DevOps portfolio project"], syllabus: ["Version Control & Git", "Docker Fundamentals", "Container Orchestration", "CI/CD with Jenkins", "Kubernetes Basics", "Monitoring & Logging", "Infrastructure as Code"] },
-  { title: "Artificial Intelligence & Machine Learning", slug: "ai-machine-learning", description: "Dive deep into AI, neural networks, NLP, and computer vision with hands-on projects.", location: "Dhaka", price: 4000, maxSeats: 20, whatYouLearn: ["Deep learning architectures", "Natural Language Processing", "Computer Vision", "Reinforcement Learning", "MLOps fundamentals"], prerequisites: ["Python & basic statistics"], benefits: ["Build an AI-powered app", "Research paper walkthrough", "AI certificate of completion"], syllabus: ["ML Fundamentals", "Neural Networks", "Convolutional Neural Networks", "Recurrent Neural Networks", "Natural Language Processing", "Computer Vision", "MLOps & Deployment"] },
-  { title: "Graphic Design with Adobe Suite", slug: "graphic-design-adobe-suite", description: "Master Photoshop, Illustrator, and InDesign for professional graphic design.", location: "Chattogram", price: 1500, maxSeats: 30, whatYouLearn: ["Adobe Photoshop", "Adobe Illustrator", "Adobe InDesign", "Typography", "Brand identity design"], prerequisites: ["No prior experience needed"], benefits: ["Design a brand identity", "Portfolio-ready projects", "Adobe certified associate prep"], syllabus: ["Design Principles", "Photoshop Basics", "Illustrator Mastery", "Typography", "Brand Identity", "Layout & InDesign", "Portfolio Review"] },
-  { title: "Business & Entrepreneurship 101", slug: "business-entrepreneurship-101", description: "Learn business modeling, financial planning, marketing strategy, and pitching.", location: "Dhaka", price: 1200, maxSeats: 50, whatYouLearn: ["Business model canvas", "Financial planning", "Marketing strategy", "Pitch deck creation", "Legal fundamentals"], prerequisites: ["None"], benefits: ["Pitch to real investors", "Business plan template", "Startup networking event"], syllabus: ["Ideation & Validation", "Business Model Canvas", "Financial Planning", "Marketing & Sales", "Legal & Compliance", "Pitching", "Growth & Scaling"] },
-  { title: "Professional Photography & Videography", slug: "professional-photography-videography", description: "Master camera techniques, lighting, composition, and post-production editing.", location: "Dhaka", price: 2200, maxSeats: 15, whatYouLearn: ["Camera settings & techniques", "Lighting & composition", "Portrait & landscape", "Video shooting & editing", "Post-processing"], prerequisites: ["A DSLR or mirrorless camera"], benefits: ["Build a photo portfolio", "Film a short video", "Exhibition opportunity"], syllabus: ["Camera Fundamentals", "Composition & Lighting", "Portrait Photography", "Landscape & Street", "Video Fundamentals", "Editing with Lightroom/Premiere", "Portfolio Review"] },
+  {
+    title: "Full-Stack Web Development Bootcamp",
+    slug: "full-stack-web-development-bootcamp",
+    description:
+      "Learn HTML, CSS, JavaScript, React, Node.js, and MongoDB to become a full-stack developer.",
+    location: "Dhaka",
+    price: 2500,
+    maxSeats: 30,
+    whatYouLearn: [
+      "React & Next.js",
+      "Node.js & Express",
+      "MongoDB & PostgreSQL",
+      "REST & GraphQL APIs",
+      "Authentication & Authorization",
+      "Deployment & DevOps",
+    ],
+    prerequisites: ["Basic computer literacy"],
+    benefits: [
+      "Build 3 real-world projects",
+      "Get a verifiable certificate",
+      "Portfolio-ready codebase",
+    ],
+    syllabus: [
+      "HTML5 & CSS3 Fundamentals",
+      "JavaScript ES6+",
+      "React & State Management",
+      "Node.js & Express.js",
+      "Database Design",
+      "Authentication & Security",
+      "Deployment & CI/CD",
+    ],
+  },
+  {
+    title: "Data Science with Python",
+    slug: "data-science-with-python",
+    description:
+      "Master Python, Pandas, Scikit-learn, and TensorFlow for data analysis and machine learning.",
+    location: "Chattogram",
+    price: 3000,
+    maxSeats: 25,
+    whatYouLearn: [
+      "Python for data analysis",
+      "Machine learning algorithms",
+      "Data visualization",
+      "Statistical modeling",
+      "Deep learning basics",
+    ],
+    prerequisites: ["Basic programming knowledge"],
+    benefits: [
+      "Work with real datasets",
+      "Kaggle competition experience",
+      "Industry-recognized certificate",
+    ],
+    syllabus: [
+      "Python Refresher",
+      "NumPy & Pandas",
+      "Matplotlib & Seaborn",
+      "Machine Learning Fundamentals",
+      "Supervised Learning",
+      "Unsupervised Learning",
+      "Neural Networks & Deep Learning",
+    ],
+  },
+  {
+    title: "Digital Marketing Mastery",
+    slug: "digital-marketing-mastery",
+    description:
+      "Master SEO, SEM, social media marketing, email marketing, and content strategy.",
+    location: "Dhaka",
+    price: 2000,
+    maxSeats: 40,
+    whatYouLearn: [
+      "SEO & SEM strategies",
+      "Social media advertising",
+      "Email marketing automation",
+      "Content marketing",
+      "Analytics & reporting",
+    ],
+    prerequisites: ["None"],
+    benefits: [
+      "Run a live campaign",
+      "Google Analytics certified",
+      "Portfolio of case studies",
+    ],
+    syllabus: [
+      "Digital Marketing Landscape",
+      "SEO & Keyword Research",
+      "Google Ads & PPC",
+      "Social Media Strategy",
+      "Content Marketing",
+      "Email Marketing",
+      "Analytics & Optimization",
+    ],
+  },
+  {
+    title: "UI/UX Design Masterclass",
+    slug: "ui-ux-design-masterclass",
+    description:
+      "Design beautiful, user-centered interfaces using Figma, with a focus on usability and accessibility.",
+    location: "Remote",
+    price: 1800,
+    maxSeats: 20,
+    whatYouLearn: [
+      "User research methods",
+      "Wireframing & prototyping",
+      "Visual design principles",
+      "Design systems",
+      "Usability testing",
+    ],
+    prerequisites: ["No prior design experience needed"],
+    benefits: [
+      "Figma portfolio project",
+      "User testing certificate",
+      "Design system you built",
+    ],
+    syllabus: [
+      "Design Thinking",
+      "User Research",
+      "Information Architecture",
+      "Wireframing & Prototyping",
+      "Visual Design",
+      "Design Systems",
+      "Usability Testing",
+    ],
+  },
+  {
+    title: "Cloud Computing with AWS",
+    slug: "cloud-computing-with-aws",
+    description:
+      "Deploy scalable applications on AWS. Learn EC2, S3, Lambda, RDS, and CloudFormation.",
+    location: "Dhaka",
+    price: 3500,
+    maxSeats: 20,
+    whatYouLearn: [
+      "AWS core services",
+      "Serverless architecture",
+      "Infrastructure as Code",
+      "Monitoring & scaling",
+      "Cost optimization",
+    ],
+    prerequisites: ["Basic Linux knowledge"],
+    benefits: [
+      "AWS practice exam access",
+      "Free AWS credits",
+      "Deploy a production app",
+    ],
+    syllabus: [
+      "AWS Fundamentals",
+      "EC2 & Networking",
+      "S3 & Storage",
+      "Lambda & Serverless",
+      "RDS & Databases",
+      "IAM & Security",
+      "CloudFormation & CI/CD",
+    ],
+  },
+  {
+    title: "Mobile App Development with React Native",
+    slug: "mobile-app-development-react-native",
+    description:
+      "Build cross-platform mobile apps for iOS and Android using React Native.",
+    location: "Chattogram",
+    price: 2800,
+    maxSeats: 25,
+    whatYouLearn: [
+      "React Native fundamentals",
+      "Navigation & state management",
+      "Native device APIs",
+      "App store deployment",
+      "Performance optimization",
+    ],
+    prerequisites: ["Basic React knowledge"],
+    benefits: [
+      "Publish to App Store & Play Store",
+      "Real-time chat app project",
+      "Developer account guidance",
+    ],
+    syllabus: [
+      "React Native Setup",
+      "Components & Styling",
+      "Navigation",
+      "State Management",
+      "Native APIs",
+      "Networking & Data",
+      "Deployment & Publishing",
+    ],
+  },
+  {
+    title: "Cybersecurity Essentials",
+    slug: "cybersecurity-essentials",
+    description:
+      "Learn ethical hacking, network security, encryption, and incident response.",
+    location: "Dhaka",
+    price: 3200,
+    maxSeats: 15,
+    whatYouLearn: [
+      "Network security fundamentals",
+      "Ethical hacking tools",
+      "Encryption & cryptography",
+      "Incident response",
+      "Compliance & governance",
+    ],
+    prerequisites: ["Basic networking knowledge"],
+    benefits: [
+      "Hands-on lab environment",
+      "Capture The Flag challenges",
+      "Certification prep guide",
+    ],
+    syllabus: [
+      "Security Fundamentals",
+      "Network Security",
+      "Cryptography",
+      "Ethical Hacking",
+      "Web Application Security",
+      "Incident Response",
+      "Compliance & Governance",
+    ],
+  },
+  {
+    title: "DevOps & CI/CD Pipeline",
+    slug: "devops-ci-cd-pipeline",
+    description:
+      "Automate deployments with Docker, Kubernetes, Jenkins, and GitHub Actions.",
+    location: "Remote",
+    price: 3000,
+    maxSeats: 20,
+    whatYouLearn: [
+      "Docker & containerization",
+      "Kubernetes orchestration",
+      "CI/CD pipelines",
+      "Infrastructure as Code",
+      "Monitoring & logging",
+    ],
+    prerequisites: ["Basic Linux & Git knowledge"],
+    benefits: [
+      "Deploy a microservice app",
+      "Kubernetes cluster setup",
+      "DevOps portfolio project",
+    ],
+    syllabus: [
+      "Version Control & Git",
+      "Docker Fundamentals",
+      "Container Orchestration",
+      "CI/CD with Jenkins",
+      "Kubernetes Basics",
+      "Monitoring & Logging",
+      "Infrastructure as Code",
+    ],
+  },
+  {
+    title: "Artificial Intelligence & Machine Learning",
+    slug: "ai-machine-learning",
+    description:
+      "Dive deep into AI, neural networks, NLP, and computer vision with hands-on projects.",
+    location: "Dhaka",
+    price: 4000,
+    maxSeats: 20,
+    whatYouLearn: [
+      "Deep learning architectures",
+      "Natural Language Processing",
+      "Computer Vision",
+      "Reinforcement Learning",
+      "MLOps fundamentals",
+    ],
+    prerequisites: ["Python & basic statistics"],
+    benefits: [
+      "Build an AI-powered app",
+      "Research paper walkthrough",
+      "AI certificate of completion",
+    ],
+    syllabus: [
+      "ML Fundamentals",
+      "Neural Networks",
+      "Convolutional Neural Networks",
+      "Recurrent Neural Networks",
+      "Natural Language Processing",
+      "Computer Vision",
+      "MLOps & Deployment",
+    ],
+  },
+  {
+    title: "Graphic Design with Adobe Suite",
+    slug: "graphic-design-adobe-suite",
+    description:
+      "Master Photoshop, Illustrator, and InDesign for professional graphic design.",
+    location: "Chattogram",
+    price: 1500,
+    maxSeats: 30,
+    whatYouLearn: [
+      "Adobe Photoshop",
+      "Adobe Illustrator",
+      "Adobe InDesign",
+      "Typography",
+      "Brand identity design",
+    ],
+    prerequisites: ["No prior experience needed"],
+    benefits: [
+      "Design a brand identity",
+      "Portfolio-ready projects",
+      "Adobe certified associate prep",
+    ],
+    syllabus: [
+      "Design Principles",
+      "Photoshop Basics",
+      "Illustrator Mastery",
+      "Typography",
+      "Brand Identity",
+      "Layout & InDesign",
+      "Portfolio Review",
+    ],
+  },
+  {
+    title: "Business & Entrepreneurship 101",
+    slug: "business-entrepreneurship-101",
+    description:
+      "Learn business modeling, financial planning, marketing strategy, and pitching.",
+    location: "Dhaka",
+    price: 1200,
+    maxSeats: 50,
+    whatYouLearn: [
+      "Business model canvas",
+      "Financial planning",
+      "Marketing strategy",
+      "Pitch deck creation",
+      "Legal fundamentals",
+    ],
+    prerequisites: ["None"],
+    benefits: [
+      "Pitch to real investors",
+      "Business plan template",
+      "Startup networking event",
+    ],
+    syllabus: [
+      "Ideation & Validation",
+      "Business Model Canvas",
+      "Financial Planning",
+      "Marketing & Sales",
+      "Legal & Compliance",
+      "Pitching",
+      "Growth & Scaling",
+    ],
+  },
+  {
+    title: "Professional Photography & Videography",
+    slug: "professional-photography-videography",
+    description:
+      "Master camera techniques, lighting, composition, and post-production editing.",
+    location: "Dhaka",
+    price: 2200,
+    maxSeats: 15,
+    whatYouLearn: [
+      "Camera settings & techniques",
+      "Lighting & composition",
+      "Portrait & landscape",
+      "Video shooting & editing",
+      "Post-processing",
+    ],
+    prerequisites: ["A DSLR or mirrorless camera"],
+    benefits: [
+      "Build a photo portfolio",
+      "Film a short video",
+      "Exhibition opportunity",
+    ],
+    syllabus: [
+      "Camera Fundamentals",
+      "Composition & Lighting",
+      "Portrait Photography",
+      "Landscape & Street",
+      "Video Fundamentals",
+      "Editing with Lightroom/Premiere",
+      "Portfolio Review",
+    ],
+  },
 ];
 
 const INSTRUCTOR_EXPERTISE = [
@@ -241,11 +698,21 @@ const CONTACT_MESSAGES = [
 ];
 
 const PHONE_NUMBERS = [
-  "+8801712345678", "+8801812345678", "+8801912345678",
-  "+8801512345678", "+8801612345678", "+8801312345678",
-  "+8801712345679", "+8801812345679", "+8801912345679",
-  "+8801512345679", "+8801612345679", "+8801312345679",
-  "+8801712345680", "+8801812345680", "+8801912345680",
+  "+8801712345678",
+  "+8801812345678",
+  "+8801912345678",
+  "+8801512345678",
+  "+8801612345678",
+  "+8801312345678",
+  "+8801712345679",
+  "+8801812345679",
+  "+8801912345679",
+  "+8801512345679",
+  "+8801612345679",
+  "+8801312345679",
+  "+8801712345680",
+  "+8801812345680",
+  "+8801912345680",
 ];
 
 const REVIEW_TITLES = [
@@ -306,14 +773,24 @@ async function seed() {
 
   if (isFresh || isClear) {
     console.log("Clearing existing seed data...");
-    const collections = ["levels", "categories", "users", "workshops", "enrollments", "payments", "reviews", "contacts"];
+    const collections = [
+      "levels",
+      "categories",
+      "users",
+      "workshops",
+      "enrollments",
+      "payments",
+      "reviews",
+      "contacts",
+    ];
     const skipUsers = isClear;
     for (const name of collections) {
       if (skipUsers && name === "users") {
         console.log(`  Skipping ${name} (--clear mode)`);
         continue;
       }
-      const count = await mongoose.connection.db?.collection(name).countDocuments() ?? 0;
+      const count =
+        (await mongoose.connection.db?.collection(name).countDocuments()) ?? 0;
       if (count > 0) {
         await mongoose.connection.db?.collection(name).deleteMany({});
         console.log(`  Cleared ${name} (${count} documents removed)`);
@@ -363,9 +840,10 @@ async function seed() {
     phone: PHONE_NUMBERS[i],
     picture: USER_PICTURES[i],
     age: 25 + i,
-    address: u.role === "STUDENT"
-      ? STUDENT_ADDRESSES[i - 6] ?? STUDENT_ADDRESSES[0]
-      : "Office 12, Level 7, BTI Building, Dhaka",
+    address:
+      u.role === "STUDENT"
+        ? (STUDENT_ADDRESSES[i - 6] ?? STUDENT_ADDRESSES[0])
+        : "Office 12, Level 7, BTI Building, Dhaka",
     expertise: u.role === "INSTRUCTOR" ? INSTRUCTOR_EXPERTISE[i] : undefined,
     bio: u.role === "INSTRUCTOR" ? INSTRUCTOR_BIO[i] : undefined,
     auths: [{ provider: "credentials", providerId: u.email }],
@@ -428,11 +906,12 @@ async function seed() {
 
     workshop.currentEnrollments += studentCount;
 
-    const createdAt = i < 4
-      ? monthsAgo(4 - i)
-      : i < 7
-        ? daysAgo(15 + i * 2)
-        : monthsAgo(1 + Math.floor(i / 2));
+    const createdAt =
+      i < 4
+        ? monthsAgo(4 - i)
+        : i < 7
+          ? daysAgo(15 + i * 2)
+          : monthsAgo(1 + Math.floor(i / 2));
 
     enrollmentDocs.push({
       user: student._id,
@@ -462,9 +941,10 @@ async function seed() {
       transactionId: generateTransactionId(),
       amount,
       status: enrollmentStatuses[i].ps,
-      paymentGatewayData: enrollmentStatuses[i].ps === "PAID"
-        ? { status: "VALID", val_id: `seed_val_${i}`, bank_txn: "SEEDBANK" }
-        : undefined,
+      paymentGatewayData:
+        enrollmentStatuses[i].ps === "PAID"
+          ? { status: "VALID", val_id: `seed_val_${i}`, bank_txn: "SEEDBANK" }
+          : undefined,
       createdAt: enrollment.createdAt,
     });
   }
@@ -527,7 +1007,10 @@ async function seed() {
     demoPassword,
     accounts: demoAccounts,
   };
-  fs.writeFileSync(CREDENTIALS_FILE, JSON.stringify(credentialsPayload, null, 2));
+  fs.writeFileSync(
+    CREDENTIALS_FILE,
+    JSON.stringify(credentialsPayload, null, 2),
+  );
   console.log(`Seed accounts created.`);
   console.log(
     `Demo credentials (all seeded users share one password, rotated every seed run):\n` +

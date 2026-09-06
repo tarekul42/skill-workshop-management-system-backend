@@ -478,7 +478,12 @@ const getTrends = async () => {
   ]);
 
   const dailyEnrollmentsPromise = Enrollment.aggregate([
-    { $match: { createdAt: { $gte: fourteenDaysAgo }, isDeleted: { $ne: true } } },
+    {
+      $match: {
+        createdAt: { $gte: fourteenDaysAgo },
+        isDeleted: { $ne: true },
+      },
+    },
     {
       $group: {
         _id: {
@@ -493,7 +498,12 @@ const getTrends = async () => {
   ]);
 
   const revenueTrendsPromise = Payment.aggregate([
-    { $match: { createdAt: { $gte: sixMonthsAgo }, status: PAYMENT_STATUS.PAID } },
+    {
+      $match: {
+        createdAt: { $gte: sixMonthsAgo },
+        status: PAYMENT_STATUS.PAID,
+      },
+    },
     {
       $group: {
         _id: { year: { $year: "$createdAt" }, month: { $month: "$createdAt" } },
@@ -514,17 +524,13 @@ const getTrends = async () => {
     { $sort: { "_id.year": 1, "_id.month": 1 } },
   ]);
 
-  const [
-    enrollmentTrends,
-    dailyEnrollments,
-    revenueTrends,
-    userTrends,
-  ] = await Promise.all([
-    enrollmentTrendsPromise,
-    dailyEnrollmentsPromise,
-    revenueTrendsPromise,
-    userTrendsPromise,
-  ]);
+  const [enrollmentTrends, dailyEnrollments, revenueTrends, userTrends] =
+    await Promise.all([
+      enrollmentTrendsPromise,
+      dailyEnrollmentsPromise,
+      revenueTrendsPromise,
+      userTrendsPromise,
+    ]);
 
   const result = {
     enrollmentTrends,

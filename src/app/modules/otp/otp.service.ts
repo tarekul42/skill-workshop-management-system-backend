@@ -2,8 +2,8 @@ import crypto from "crypto";
 import { StatusCodes } from "http-status-codes";
 import { redisClient } from "../../config/redis.config.js";
 import AppError from "../../errorHelpers/AppError.js";
-import { sendEmailDirect } from "../../utils/sendEmailDirect.js";
 import logger from "../../utils/logger.js";
+import { sendEmailDirect } from "../../utils/sendEmailDirect.js";
 import User from "../user/user.model.js";
 
 // 5 minutes — extended for user convenience; brute-force risk mitigated by 5-attempt limit

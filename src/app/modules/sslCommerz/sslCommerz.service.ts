@@ -2,8 +2,8 @@ import axios from "axios";
 import crypto from "crypto";
 import { StatusCodes } from "http-status-codes";
 import envVariables from "../../config/env.js";
-import AppError from "../../errorHelpers/AppError.js";
 import { redisClient } from "../../config/redis.config.js";
+import AppError from "../../errorHelpers/AppError.js";
 import logger from "../../utils/logger.js";
 import Payment from "../payment/payment.model.js";
 import { ISSLCommerz } from "./sslCommerz.interface.js";
@@ -82,7 +82,10 @@ const validatePayment = async (payload: {
   // Distributed lock: prevent concurrent IPN + callback from both hitting
   // the SSLCommerz validation API for the same val_id simultaneously.
   const lockKey = `lock:payment:val_id:${payload.val_id}`;
-  const acquired = await redisClient.set(lockKey, "locked", { NX: true, EX: 30 });
+  const acquired = await redisClient.set(lockKey, "locked", {
+    NX: true,
+    EX: 30,
+  });
   if (!acquired) {
     logger.info({
       msg: "Payment validation already in progress for this val_id, skipping duplicate",
@@ -117,18 +120,11 @@ const validatePayment = async (payload: {
     );
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    const sanitizedMsg = errorMessage.replace(
-      /store_passwd=[^&\s]+/gi,
-      "store_passwd=REDACTED",
-    ).replace(
-      /store_id=[^&\s]+/gi,
-      "store_id=REDACTED",
-    );
+    const sanitizedMsg = errorMessage
+      .replace(/store_passwd=[^&\s]+/gi, "store_passwd=REDACTED")
+      .replace(/store_id=[^&\s]+/gi, "store_id=REDACTED");
     logger.error({ msg: "Payment validation error", err: sanitizedMsg });
-    throw new AppError(
-      StatusCodes.BAD_GATEWAY,
-      "Payment validation failed",
-    );
+    throw new AppError(StatusCodes.BAD_GATEWAY, "Payment validation failed");
   } finally {
     await redisClient.del(lockKey).catch(() => undefined);
   }
@@ -209,10 +205,7 @@ const sslRefundPayment = async (payload: {
     if (error instanceof AppError) throw error;
     const errorMessage = error instanceof Error ? error.message : String(error);
     logger.error({ msg: "SSLCommerz refund error", err: errorMessage });
-    throw new AppError(
-      StatusCodes.BAD_GATEWAY,
-      "Payment refund failed",
-    );
+    throw new AppError(StatusCodes.BAD_GATEWAY, "Payment refund failed");
   }
 };
 

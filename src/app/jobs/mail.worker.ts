@@ -60,7 +60,13 @@ export const mailWorker = new Worker(
           ],
         });
       } else {
-        await sendEmail({ to, subject, templateName, templateData, attachments });
+        await sendEmail({
+          to,
+          subject,
+          templateName,
+          templateData,
+          attachments,
+        });
       }
     } catch (error) {
       logger.error({ msg: `Failed to process job ${job.id}`, err: error });

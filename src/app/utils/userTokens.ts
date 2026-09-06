@@ -43,9 +43,7 @@ const revokeAllRefreshTokens = async (userId: string): Promise<void> => {
  * Revoke a single refresh session by presenting the refresh token itself.
  * Used at logout so other devices stay logged in.
  */
-const revokeRefreshSession = async (
-  refreshToken: string,
-): Promise<boolean> => {
+const revokeRefreshSession = async (refreshToken: string): Promise<boolean> => {
   try {
     const payload = verifyToken(refreshToken, envVariables.JWT_REFRESH_SECRET);
     if (!payload.userId || !payload.jti) return false;
@@ -122,8 +120,7 @@ const createNewAccessToken = async (refreshToken: string) => {
     // REUSE DETECTION: this token was already rotated/revoked (or forged).
     // Treat as theft and revoke every session belonging to this user.
     logger.warn({
-      msg:
-        "Refresh token reuse detected — revoking ALL sessions for this user",
+      msg: "Refresh token reuse detected — revoking ALL sessions for this user",
       userId,
       jti,
     });
@@ -182,13 +179,9 @@ const createNewAccessToken = async (refreshToken: string) => {
   // If Redis fails mid-rotation we fail closed — the old token remains valid
   // and the client can retry rather than being stranded.
   const hashedNewToken = hashToken(newRefreshToken);
-  await redisClient.set(
-    refreshSessionKey(userId, newJti),
-    hashedNewToken,
-    {
-      EX: parseExpiryToSeconds(envVariables.JWT_REFRESH_EXPIRES),
-    },
-  );
+  await redisClient.set(refreshSessionKey(userId, newJti), hashedNewToken, {
+    EX: parseExpiryToSeconds(envVariables.JWT_REFRESH_EXPIRES),
+  });
   await redisClient.del(refreshSessionKey(userId, jti));
 
   return { accessToken, refreshToken: newRefreshToken };
