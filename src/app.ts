@@ -112,11 +112,26 @@ app.use((req, res, next) => {
 });
 
 // ──── Security Headers ────
-// CSP is intentionally not set here — Vercel manages it on the frontend,
-// and API responses don't execute scripts.
+// HSTS: enabled in development + production (any real deployment).
+// Disabled in test mode to avoid interfering with local HTTP testing.
+// CSP: minimal policy for API-only backend (no inline scripts, no frames).
+// Frontend CSP is managed by Vercel separately.
+const isLocalEnv = envVariables.NODE_ENV === "test";
 const helmetOptions = {
-  hsts: envVariables.NODE_ENV !== "production" ? false : undefined,
-  contentSecurityPolicy: false,
+  hsts: isLocalEnv
+    ? false
+    : {
+        maxAge: 31536000, // 1 year
+        includeSubDomains: true,
+        preload: true,
+      },
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'none'"],
+      frameAncestors: ["'none'"],
+      formAction: ["'none'"],
+    },
+  },
 };
 
 app.use(helmet(helmetOptions));
