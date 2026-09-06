@@ -1,7 +1,12 @@
 import express from "express";
 import checkAuth from "../../middlewares/checkAuth.js";
 import validateRequest from "../../middlewares/validateRequest.js";
-import { adminCrudLimiter, authLimiter, ipnLimiter, publicLimiter } from "../../utils/rateLimiter.js";
+import {
+  adminCrudLimiter,
+  authLimiter,
+  ipnLimiter,
+  publicLimiter,
+} from "../../utils/rateLimiter.js";
 import { UserRole } from "../user/user.interface.js";
 import PaymentController from "./payment.controller.js";
 import {

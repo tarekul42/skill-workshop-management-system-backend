@@ -26,7 +26,11 @@ class QueryBuilder<T> {
       : undefined;
 
     for (const [key, value] of Object.entries(this.query)) {
-      if (!excludeFields.includes(key) && typeof value === "string" && !key.startsWith("$")) {
+      if (
+        !excludeFields.includes(key) &&
+        typeof value === "string" &&
+        !key.startsWith("$")
+      ) {
         if (FORBIDDEN_FIELDS.has(key)) continue;
         if (allowed && !allowed.has(key)) continue;
         sanitizedFilter[key] = value;

@@ -175,8 +175,7 @@ const loadEnvVariables = (): IEnvConfig => {
       REDIS_USERNAME: process.env.REDIS_USERNAME ?? "",
       REDIS_PASSWORD: process.env.REDIS_PASSWORD ?? "",
       REDIS_TLS:
-        process.env.REDIS_TLS === "true" ||
-        process.env.REDIS_TLS === "1",
+        process.env.REDIS_TLS === "true" || process.env.REDIS_TLS === "1",
     },
     CSRF_SECRET: process.env.CSRF_SECRET as string,
     RESET_PASSWORD_SECRET:
@@ -186,7 +185,9 @@ const loadEnvVariables = (): IEnvConfig => {
         : ""),
     METRICS_API_KEY:
       (process.env.METRICS_API_KEY as string) ||
-      (process.env.NODE_ENV === "test" ? "test-metrics-key-for-unit-tests" : ""),
+      (process.env.NODE_ENV === "test"
+        ? "test-metrics-key-for-unit-tests"
+        : ""),
   };
 };
 

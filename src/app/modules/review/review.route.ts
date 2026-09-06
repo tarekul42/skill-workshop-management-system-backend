@@ -1,7 +1,11 @@
 import express from "express";
 import checkAuth from "../../middlewares/checkAuth.js";
 import validateRequest from "../../middlewares/validateRequest.js";
-import { adminCrudLimiter, authLimiter, publicLimiter } from "../../utils/rateLimiter.js";
+import {
+  adminCrudLimiter,
+  authLimiter,
+  publicLimiter,
+} from "../../utils/rateLimiter.js";
 import { UserRole } from "../user/user.interface.js";
 import ReviewController from "./review.controller.js";
 import {
@@ -55,7 +59,11 @@ const router = express.Router();
  *       404:
  *         $ref: "#/components/responses/NotFoundError"
  */
-router.get("/workshop/:workshopId", publicLimiter, ReviewController.getWorkshopReviews);
+router.get(
+  "/workshop/:workshopId",
+  publicLimiter,
+  ReviewController.getWorkshopReviews,
+);
 
 /**
  * @openapi

@@ -1,7 +1,7 @@
 import { StatusCodes } from "http-status-codes";
+import { uploadBufferToCloudinary } from "../../config/cloudinary.config.js";
 import AppError from "../../errorHelpers/AppError.js";
 import auditLogger from "../../utils/auditLogger.js";
-import { uploadBufferToCloudinary } from "../../config/cloudinary.config.js";
 import { generatePDF, IInvoiceData } from "../../utils/invoice.js";
 import logger from "../../utils/logger.js";
 import { sendEmailDirect } from "../../utils/sendEmailDirect.js";
@@ -346,9 +346,9 @@ const failPayment = async (query: Record<string, string>) => {
           templateName: "bookingConfirmation",
           templateData: {
             userName: u.name,
-            workshopTitle: (
-              enrollmentWithWorkshop.workshop as { title?: string }
-            )?.title ?? "Workshop",
+            workshopTitle:
+              (enrollmentWithWorkshop.workshop as { title?: string })?.title ??
+              "Workshop",
             status: "failed",
           },
         });
@@ -449,9 +449,9 @@ const cancelPayment = async (query: Record<string, string>) => {
           templateName: "bookingConfirmation",
           templateData: {
             userName: u.name,
-            workshopTitle: (
-              enrollmentWithWorkshop.workshop as { title?: string }
-            )?.title ?? "Workshop",
+            workshopTitle:
+              (enrollmentWithWorkshop.workshop as { title?: string })?.title ??
+              "Workshop",
             status: "cancelled",
           },
         });
@@ -578,10 +578,9 @@ const handleIPN = async (body: Record<string, string>) => {
       await session.commitTransaction();
       session.endSession();
 
-      const ipnEnrollment =
-        await PaymentRepository.findEnrollmentWithUser(
-          String(updatedPayment.enrollment),
-        );
+      const ipnEnrollment = await PaymentRepository.findEnrollmentWithUser(
+        String(updatedPayment.enrollment),
+      );
       try {
         if (ipnEnrollment?.user) {
           const u = ipnEnrollment.user as unknown as {
@@ -594,9 +593,9 @@ const handleIPN = async (body: Record<string, string>) => {
             templateName: "bookingConfirmation",
             templateData: {
               userName: u.name,
-              workshopTitle: (
-                ipnEnrollment.workshop as { title?: string }
-              )?.title ?? "Workshop",
+              workshopTitle:
+                (ipnEnrollment.workshop as { title?: string })?.title ??
+                "Workshop",
               status: "confirmed",
             },
           });
@@ -661,9 +660,9 @@ const handleIPN = async (body: Record<string, string>) => {
               templateName: "bookingConfirmation",
               templateData: {
                 userName: u.name,
-                workshopTitle: (
-                  enrollmentWithWorkshop.workshop as { title?: string }
-                )?.title ?? "Workshop",
+                workshopTitle:
+                  (enrollmentWithWorkshop.workshop as { title?: string })
+                    ?.title ?? "Workshop",
                 status: "failed",
               },
             });
@@ -708,7 +707,9 @@ const refundPayment = async (
 
   // Call SSLCommerz refund API before updating local state.
   // If the gateway refund fails, we never touch the database.
-  const gatewayData = payment.paymentGatewayData as Record<string, string> | undefined;
+  const gatewayData = payment.paymentGatewayData as
+    | Record<string, string>
+    | undefined;
   const bankTranId = gatewayData?.bank_tran_id;
   if (bankTranId) {
     try {
@@ -793,9 +794,9 @@ const refundPayment = async (
           templateName: "bookingConfirmation",
           templateData: {
             userName: u.name,
-            workshopTitle: (
-              enrollmentWithWorkshop.workshop as { title?: string }
-            )?.title ?? "Workshop",
+            workshopTitle:
+              (enrollmentWithWorkshop.workshop as { title?: string })?.title ??
+              "Workshop",
             status: "refunded",
           },
         });

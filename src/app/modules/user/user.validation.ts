@@ -23,7 +23,9 @@ const loginZodSchema = z.object({
   email: z
     .string("Email must be string")
     .email({ message: "Invalid email address format." }),
-  password: z.string({ message: "Password must be string" }).min(1, "Password is required"),
+  password: z
+    .string({ message: "Password must be string" })
+    .min(1, "Password is required"),
 });
 
 const createUserZodSchema = z.object({
